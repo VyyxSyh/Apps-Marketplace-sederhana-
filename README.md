@@ -2,14 +2,13 @@
 
 # 🛍️ TokoKita
 
-### Belanja kebutuhan harian, simpel dari satu aplikasi.
+### Kebutuhan harian, tinggal klik.
 
-Marketplace desktop sederhana dengan tampilan mobile, dibuat menggunakan Python dan Tkinter.
+Web app belanja kebutuhan harian dengan tampilan mobile-first. Bisa dibuka di browser atau dipasang sebagai aplikasi melalui platform web-to-app.
 
-![Python](https://img.shields.io/badge/Python-3.x-3776AB?logo=python&logoColor=white)
-![UI](https://img.shields.io/badge/UI-Tkinter-1769aa)
+![HTML](https://img.shields.io/badge/HTML-CSS%20%2B%20JavaScript-2878d0)
+![Responsive](https://img.shields.io/badge/layout-responsive-1769aa)
 ![Status](https://img.shields.io/badge/status-prototype-blue)
-![License](https://img.shields.io/badge/license-MIT-green)
 
 </div>
 
@@ -17,63 +16,46 @@ Marketplace desktop sederhana dengan tampilan mobile, dibuat menggunakan Python 
 
 ## ✨ Tentang
 
-TokoKita adalah prototipe aplikasi belanja kebutuhan sehari-hari. Pengguna dapat melihat produk sembako, obat dan P3K, pakaian, serta perlengkapan rumah tangga dalam satu antarmuka yang ringkas.
+TokoKita adalah prototipe marketplace untuk kebutuhan sehari-hari: sembako, obat dan P3K, pakaian, serta perlengkapan rumah. Antarmuka dirancang mobile-first dengan gaya flat, warna biru, dan kartu produk rounded.
 
-> Dibuat sebagai proyek pembelajaran GUI Python. Tampilan terinspirasi aplikasi marketplace; bukan aplikasi resmi Shopee atau toko sungguhan.
+## 🛒 Fitur
 
-## 📱 Fitur
+- Cari produk dan filter berdasarkan kategori.
+- Lihat harga, diskon, rating, benefit, dan lokasi toko.
+- Tambahkan produk ke keranjang, ubah jumlah, hitung total otomatis.
+- Checkout demo dengan validasi nama dan alamat.
+- Simpan riwayat pesanan dan nama profil secara lokal di browser.
+- Tandai produk favorit.
+- Chat dan notifikasi memiliki tampilan demo.
+- Layout responsif untuk layar ponsel maupun desktop.
 
-- **Katalog kebutuhan harian** — sembako, kesehatan, pakaian, dan rumah tangga.
-- **Cari & filter** — temukan produk lewat nama atau kategori.
-- **Info produk** — harga, diskon, rating, jumlah terjual, benefit, dan lokasi.
-- **Keranjang interaktif** — tambah atau kurangi jumlah produk, total dihitung otomatis.
-- **Checkout simulasi** — coba alur pemesanan tanpa transaksi sungguhan.
-- **UI responsif** — grid produk menyesuaikan ukuran jendela; daftar produk dapat di-scroll.
-- **Tema biru flat** — tampilan ringan dengan elemen rounded.
+## 🚀 Menjalankan
 
-## 🚀 Mulai
+> TokoKita tidak membutuhkan instalasi paket atau server backend. Buka `index.html` langsung di browser.
 
-### Persyaratan
+Untuk mengemas menjadi aplikasi, unggah/deploy file web ini ke layanan web-to-app milikmu. File utama aplikasi adalah `index.html`.
 
-- Python 3
-- Tkinter (umumnya sudah tersedia pada instalasi Python desktop)
+## 🧭 Alur penggunaan
 
-Tidak memerlukan dependensi pihak ketiga.
+1. Cari produk atau pilih kategori.
+2. Tekan **+ Keranjang** untuk menambahkan barang.
+3. Buka ikon keranjang untuk mengatur jumlah dan melihat total.
+4. Tekan **Lanjut checkout**, isi nama dan alamat, lalu buat pesanan demo.
 
-### Jalankan
-
-```bash
-git clone <url-repository>
-cd <folder-repository>
-python toko_gui.py
-```
-
-Windows juga dapat menjalankan:
-
-```bash
-py toko_gui.py
-```
-
-## 🧭 Penggunaan
-
-1. Ketik nama produk di kolom pencarian, atau pilih kategori.
-2. Tekan **+ Keranjang** pada produk yang diinginkan.
-3. Buka ikon keranjang untuk melihat barang dan mengatur kuantitas.
-4. Tekan **Checkout** untuk mencoba konfirmasi pesanan.
-
-## 🗂️ Struktur
+## 🗂️ Struktur proyek
 
 ```text
 .
-├── toko_gui.py   # Aplikasi GUI dan data produk contoh
-├── README.md     # Dokumentasi proyek
-└── LICENSE       # Lisensi MIT
+├── index.html   # Web app: markup, style, dan interaksi
+├── toko_gui.py  # Versi GUI Python/Tkinter sebelumnya
+├── README.md    # Dokumentasi proyek
+└── LICENSE      # Lisensi MIT
 ```
 
-## ⚠️ Batasan
+## ⚠️ Catatan prototipe
 
-Proyek ini masih berupa prototipe lokal. Produk dan harga tersimpan sebagai data contoh di dalam kode. Login, chat, pembayaran, inventori, pemesanan nyata, dan integrasi pengiriman belum tersedia.
+Produk dan harga adalah data contoh. Keranjang hanya tersimpan selama halaman terbuka; profil dan riwayat demo tersimpan di `localStorage` browser. Tidak ada akun nyata, pembayaran, inventori, chat toko, atau pengiriman sungguhan. Jangan masukkan data pribadi sensitif.
 
 ## 📄 Lisensi
 
-Dirilis di bawah [MIT License](LICENSE).
+MIT — lihat [LICENSE](LICENSE).
