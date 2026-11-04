@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox
+from math import cos, pi, sin
 
 
 PRODUCTS = [
@@ -17,6 +18,57 @@ PRODUCTS = [
 ]
 ORANGE = "#2878d0"
 GREEN = "#1769aa"
+BG = "#f5f8fc"
+PALE_BLUE = "#eaf3ff"
+TEXT = "#172b4d"
+
+
+class RoundButton(tk.Canvas):
+    def __init__(self, parent, text, command, bg=ORANGE, fg="white", width=110, height=34, font_size=9):
+        super().__init__(parent, width=width, height=height, bg=parent.cget("bg"),
+                         highlightthickness=0, bd=0, cursor="hand2")
+        self.command, self.color = command, bg
+        self.shape = self.create_polygon(self._points(width, height, 12), smooth=False,
+                                         fill=bg, outline=bg)
+        self.label = self.create_text(width / 2, height / 2, text=text, fill=fg,
+                                      font=("Arial", font_size, "bold"))
+        self.bind("<Button-1>", lambda _e: self.command())
+        self.tag_bind(self.label, "<Button-1>", lambda _e: self.command())
+        self.bind("<Enter>", lambda _e: self.itemconfigure(self.shape, fill="#1d65b5"))
+        self.bind("<Leave>", lambda _e: self.itemconfigure(self.shape, fill=self.color))
+
+    @staticmethod
+    def _points(width, height, radius):
+        radius = min(radius, width / 2, height / 2)
+        points = []
+        for cx, cy, start in ((width-radius, radius, -90),
+                              (width-radius, height-radius, 0),
+                              (radius, height-radius, 90),
+                              (radius, radius, 180)):
+            for step in range(9):
+                angle = (start + step * 90 / 8) * pi / 180
+                points.extend((cx + radius * cos(angle), cy + radius * sin(angle)))
+        return points
+
+
+class RoundedPanel(tk.Canvas):
+    def __init__(self, parent, bg="white", radius=14, padding=7):
+        super().__init__(parent, height=40, bg=parent.cget("bg"), highlightthickness=0, bd=0)
+        self.radius, self.padding = radius, padding
+        self.shape = self.create_polygon(0, 0, 1, 1, fill=bg, outline="")
+        self.content = tk.Frame(self, bg=bg)
+        self.window = self.create_window(padding, padding, window=self.content, anchor="nw")
+        self.content.bind("<Configure>", self._resize)
+        self.bind("<Configure>", self._resize)
+
+    def _resize(self, _event=None):
+        width = max(self.winfo_width(), 1)
+        height = max(self.content.winfo_reqheight() + 2 * self.padding, 1)
+        self.configure(height=height)
+        self.coords(self.shape, *RoundButton._points(width, height, self.radius))
+        self.coords(self.window, self.padding, self.padding)
+        self.itemconfigure(self.window, width=max(width - 2 * self.padding, 1))
+
 
 class ShopApp(tk.Tk):
     def __init__(self):
@@ -24,7 +76,7 @@ class ShopApp(tk.Tk):
         self.title("TokoKita — Belanja Online")
         self.geometry("390x844")
         self.minsize(350, 650)
-        self.configure(bg="white")
+        self.configure(bg=BG)
         self.cart = {}
         self.category = "Semua"
         self.query = tk.StringVar()
@@ -35,15 +87,16 @@ class ShopApp(tk.Tk):
     def _build(self):
         header = tk.Frame(self, bg="white", padx=12, pady=9)
         header.pack(fill="x")
-        searchbox = tk.Frame(header, bg="white", highlightbackground="#aaa", highlightthickness=1)
+        searchbox = tk.Frame(header, bg="#f5f7fa", highlightbackground="#dbe3ef", highlightthickness=1)
         searchbox.pack(side="left", fill="x", expand=True, ipady=4)
-        tk.Label(searchbox, text="⌕", bg="white", fg="#666", font=("Arial", 17)).pack(side="left", padx=(7, 2))
+        tk.Label(searchbox, text="⌕", bg="#f5f7fa", fg="#66758a", font=("Arial", 17)).pack(side="left", padx=(7, 2))
         search = tk.Entry(searchbox, textvariable=self.query, font=("Arial", 11),
-                          relief="flat", bd=0)
+                          relief="flat", bd=0, bg="#f5f7fa", fg=TEXT, insertbackground=ORANGE)
         search.pack(side="left", fill="x", expand=True, ipady=4)
         search.bind("<KeyRelease>", lambda _event: self._show_products())
-        tk.Button(searchbox, text="Cari", command=self._show_products, bg="white", fg="#111",
-                  relief="flat", font=("Arial", 11, "bold")).pack(side="right", padx=4)
+        tk.Button(searchbox, text="Cari", command=self._show_products, bg="#f5f7fa", fg=ORANGE,
+                  activebackground=PALE_BLUE, relief="flat", bd=0, cursor="hand2",
+                  font=("Arial", 10, "bold")).pack(side="right", padx=4)
         self.header_icons = []
         for icon in ("✉", "♧"):
             label = tk.Label(header, text=icon, bg="white", fg="#222", font=("Arial", 17))
@@ -64,16 +117,15 @@ class ShopApp(tk.Tk):
         promo = tk.Frame(self.content, bg="#dceeff", height=126)
         promo.pack(fill="x")
         promo.pack_propagate(False)
-        tk.Label(promo, text="TOKOKITA  •  KEBUTUHAN HARIAN\n\nBelanja kebutuhan pokok\nPraktis, langsung dari rumah", bg="#dceeff", fg="#111",
+        tk.Label(promo, text="TOKOKITA  •  KEBUTUHAN HARIAN\n\nBelanja kebutuhan pokok\nPraktis, langsung dari rumah", bg="#dceeff", fg=TEXT,
                  justify="left", font=("Arial", 13, "bold")).pack(side="left", padx=16)
         tk.Label(promo, text="🛒\n🏠", bg="#dceeff", fg=ORANGE, font=("Arial", 30, "bold")).pack(side="right", padx=20)
 
-        account = tk.Frame(self.content, bg="white", padx=15, pady=10)
+        account = tk.Frame(self.content, bg="white", padx=15, pady=12)
         account.pack(fill="x")
         tk.Label(account, text="🏠  Semua kebutuhan, satu toko\n      Sembako, kesehatan, dan rumah", bg="white",
-                 fg="#222", justify="left", font=("Arial", 10, "bold")).pack(side="left")
-        tk.Label(account, text="Siap antar", bg=GREEN, fg="white",
-                 font=("Arial", 9, "bold"), padx=10, pady=5).pack(side="right")
+                 fg=TEXT, justify="left", font=("Arial", 10, "bold")).pack(side="left")
+        RoundButton(account, "Siap antar", lambda: None, bg=GREEN, width=88, height=30, font_size=8).pack(side="right")
 
         categories = tk.Frame(self.content, bg="white", padx=8, pady=5)
         categories.pack(fill="x")
@@ -82,35 +134,39 @@ class ShopApp(tk.Tk):
                                       ("🏠", "Rumah Tangga", "Rumah Tangga")):
             item = tk.Frame(categories, bg="white")
             item.pack(side="left", expand=True, fill="x")
-            circle = tk.Canvas(item, width=43, height=43, bg="white", highlightthickness=0)
+            circle = tk.Canvas(item, width=50, height=50, bg="white", highlightthickness=0, cursor="hand2")
             circle.pack()
-            circle.create_oval(2, 2, 41, 41, fill="#e8f3ff", outline="#cfe4fa")
-            circle.create_text(21, 21, text=icon, fill=GREEN, font=("Arial", 10, "bold"))
+            circle.create_oval(2, 2, 47, 47, fill="#e8f3ff", outline="")
+            circle.create_text(25, 25, text=icon, fill=GREEN, font=("Arial", 12, "bold"))
             circle.bind("<Button-1>", lambda _e, c=category: self._set_category(c))
-            tk.Label(item, text=label, bg="white", fg="#222", font=("Arial", 7),
+            tk.Label(item, text=label, bg="white", fg=TEXT, font=("Arial", 7),
                      justify="center").pack(pady=(3, 0))
 
         self.cart_label = tk.Label(header, text="0", bg=ORANGE, fg="white", font=("Arial", 7, "bold"))
         self.cart_label.place(in_=self.cart_button, relx=1, rely=0, x=-2, y=1, anchor="ne")
-        cart_summary = tk.Frame(self.content, bg="#f0f6fc", padx=10, pady=5)
+        cart_summary = RoundedPanel(self.content, bg=PALE_BLUE, radius=14, padding=7)
         cart_summary.pack(fill="x", padx=8, pady=(5, 2))
-        self.cart_text = tk.Label(cart_summary, text="Keranjang masih kosong", bg="#f0f6fc", fg="#777", font=("Arial", 8))
+        self.cart_text = tk.Label(cart_summary.content, text="Keranjang masih kosong", bg=PALE_BLUE, fg="#66758a", font=("Arial", 8))
         self.cart_text.pack(side="left")
-        self.total_label = tk.Label(cart_summary, text="Rp0", bg="#f0f6fc", fg=ORANGE, font=("Arial", 8, "bold"))
+        self.total_label = tk.Label(cart_summary.content, text="Rp0", bg=PALE_BLUE, fg=ORANGE, font=("Arial", 8, "bold"))
         self.total_label.pack(side="right")
-        tk.Button(cart_summary, text="Checkout", command=self._checkout, bg=ORANGE, fg="white",
-                  relief="flat", font=("Arial", 8, "bold"), padx=5).pack(side="right", padx=5)
+        RoundButton(cart_summary.content, "Checkout", self._checkout, width=78, height=27, font_size=8).pack(side="right", padx=5)
 
         tabs = tk.Frame(self.content, bg="white", padx=10, pady=8)
         tabs.pack(fill="x")
+        self.tab_buttons = []
         for label, category in (("Semua", "Semua"), ("Sembako", "Sembako"), ("Kesehatan", "Obat & P3K"), ("Rumah", "Rumah Tangga")):
-            tk.Button(tabs, text=label, command=lambda c=category: self._set_category(c),
-                      bg="white", fg=GREEN if label == "For You" else "#222", relief="flat",
-                      font=("Arial", 9, "bold" if label == "For You" else "normal")).pack(side="left", expand=True)
+            button = tk.Button(tabs, text=label, command=lambda c=category: self._set_category(c),
+                               bg=PALE_BLUE if category == self.category else "white",
+                               fg=ORANGE if category == self.category else "#66758a",
+                               activebackground=PALE_BLUE, relief="flat", bd=0, cursor="hand2",
+                               padx=8, pady=5, font=("Arial", 8, "bold"))
+            button.pack(side="left", expand=True)
+            self.tab_buttons.append((button, category))
 
-        self.products_frame = tk.Frame(self.content, bg="white")
+        self.products_frame = tk.Frame(self.content, bg=BG)
         self.products_frame.pack(fill="x", padx=8)
-        self.bottom_nav = tk.Frame(self, bg="white", highlightbackground="#ddd", highlightthickness=1)
+        self.bottom_nav = tk.Frame(self, bg="white", highlightbackground="#e5ebf3", highlightthickness=1)
         self.bottom_nav.pack(fill="x", side="bottom")
         for icon, label in (("⬟", "Home"), ("▷", "Feed"), ("♡", "Mall"), ("▤", "Transaksi"), ("♙", "Akun")):
             tk.Button(self.bottom_nav, text=f"{icon}\n{label}", bg="white", fg=GREEN if label == "Home" else "#333",
@@ -130,32 +186,39 @@ class ShopApp(tk.Tk):
 
     def _set_category(self, category):
         self.category = category
+        for button, button_category in self.tab_buttons:
+            active = button_category == category
+            button.configure(bg=PALE_BLUE if active else "white",
+                             fg=ORANGE if active else "#66758a",
+                             font=("Arial", 8, "bold" if active else "normal"))
         self._show_products()
 
     def _show_products(self):
         for widget in self.products_frame.winfo_children():
             widget.destroy()
+        for col in range(3):
+            self.products_frame.grid_columnconfigure(col, weight=0, uniform="")
         self.products_frame.update_idletasks()
         matches = [p for p in PRODUCTS
                    if (self.category == "Semua" or p[1] == self.category)
                    and self.query.get().strip().lower() in p[0].lower()]
         if not matches:
-            tk.Label(self.products_frame, text="Produk tidak ditemukan", bg="#f5f5f5",
+            tk.Label(self.products_frame, text="Produk tidak ditemukan", bg=BG,
                      fg="#777", font=("Arial", 12)).pack(pady=30)
             return
         for index, product in enumerate(matches):
             row, col = divmod(index, self.product_columns)
             name, category, price, old_price, icon, rating, sold, benefit, location, discount = product
-            card = tk.Frame(self.products_frame, bg="white", padx=5, pady=5,
-                            highlightbackground="#e9e9e9", highlightthickness=1)
-            card.grid(row=row, column=col, sticky="nsew", padx=3, pady=4)
-            picture = tk.Frame(card, bg="#eef6ff", height=112)
+            panel = RoundedPanel(self.products_frame, bg="white", radius=15, padding=7)
+            card = panel.content
+            panel.grid(row=row, column=col, sticky="nsew", padx=3, pady=4)
+            picture = tk.Frame(card, bg="#f1f6fd", height=112)
             picture.pack(fill="x", pady=(0, 6))
             picture.pack_propagate(False)
             tk.Label(picture, text=f"-{discount}", bg=ORANGE, fg="white",
                      font=("Arial", 8, "bold"), padx=4).place(x=0, y=0)
-            tk.Label(picture, text=icon, bg="#eef6ff", font=("Segoe UI Emoji", 39)).place(relx=.5, rely=.51, anchor="center")
-            tk.Label(card, text=name, bg="white", fg="#222", anchor="w",
+            tk.Label(picture, text=icon, bg="#f1f6fd", font=("Segoe UI Emoji", 39)).place(relx=.5, rely=.51, anchor="center")
+            tk.Label(card, text=name, bg="white", fg=TEXT, anchor="w",
                      font=("Arial", 9, "bold")).pack(fill="x")
             tk.Label(card, text=f"Rp{price:,}".replace(",", "."), bg="white",
                      fg=ORANGE, anchor="w", font=("Arial", 11, "bold")).pack(fill="x", pady=2)
@@ -165,8 +228,8 @@ class ShopApp(tk.Tk):
                      anchor="w", font=("Arial", 7, "bold")).pack(fill="x", pady=(4, 2))
             tk.Label(card, text=f"📍 {location}", bg="white", fg="#777",
                      anchor="w", font=("Arial", 7)).pack(fill="x")
-            tk.Button(card, text="+ Keranjang", command=lambda p=product: self._add(p),
-                      bg=ORANGE, fg="white", relief="flat", font=("Arial", 8), pady=4).pack(fill="x", pady=(5, 0))
+            RoundButton(card, "+ Keranjang", lambda p=product: self._add(p),
+                        width=130, height=30, font_size=8).pack(fill="x", pady=(6, 0))
         for col in range(self.product_columns):
             self.products_frame.grid_columnconfigure(col, weight=1, uniform="product")
 
@@ -179,7 +242,7 @@ class ShopApp(tk.Tk):
         window.title("Keranjang belanja")
         window.geometry("340x430")
         window.configure(bg="white")
-        tk.Label(window, text="Keranjang Belanja", bg="white", fg="#222",
+        tk.Label(window, text="Keranjang Belanja", bg="white", fg=TEXT,
                  font=("Arial", 16, "bold")).pack(anchor="w", padx=16, pady=14)
         items = tk.Frame(window, bg="white")
         items.pack(fill="both", expand=True, padx=12)
@@ -194,10 +257,10 @@ class ShopApp(tk.Tk):
                 product = next(p for p in PRODUCTS if p[0] == name)
                 price = product[2]
                 total += price * qty
-                row = tk.Frame(items, bg="white", pady=7)
+                row = tk.Frame(items, bg="#f5f8fc", pady=7, padx=7)
                 row.pack(fill="x")
                 tk.Label(row, text=f"{product[4]}  {name}\nRp{price:,}".replace(",", "."),
-                         bg="white", fg="#333", justify="left", anchor="w",
+                         bg="#f5f8fc", fg=TEXT, justify="left", anchor="w",
                          font=("Arial", 9)).pack(side="left", fill="x", expand=True)
                 tk.Button(row, text="−", command=lambda n=name: change(n, -1), width=2).pack(side="left")
                 tk.Label(row, text=str(qty), bg="white", width=3).pack(side="left")
@@ -220,8 +283,7 @@ class ShopApp(tk.Tk):
             window.destroy()
             self._checkout()
 
-        tk.Button(window, text="Checkout", command=checkout, bg=ORANGE, fg="white",
-                  relief="flat", font=("Arial", 10, "bold"), pady=9).pack(fill="x", padx=16, pady=(0, 14))
+        RoundButton(window, "Checkout", checkout, width=300, height=38, font_size=10).pack(fill="x", padx=16, pady=(0, 14))
         refresh()
 
     def _update_cart(self):
