@@ -4,9 +4,10 @@
 
 ### Kebutuhan harian, tinggal klik.
 
-Web app belanja kebutuhan harian dengan tampilan mobile-first. Bisa dibuka di browser atau dipasang sebagai aplikasi melalui platform web-to-app.
+Web app belanja kebutuhan harian dengan tampilan mobile-first. Bisa dibuka di browser atau dipasang sebagai aplikasi melalui platform web-to-app. Styling memakai Tailwind CSS CDN dan CSS khusus untuk komponen antarmuka.
 
 ![HTML](https://img.shields.io/badge/HTML-CSS%20%2B%20JavaScript-2878d0)
+![Tailwind](https://img.shields.io/badge/Tailwind-CDN-38B2AC)
 ![Responsive](https://img.shields.io/badge/layout-responsive-1769aa)
 ![Status](https://img.shields.io/badge/status-prototype-blue)
 
@@ -31,7 +32,7 @@ TokoKita adalah prototipe marketplace untuk kebutuhan sehari-hari: sembako, obat
 
 ## 🚀 Menjalankan
 
-> TokoKita tidak membutuhkan instalasi paket atau server backend. Buka `index.html` langsung di browser.
+> TokoKita tidak membutuhkan instalasi paket atau server backend. Buka `index.html` langsung di browser. Koneksi internet diperlukan untuk memuat Tailwind CSS CDN.
 
 Untuk mengemas menjadi aplikasi, unggah/deploy file web ini ke layanan web-to-app milikmu. File utama aplikasi adalah `index.html`.
 
