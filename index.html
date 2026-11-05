@@ -9,42 +9,42 @@
     <link rel="stylesheet" href="stylesheet.css">
 </head>
 <body>
-<div class="app w-full min-w-0">
-    <header class="topbar">
-        <div class="brand">Toko<span>Kita</span></div>
-        <form class="search" id="searchForm" role="search"><span>âŒ•</span><input id="searchInput" placeholder="Cari beras, obat, kebutuhan rumah..." aria-label="Cari produk"><button type="submit">Cari</button></form>
-        <div class="icon-actions">
-            <button class="icon-btn" data-action="chat" aria-label="Chat">âœ‰</button>
-            <button class="icon-btn" data-action="notifications" aria-label="Notifikasi">â™§</button>
-            <button class="icon-btn" data-action="cart" aria-label="Keranjang">ðŸ›’<span id="cartBadge" class="badge" hidden>0</span></button>
+<div class="mx-auto min-h-screen w-full max-w-[1180px] min-w-0 overflow-x-clip bg-[#f5f8fc] pb-[78px]">
+    <header class="sticky top-0 z-10 flex h-[60px] w-full min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-[5px] bg-white px-2 shadow-sm sm:h-[70px] sm:gap-[18px] sm:px-[22px] sm:grid-cols-none">
+        <div class="shrink-0 whitespace-nowrap text-[0px] font-extrabold text-[#2878d0] after:content-['TK'] after:text-lg sm:text-[21px] sm:after:content-none">Toko<span>Kita</span></div>
+        <form class="flex h-[42px] w-full min-w-0 flex-1 items-center gap-1 overflow-hidden rounded-[14px] border border-[#e7edf5] bg-[#f7f9fc] py-0 pl-2 pr-[5px] sm:gap-2 sm:pl-[13px] sm:pr-2" id="searchForm" role="search"><span>âŒ•</span><input id="searchInput" placeholder="Cari beras, obat, kebutuhan rumah..." aria-label="Cari produk"><button type="submit">Cari</button></form>
+        <div class="flex shrink-0 gap-0 sm:gap-[6px]">
+            <button class="relative h-9 w-[30px] shrink-0 rounded-[13px] bg-transparent text-[17px] text-[#34445d] hover:bg-[#eaf3ff] sm:h-10 sm:w-10 sm:text-xl" data-action="chat" aria-label="Chat">âœ‰</button>
+            <button class="relative h-9 w-[30px] shrink-0 rounded-[13px] bg-transparent text-[17px] text-[#34445d] hover:bg-[#eaf3ff] sm:h-10 sm:w-10 sm:text-xl" data-action="notifications" aria-label="Notifikasi">â™§</button>
+            <button class="relative h-9 w-[30px] shrink-0 rounded-[13px] bg-transparent text-[17px] text-[#34445d] hover:bg-[#eaf3ff] sm:h-10 sm:w-10 sm:text-xl" data-action="cart" aria-label="Keranjang">ðŸ›’<span id="cartBadge" class="absolute right-0 top-0 grid h-[17px] min-w-[17px] place-items-center rounded-full bg-[#f04452] px-1 text-[10px] text-white" hidden>0</span></button>
         </div>
     </header>
     <main class="w-full min-w-0">
-        <section class="hero">
-            <div><div class="eyebrow">TOKOKITA Â· KEBUTUHAN HARIAN</div><h1>Belanja kebutuhan pokok, lebih praktis.</h1><p>Sembako, kesehatan, dan kebutuhan rumah dalam satu tempat.</p></div>
-            <div class="hero-art" aria-hidden="true">ðŸ›’</div>
+        <section class="relative flex min-h-[145px] w-full min-w-0 items-center justify-between gap-1 overflow-hidden rounded-[20px] bg-gradient-to-br from-[#dceeff] via-[#eaf4ff] to-[#c5e0ff] p-5 sm:min-h-[190px] sm:rounded-3xl sm:p-8">
+            <div class="z-[1] min-w-0 max-w-[calc(100%_-_62px)] sm:max-w-[80%]"><div class="text-[11px] font-extrabold tracking-[1.3px] text-[#1769aa]">TOKOKITA Â· KEBUTUHAN HARIAN</div><h1 class="my-2 max-w-[560px] break-words text-[23px] font-bold leading-[1.12] sm:text-[clamp(23px,4vw,36px)]">Belanja kebutuhan pokok, lebih praktis.</h1><p class="max-w-[240px] text-xs text-[#526984]">Sembako, kesehatan, dan kebutuhan rumah dalam satu tempat.</p></div>
+            <div class="absolute bottom-[26px] right-[10px] z-[1] text-[44px] drop-shadow-lg sm:relative sm:bottom-auto sm:right-auto sm:mr-[8%] sm:text-[92px]" aria-hidden="true">ðŸ›’</div>
         </section>
-        <section class="section">
-            <div class="section-head"><div><h2>Cari berdasarkan kategori</h2><p>Yang kamu butuhkan, tinggal pilih.</p></div></div>
-            <div id="categories" class="categories"></div>
-            <div class="quick-info"><span>ðŸ“¦</span><span><b>Belanja lebih praktis</b><br>Temukan kebutuhan harian dari rumah</span><span class="spacer"></span><span>ðŸ’™</span></div>
+        <section class="mt-5 w-full min-w-0 sm:mt-6">
+            <div class="mb-[13px]"><h2 class="text-base font-bold sm:text-lg">Cari berdasarkan kategori</h2><p class="mt-[5px] text-xs text-[#718096]">Yang kamu butuhkan, tinggal pilih.</p></div>
+            <div id="categories" class="grid w-full min-w-0 grid-cols-5 gap-[5px] sm:gap-[10px]"></div>
+            <div class="mt-4 flex w-full min-w-0 items-center gap-[7px] rounded-2xl border border-[#e7edf5] bg-white p-[10px] text-[10px] text-[#53647a] sm:gap-[10px] sm:p-[11px_14px] sm:text-xs"><span>ðŸ“¦</span><span><b>Belanja lebih praktis</b><br>Temukan kebutuhan harian dari rumah</span><span class="flex-1"></span><span>ðŸ’™</span></div>
         </section>
-        <section class="section">
-            <div class="section-head"><div><h2 id="productHeading">Pilihan buat kamu</h2><p id="productSubheading">Produk kebutuhan harian pilihan</p></div></div>
-            <div id="filters" class="filters"></div>
-            <div id="products" class="products"></div>
+        <section class="mt-5 w-full min-w-0 sm:mt-6">
+            <div class="mb-[13px]"><h2 class="text-base font-bold sm:text-lg" id="productHeading">Pilihan buat kamu</h2><p class="mt-[5px] text-xs text-[#718096]" id="productSubheading">Produk kebutuhan harian pilihan</p></div>
+            <div id="filters" class="mb-2 flex max-w-full gap-2 overflow-x-auto overscroll-x-contain px-px py-[2px] pb-[10px]"></div>
+            <div id="products" class="grid w-full min-w-0 grid-cols-2 gap-[9px] min-[601px]:grid-cols-3 min-[851px]:grid-cols-4 sm:gap-[14px]"></div>
         </section>
     </main>
-    <nav class="bottom-nav" aria-label="Navigasi utama">
-        <button class="nav-btn active" data-action="home"><span>âŒ‚</span>Home</button>
-        <button class="nav-btn" data-action="feed"><span>â–£</span>Feed</button>
-        <button class="nav-btn" data-action="mall"><span>â™¡</span>Favorit</button>
-        <button class="nav-btn" data-action="transactions"><span>â–¤</span>Pesanan</button>
-        <button class="nav-btn" data-action="account"><span>â™™</span>Akun</button>
+    <nav class="fixed bottom-0 left-0 z-10 flex h-16 w-full justify-around border-t border-[#e7edf5] bg-white shadow-[0_-5px_20px_#173b640c] sm:left-1/2 sm:h-[70px] sm:max-w-[1180px] sm:-translate-x-1/2" aria-label="Navigasi utama">
+        <button class="nav-btn active grid min-w-0 flex-1 place-content-center justify-items-center gap-[3px] bg-transparent text-[9px] text-[#2878d0] sm:text-[10px]" data-action="home"><span class="text-lg sm:text-xl">âŒ‚</span>Home</button>
+        <button class="nav-btn grid min-w-0 flex-1 place-content-center justify-items-center gap-[3px] bg-transparent text-[9px] text-[#8090a5] sm:text-[10px]" data-action="feed"><span>â–£</span>Feed</button>
+        <button class="nav-btn grid min-w-0 flex-1 place-content-center justify-items-center gap-[3px] bg-transparent text-[9px] text-[#8090a5] sm:text-[10px]" data-action="mall"><span>â™¡</span>Favorit</button>
+        <button class="nav-btn grid min-w-0 flex-1 place-content-center justify-items-center gap-[3px] bg-transparent text-[9px] text-[#8090a5] sm:text-[10px]" data-action="transactions"><span>â–¤</span>Pesanan</button>
+        <button class="nav-btn grid min-w-0 flex-1 place-content-center justify-items-center gap-[3px] bg-transparent text-[9px] text-[#8090a5] sm:text-[10px]" data-action="account"><span>â™™</span>Akun</button>
     </nav>
 </div>
-<div id="overlay" class="overlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><section class="modal"><header class="modal-head"><h2 id="modalTitle"></h2><button class="close" data-action="close" aria-label="Tutup">Ã—</button></header><div id="modalBody" class="modal-body"></div></section></div>
-<div id="toast" class="toast" role="status"></div>
+<div id="overlay" class="fixed inset-0 z-20 hidden items-center justify-center bg-[#10233d66] p-4" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><section class="max-h-[88vh] w-full max-w-[480px] overflow-auto rounded-[22px] bg-white shadow-2xl"><header class="sticky top-0 z-[1] flex items-center justify-between border-b border-[#e7edf5] bg-white px-5 py-[18px]"><h2 id="modalTitle"></h2><button class="grid h-[34px] w-[34px] place-items-center rounded-full bg-[#f1f5f9] text-lg text-[#52647b]" data-action="close" aria-label="Tutup">Ã—</button></header><div id="modalBody" class="p-5"></div></section></div>
+<div id="toast" class="pointer-events-none fixed bottom-[85px] left-1/2 z-30 -translate-x-1/2 translate-y-[15px] rounded-xl bg-[#172b4d] px-4 py-[11px] text-[13px] text-white opacity-0 shadow-lg transition-all" role="status"></div>
 <script>
     const PRODUCTS = [
         {name:"Beras Premium 5 kg",category:"Sembako",price:74800,old:89000,icon:"ðŸš",rating:"4.9",sold:"2,4 rb",tag:"Gratis ongkir",city:"Jakarta Barat",discount:"16%"},
