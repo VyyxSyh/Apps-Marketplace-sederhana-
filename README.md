@@ -1,15 +1,15 @@
 <div align="center">
 
-# 🛍️ TokoKita
+# 🛍️ TOKOKO
 
-### Kebutuhan harian, tinggal klik.
+### Marketplace sederhana, langsung di browser.
 
-Web app belanja kebutuhan harian dengan tampilan mobile-first. Bisa dibuka di browser atau dipasang sebagai aplikasi melalui platform web-to-app. Styling memakai Tailwind CSS CDN dan CSS khusus untuk komponen antarmuka.
+Web app marketplace yang mempertemukan penjual dan pembeli. Mobile-first, tanpa backend — cukup buka `index.html`. Data tersimpan di browser (`localStorage`). Styling memakai Tailwind CSS CDN dan CSS kustom.
 
 ![HTML](https://img.shields.io/badge/HTML-CSS%20%2B%20JavaScript-2878d0)
 ![Tailwind](https://img.shields.io/badge/Tailwind-CDN-38B2AC)
-![Responsive](https://img.shields.io/badge/layout-responsive-1769aa)
-![Status](https://img.shields.io/badge/status-prototype-blue)
+![Responsive](https://img.shields.io/badge/layout-mobile--first-1769aa)
+![Status](https://img.shields.io/badge/status-in%20development-orange)
 
 </div>
 
@@ -17,47 +17,64 @@ Web app belanja kebutuhan harian dengan tampilan mobile-first. Bisa dibuka di br
 
 ## ✨ Tentang
 
-TokoKita adalah prototipe marketplace untuk kebutuhan sehari-hari: sembako, obat dan P3K, pakaian, serta perlengkapan rumah. Antarmuka dirancang mobile-first dengan gaya flat, warna biru, dan kartu produk rounded.
+TOKOKO adalah prototipe marketplace untuk kebutuhan sehari-hari. Penjual bisa menambah dan mengelola produk, pembeli bisa mencari, membeli, dan melacak pesanan. Antarmuka dirancang mobile-first dengan gaya flat, warna biru, dan kartu produk rounded.
 
-## 🛒 Fitur
+## 🛒 Fitur (Target)
 
-- Cari produk dan filter berdasarkan kategori.
-- Lihat harga, diskon, rating, benefit, dan lokasi toko.
-- Tambahkan produk ke keranjang, ubah jumlah, hitung total otomatis.
-- Checkout demo dengan validasi nama dan alamat.
-- Simpan riwayat pesanan dan nama profil secara lokal di browser.
-- Tandai produk favorit.
-- Chat dan notifikasi memiliki tampilan demo.
-- Layout responsif untuk layar ponsel maupun desktop.
+- **Autentikasi simulasi** — register, login, logout dengan peran Pembeli atau Penjual.
+- **Katalog produk** — grid card dengan emoji, nama, harga, diskon, rating, dan lokasi toko.
+- **Detail produk** — info lengkap, pilih jumlah, tambah ke keranjang atau langsung beli.
+- **Pencarian, filter & sorting** — cari nama produk, filter kategori, urutkan harga.
+- **Keranjang belanja** — tambah/ubah jumlah/hapus item, total otomatis, persisten di browser.
+- **Checkout** — isi data pengiriman, pilih metode bayar (simulasi), buat pesanan.
+- **Riwayat pesanan** — daftar pesanan, status, detail, dan pembatalan.
+- **Manajemen produk (Penjual)** — tambah, edit, hapus produk milik sendiri.
+- **Layout responsif** — optimal di layar 360–430 px, tetap dapat dipakai di tablet dan desktop.
 
 ## 🚀 Menjalankan
 
-> TokoKita tidak membutuhkan instalasi paket atau server backend. Buka `index.html` langsung di browser. Koneksi internet diperlukan untuk memuat Tailwind CSS CDN.
-
-Untuk mengemas menjadi aplikasi, unggah/deploy file web ini ke layanan web-to-app milikmu. File utama aplikasi adalah `index.html`.
+> Tidak memerlukan Node.js, npm, atau server apapun. Buka `index.html` langsung di browser. Koneksi internet diperlukan untuk memuat Tailwind CSS CDN.
 
 ## 🧭 Alur penggunaan
 
-1. Cari produk atau pilih kategori.
-2. Tekan **+ Keranjang** untuk menambahkan barang.
-3. Buka ikon keranjang untuk mengatur jumlah dan melihat total.
-4. Tekan **Lanjut checkout**, isi nama dan alamat, lalu buat pesanan demo.
+**Pembeli:**
+
+1. Register/login sebagai Pembeli.
+2. Cari produk atau pilih kategori.
+3. Tekan **+ Keranjang** atau buka detail produk.
+4. Buka keranjang, atur jumlah, lihat total.
+5. Tekan **Checkout**, isi nama dan alamat, buat pesanan.
+6. Lihat riwayat pesanan di menu Pesanan.
+
+**Penjual:**
+
+1. Register/login sebagai Penjual.
+2. Tambah produk baru dari menu Produk Saya.
+3. Edit atau hapus produk milik sendiri.
 
 ## 🗂️ Struktur proyek
 
 ```text
 .
-├── index.html      # Markup utama web app
-├── script.js       # Logika interaksi dan data produk
-├── stylesheet.css  # Style kustom di luar Tailwind
-├── PRD.md          # Dokumen kebutuhan produk
-├── README.md       # Dokumentasi proyek
-└── LICENSE         # Lisensi MIT
+├── index.html         # Markup utama (SPA)
+├── store.js           # Data layer: baca/tulis localStorage, load seed
+├── app.js             # Logika UI, render, event handling
+├── stylesheet.css     # Style kustom di luar Tailwind
+├── data.json          # Seed data awal (produk, kategori, user contoh)
+├── PRD.md             # Dokumen kebutuhan produk
+├── README.md          # Dokumentasi proyek
+└── LICENSE            # Lisensi MIT
 ```
 
-## ⚠️ Catatan prototipe
+## 💾 Penyimpanan data
 
-Produk dan harga adalah data contoh. Keranjang hanya tersimpan selama halaman terbuka; profil dan riwayat demo tersimpan di `localStorage` browser. Tidak ada akun nyata, pembayaran, inventori, chat toko, atau pengiriman sungguhan. Jangan masukkan data pribadi sensitif.
+Semua data (user, produk, keranjang, pesanan) disimpan di **`localStorage`** browser. File `data.json` berisi data awal yang dimuat saat pertama kali dibuka atau saat data di-reset. Tidak ada database atau server — data bertahan selama browser tidak di-clear.
+
+## ⚠️ Catatan
+
+- Ini adalah **prototipe untuk demo dan pembelajaran**, bukan untuk produksi.
+- Password tersimpan sebagai teks biasa di localStorage — **jangan masukkan data pribadi sensitif**.
+- Produk, harga, dan transaksi adalah simulasi.
 
 ## 📄 Lisensi
 
