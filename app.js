@@ -6,7 +6,14 @@
   const cartForUser = userId => Store.carts.filter(item => item.userId === userId);
   const currentUser = () => Store.users.find(user => user.id === Store.session?.userId) || null;
   const sellerName = id => Store.users.find(user => user.id === id)?.name || "Penjual lokal";
-  const productStore = product => ({
+  const brandStore = {
+    Samsung: "Samsung Official Store",
+    Xiaomi: "Xiaomi Official Store",
+    OPPO: "OPPO Official Store",
+    vivo: "vivo Official Store",
+    realme: "realme Official Store"
+  };
+  const productStore = product => brandStore[product.brand] || ({
     "Handphone & Tablet": "Xiaomi Official Store",
     "Komputer & Laptop": "Lenovo Official Store",
     "Elektronik": "JBL Official Store",
@@ -58,8 +65,10 @@
         <div class="product-price text-emerald-800">${money(product.price)}${product.oldPrice ? `<span class="product-old-price">${money(product.oldPrice)}</span>` : ""}</div>
         ${product.oldPrice ? `<div class="product-promo">Hemat ${Math.max(1, Math.round((1 - product.price / product.oldPrice) * 100))}%</div>` : ""}
         <div class="product-rating" aria-label="Rating ${rating.toFixed(1)} dari 5, ${sold} terjual"><span class="text-amber-500" aria-hidden="true">★</span><span>${rating.toFixed(1)}</span><span class="rating-separator">·</span><span>${sold}+ terjual</span></div>
-        <div class="product-meta"><span>${safe(productStore(product))}</span><span>·</span><span>${safe(product.city || "")}</span></div>
-        <div class="product-meta">${stock ? `<span>Stok ${stock}</span>` : `<span class="product-soldout">Stok habis</span>`}</div>
+        <div class="product-foot">
+          <span class="product-store">${safe(productStore(product))}</span>
+          ${stock ? `<span class="stock-chip">Stok ${stock}</span>` : `<span class="stock-chip is-empty">Habis</span>`}
+        </div>
         <button class="product-add" type="button" data-add="${safe(product.id)}" ${stock ? "" : "disabled"}>${stock ? "Tambah ke keranjang" : "Stok habis"}</button>
       </div>
     </article>`;
@@ -289,7 +298,28 @@
     }
   }
 
-  function addToCart(productId, buyNow = false) {
+  function bumpBadge() {
+    const badge = $("cartBadge");
+    if (!badge) return;
+    badge.classList.remove("is-bumped");
+    void badge.offsetWidth;
+    badge.classList.add("is-bumped");
+  }
+
+  function animateButton(btn) {
+    if (!btn) return;
+    if (navigator.vibrate) { try { navigator.vibrate(15); } catch {} }
+    btn.classList.add("is-added");
+    const original = btn.textContent;
+    btn.textContent = "✓ Ditambahkan";
+    clearTimeout(btn._addTimer);
+    btn._addTimer = setTimeout(() => {
+      btn.textContent = original;
+      btn.classList.remove("is-added");
+    }, 900);
+  }
+
+  function addToCart(productId, buyNow = false, trigger = null) {
     const user = requireRole("buyer", buyNow ? "checkout" : `add:${productId}`);
     if (!user) return;
     const product = Store.products.find(item => item.id === productId);
@@ -299,7 +329,13 @@
     if (existing?.quantity >= product.stock) return toast("Jumlah sudah mencapai stok tersedia.");
     const next = existing ? items.map(item => item.productId === product.id ? { ...item, quantity: item.quantity + 1 } : item) : [...items, { userId: user.id, productId: product.id, name: product.name, price: product.price, quantity: 1 }];
     Store.carts = [...Store.carts.filter(item => item.userId !== user.id), ...next];
-    if (buyNow) { closeDialog(); showCheckout(); } else { render(); toast("Produk ditambahkan ke keranjang."); }
+    if (buyNow) { closeDialog(); showCheckout(); }
+    else {
+      setNav();
+      bumpBadge();
+      if (trigger) animateButton(trigger);
+      toast("Produk ditambahkan ke keranjang.");
+    }
   }
 
   document.addEventListener("submit", handleSubmit);
@@ -311,7 +347,7 @@
     const target = event.target.closest("[data-category], [data-add], [data-detail], [data-buy], [data-action], [data-auth-mode], [data-quantity], [data-cancel-order], [data-edit-product], [data-delete-product]");
     if (!target) return;
     if (target.dataset.category) { state.category = target.dataset.category; render(); return; }
-    if (target.dataset.add) { addToCart(target.dataset.add); return; }
+    if (target.dataset.add) { addToCart(target.dataset.add, false, target); return; }
     if (target.dataset.detail) { showDetail(target.dataset.detail); return; }
     if (target.dataset.buy) { addToCart(target.dataset.buy, true); return; }
     if (target.dataset.authMode) { showAuth(target.dataset.authMode, target.dataset.next || ""); return; }

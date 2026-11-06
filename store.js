@@ -57,16 +57,16 @@
   async function init() {
     if (localStorage.getItem(keys.users) && localStorage.getItem(keys.products)) {
       migrateCategories();
-      if (localStorage.getItem("tokoko-seed-version") !== "4") {
+      if (localStorage.getItem("tokoko-seed-version") !== "5") {
         try {
           const response = await fetch("data.json");
           if (response.ok) {
             const seed = await response.json();
-            const demoIds = new Set(["beras-premium", "minyak-goreng", "telur-ayam", "mi-instan", "paket-p3k", "vitamin-c", "kaos-katun", "deterjen-cair", "sabun-mandi", "alat-dapur", "smartphone-demo", "headphone-demo", "salad-demo", "skincare-demo", "laptop-demo", "buku-demo", "otomotif-demo", "sepatu-lari", "perlengkapan-bayi", "mouse-wireless"]);
+            const demoIds = new Set(["beras-premium", "minyak-goreng", "telur-ayam", "mi-instan", "paket-p3k", "vitamin-c", "kaos-katun", "deterjen-cair", "sabun-mandi", "alat-dapur", "smartphone-demo", "samsung-galaxy-a16-5g", "xiaomi-redmi-note-14-5g", "oppo-a3x", "vivo-y28", "realme-c75", "headphone-demo", "salad-demo", "skincare-demo", "laptop-demo", "buku-demo", "otomotif-demo", "sepatu-lari", "perlengkapan-bayi", "mouse-wireless"]);
             const custom = read(keys.products, []).filter(product => !demoIds.has(product.id));
             write(keys.products, [...seed.products, ...custom]);
             write(keys.categories, seed.categories);
-            localStorage.setItem("tokoko-seed-version", "4");
+            localStorage.setItem("tokoko-seed-version", "5");
           }
         } catch { /* Keep existing browser data when seed file is unavailable. */ }
       }
@@ -79,7 +79,7 @@
       Object.entries({ users: seed.users, products: seed.products, categories: seed.categories, carts: seed.carts, orders: seed.orders }).forEach(([name, value]) => {
         if (!localStorage.getItem(keys[name])) write(keys[name], value);
       });
-      write("tokoko-seed-version", "4");
+      write("tokoko-seed-version", "5");
     } catch {
       throw new Error("Data awal gagal dimuat. Jalankan lewat Live Server atau pastikan data.json tersedia.");
     }
