@@ -7,17 +7,20 @@
   const currentUser = () => Store.users.find(user => user.id === Store.session?.userId) || null;
   const sellerName = id => Store.users.find(user => user.id === id)?.name || "Penjual lokal";
   const productStore = product => ({
-    "Handphone & aksesori": "Xiaomi Official Store",
-    "Komputer & aksesori": "Lenovo Official Store",
-    "Elektronik & aksesori": "JBL Official Store",
-    "Fashion": "Erigo Official Store",
-    "Makanan & minuman": "Dapur Segar",
-    "Kesehatan & kecantikan": "Wardah Official Store",
-    "Rumah tangga": "Maspion Official Store",
-    "Buku & alat tulis": "Gramedia Official Store",
+    "Handphone & Tablet": "Xiaomi Official Store",
+    "Komputer & Laptop": "Lenovo Official Store",
+    "Elektronik": "JBL Official Store",
+    "Fashion Pria": "Erigo Official Store",
+    "Fashion Wanita": "Cottonink Official Store",
+    "Makanan & Minuman": "Dapur Segar",
+    "Kecantikan": "Wardah Official Store",
+    "Kesehatan": "Kimia Farma Official Store",
+    "Rumah Tangga": "Maspion Official Store",
+    "Buku & Alat Tulis": "Gramedia Official Store",
     "Otomotif": "Planet Ban Official Store",
-    "Olahraga & hobi": "Decathlon Official Store",
-    "Ibu & bayi": "MamyPoko Official Store"
+    "Olahraga": "Decathlon Official Store",
+    "Ibu & Bayi": "MamyPoko Official Store",
+    "Hobi & Koleksi": "Multi Toys Official Store"
   })[product.category] || sellerName(product.sellerId);
 
   function toast(message) {

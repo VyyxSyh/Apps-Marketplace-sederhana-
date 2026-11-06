@@ -11,10 +11,40 @@
     try { return JSON.parse(localStorage.getItem(key)) ?? fallback; }
     catch { return fallback; }
   };
-  const categoryMap = { "Sembako": "Makanan & minuman", "Obat & P3K": "Kesehatan & kecantikan", "Pakaian": "Fashion", "Rumah Tangga": "Rumah tangga" };
+  const categoryMap = {
+    "Sembako": "Makanan & Minuman",
+    "Obat & P3K": "Kesehatan",
+    "Pakaian": "Fashion Pria",
+    "Rumah tangga": "Rumah Tangga",
+    "Makanan & minuman": "Makanan & Minuman",
+    "Kesehatan & kecantikan": "Kecantikan",
+    "Olahraga & hobi": "Olahraga",
+    "Buku & alat tulis": "Buku & Alat Tulis",
+    "Komputer & aksesori": "Komputer & Laptop",
+    "Handphone & aksesori": "Handphone & Tablet",
+    "Elektronik & aksesori": "Elektronik",
+    "Fashion": "Fashion Pria",
+    "Ibu & bayi": "Ibu & Bayi"
+  };
   function migrateCategories() {
     const categories = read(keys.categories, []);
-    const nextCategories = ["Semua", "Elektronik & aksesori", "Fashion", "Rumah tangga", "Makanan & minuman", "Kesehatan & kecantikan", "Ibu & bayi", "Olahraga & hobi", "Otomotif", "Buku & alat tulis", "Komputer & aksesori", "Handphone & aksesori"];
+    const nextCategories = [
+      "Semua",
+      "Elektronik",
+      "Handphone & Tablet",
+      "Komputer & Laptop",
+      "Fashion Pria",
+      "Fashion Wanita",
+      "Ibu & Bayi",
+      "Kecantikan",
+      "Kesehatan",
+      "Makanan & Minuman",
+      "Rumah Tangga",
+      "Otomotif",
+      "Olahraga",
+      "Buku & Alat Tulis",
+      "Hobi & Koleksi"
+    ];
     if (JSON.stringify(categories) !== JSON.stringify(nextCategories)) write(keys.categories, nextCategories);
     const products = read(keys.products, []);
     const migrated = products.map(product => ({ ...product, category: categoryMap[product.category] || product.category, image: product.image || `src/images/${product.id}.jpg` }));
@@ -27,7 +57,7 @@
   async function init() {
     if (localStorage.getItem(keys.users) && localStorage.getItem(keys.products)) {
       migrateCategories();
-      if (localStorage.getItem("tokoko-seed-version") !== "3") {
+      if (localStorage.getItem("tokoko-seed-version") !== "4") {
         try {
           const response = await fetch("data.json");
           if (response.ok) {
@@ -36,7 +66,7 @@
             const custom = read(keys.products, []).filter(product => !demoIds.has(product.id));
             write(keys.products, [...seed.products, ...custom]);
             write(keys.categories, seed.categories);
-            localStorage.setItem("tokoko-seed-version", "3");
+            localStorage.setItem("tokoko-seed-version", "4");
           }
         } catch { /* Keep existing browser data when seed file is unavailable. */ }
       }
@@ -49,7 +79,7 @@
       Object.entries({ users: seed.users, products: seed.products, categories: seed.categories, carts: seed.carts, orders: seed.orders }).forEach(([name, value]) => {
         if (!localStorage.getItem(keys[name])) write(keys[name], value);
       });
-      write("tokoko-seed-version", "3");
+      write("tokoko-seed-version", "4");
     } catch {
       throw new Error("Data awal gagal dimuat. Jalankan lewat Live Server atau pastikan data.json tersedia.");
     }
