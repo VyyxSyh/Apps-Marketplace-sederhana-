@@ -47,10 +47,12 @@ Untuk mengemas menjadi aplikasi, unggah/deploy file web ini ke layanan web-to-ap
 
 ```text
 .
-├── index.html   # Web app: markup, style, dan interaksi
-├── toko_gui.py  # Versi GUI Python/Tkinter sebelumnya
-├── README.md    # Dokumentasi proyek
-└── LICENSE      # Lisensi MIT
+├── index.html      # Markup utama web app
+├── script.js       # Logika interaksi dan data produk
+├── stylesheet.css  # Style kustom di luar Tailwind
+├── PRD.md          # Dokumen kebutuhan produk
+├── README.md       # Dokumentasi proyek
+└── LICENSE         # Lisensi MIT
 ```
 
 ## ⚠️ Catatan prototipe
