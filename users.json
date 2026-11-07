@@ -1,0 +1,19 @@
+{  
+  "seller" : [
+    {
+      "id": "seller-demo",
+      "name": "Toko Contoh",
+      "email": "penjual@tokoko.test",
+      "password": "tokoko123"
+    }
+  ],
+
+  "buyer" : [
+    {
+      "id": "buyer-demo",
+      "name": "Pembeli Demo",
+      "email": "pembeli@tokoko.test",
+      "password": "tokoko123"
+    }
+  ]
+}

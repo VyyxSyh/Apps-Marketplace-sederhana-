@@ -1,20 +1,4 @@
 ﻿{
-  "users": [
-    {
-      "id": "seller-demo",
-      "name": "Toko Contoh",
-      "email": "penjual@tokoko.test",
-      "password": "tokoko123",
-      "role": "seller"
-    },
-    {
-      "id": "buyer-demo",
-      "name": "Pembeli Demo",
-      "email": "pembeli@tokoko.test",
-      "password": "tokoko123",
-      "role": "buyer"
-    }
-  ],
   "categories": [
     "Semua",
     "Elektronik",
