@@ -57,7 +57,7 @@
     const rating = Number(String(product.rating ?? "4,8").replace(",", "."));
     const sold = Number(product.sold) || 0;
     return `<article class="min-w-0 overflow-hidden rounded-[18px] border border-[#d6d3d1] bg-[#fffaf2] shadow-[0_5px_18px_#242a2010]">
-      <button class="relative grid aspect-[1.13] w-full place-items-center overflow-hidden border-0 bg-[#eeeadc] after:absolute after:right-[-19px] after:bottom-[-32px] after:size-[82px] after:rounded-full after:border after:border-[#d2ceb9] after:content-[''] max-[520px]:aspect-square min-[768px]:aspect-[1.25]" type="button" data-detail="${safe(product.id)}" aria-label="Lihat detail ${safe(product.name)}">
+      <button class="relative grid aspect-[1.13] w-full place-items-center overflow-hidden border-0 bg-[#eeeadc] max-[520px]:aspect-square min-[768px]:aspect-[1.25]" type="button" data-detail="${safe(product.id)}" aria-label="Lihat detail ${safe(product.name)}">
         <span class="absolute top-[9px] left-[9px] max-w-[calc(100%-18px)] overflow-hidden rounded-[7px] border border-[#ffffff80] bg-[#fffdf0cc] px-2 py-[5px] text-[10px] font-extrabold text-[#47533f] text-ellipsis whitespace-nowrap backdrop-blur-[4px]">${safe(product.category)}</span>${product.image ? `<img class="h-full w-full object-cover" src="${safe(product.image)}" alt="${safe(product.name)}" width="640" height="560" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.hidden=false">` : ""}<span class="text-[clamp(42px,13vw,74px)] saturate-[.82]" aria-hidden="true" ${product.image ? "hidden" : ""}>${safe(product.icon || "□")}</span>
       </button>
       <div class="min-w-0 p-[9px] min-[768px]:p-[13px]">
@@ -158,9 +158,21 @@
   function showDetail(id) {
     const product = Store.products.find(item => item.id === id);
     if (!product) return toast("Produk tidak ditemukan.");
-    openDialog(product.name, `<div class="detail-art">${product.image ? `<img class="detail-image" src="${safe(product.image)}" alt="${safe(product.name)}" width="640" height="560" onerror="this.hidden=true;this.nextElementSibling.hidden=false">` : ""}<span aria-hidden="true" ${product.image ? "hidden" : ""}>${safe(product.icon || "□")}</span></div><p class="product-category">${safe(product.category)}</p><div class="detail-price">${money(product.price)}</div>
-      <p class="detail-copy">${safe(product.description || "Belum ada deskripsi produk.")}</p><p class="detail-copy">Penjual: ${safe(sellerName(product.sellerId))} · Stok ${Number(product.stock) || 0}</p>
-      <div class="form-actions"><button class="primary-button active:brightness-[.88] disabled:cursor-not-allowed" type="button" data-add="${safe(product.id)}" ${product.stock > 0 ? "" : "disabled"}>Tambah ke keranjang</button><button class="secondary-button active:brightness-[.88] disabled:cursor-not-allowed" type="button" data-buy="${safe(product.id)}" ${product.stock > 0 ? "" : "disabled"}>Beli sekarang</button></div>`, "detail");
+    const stock = Number(product.stock) || 0;
+    const rating = Number(String(product.rating ?? "").replace(",", "."));
+    const sold = Number(product.sold) || 0;
+    const discount = product.oldPrice ? Math.round((1 - product.price / product.oldPrice) * 100) : 0;
+    openDialog(product.name, `<div class="detail-layout">
+      <div class="detail-art">${product.image ? `<img class="detail-image" src="${safe(product.image)}" alt="${safe(product.name)}" width="640" height="560" onerror="this.hidden=true;this.nextElementSibling.hidden=false">` : ""}<span aria-hidden="true" ${product.image ? "hidden" : ""}>${safe(product.icon || "□")}</span></div>
+      <div class="detail-info">
+        <h3 class="detail-name">${safe(product.name)}</h3>
+        <div class="detail-price-block"><div class="detail-price">${money(product.price)}</div>${product.oldPrice ? `<div class="detail-old-price"><span class="detail-old-amount">${money(product.oldPrice)}</span><span class="detail-discount">-${discount}%</span></div>` : ""}</div>
+        <div class="detail-stats">${Number.isFinite(rating) && rating > 0 ? `<span class="detail-rating"><span aria-hidden="true">★</span> ${rating.toFixed(1)}</span>` : ""}${sold ? `<span>${sold}+ terjual</span>` : ""}${stock ? `<span>Stok ${stock}</span>` : `<span class="detail-out-of-stock">Stok habis</span>`}</div>
+        <section class="detail-section"><h4>Deskripsi produk</h4><p class="detail-copy">${safe(product.description || "Deskripsi belum tersedia.")}</p></section>
+        <section class="detail-seller"><div class="detail-seller-mark" aria-hidden="true">${safe((sellerName(product.sellerId)[0] || "T").toUpperCase())}</div><div class="detail-seller-copy"><strong>${safe(sellerName(product.sellerId))}</strong><span>${safe(product.city || "Lokasi belum tersedia")}</span></div></section>
+      </div>
+      <div class="detail-actions"><button class="secondary-button active:brightness-[.88] disabled:cursor-not-allowed" type="button" data-add="${safe(product.id)}" ${stock > 0 ? "" : "disabled"}>Tambah ke keranjang</button><button class="primary-button active:brightness-[.88] disabled:cursor-not-allowed" type="button" data-buy="${safe(product.id)}" ${stock > 0 ? "" : "disabled"}>Beli sekarang</button></div>
+    </div>`, "detail");
   }
 
   function showCheckout(buyId = "") {
