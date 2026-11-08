@@ -26,6 +26,7 @@
     "Fashion": "Fashion Pria",
     "Ibu & bayi": "Ibu & Bayi"
   };
+  let fileUsers = [];
   function migrateCategories() {
     const categories = read(keys.categories, []);
     const nextCategories = [
@@ -55,6 +56,14 @@
     catch { throw new Error("Penyimpanan browser penuh atau tidak tersedia. Kosongkan ruang, lalu muat ulang aplikasi."); }
   };
   async function init() {
+    const usersResponse = await fetch("users.json");
+    if (!usersResponse.ok) throw new Error("Data akun gagal dimuat. Pastikan users.json tersedia.");
+    const userData = await usersResponse.json();
+    fileUsers = [
+      ...(Array.isArray(userData.buyer) ? userData.buyer.map(user => ({ ...user, role: "buyer" })) : []),
+      ...(Array.isArray(userData.seller) ? userData.seller.map(user => ({ ...user, role: "seller" })) : [])
+    ];
+    if (fileUsers.some(user => !user.id || !user.email || !user.password || !["buyer", "seller"].includes(user.role))) throw new Error("Format users.json tidak valid.");
     if (localStorage.getItem(keys.users) && localStorage.getItem(keys.products)) {
       migrateCategories();
       if (localStorage.getItem("tokoko-seed-version") !== "5") {
@@ -87,7 +96,10 @@
 
   window.Store = {
     init,
-    get users() { return read(keys.users, []); },
+    get users() {
+      const localUsers = read(keys.users, []);
+      return [...fileUsers, ...localUsers.filter(user => !fileUsers.some(seed => seed.email.toLowerCase() === user.email.toLowerCase()))];
+    },
     set users(value) { write(keys.users, value); },
     get products() { return read(keys.products, []); },
     set products(value) { write(keys.products, value); },
