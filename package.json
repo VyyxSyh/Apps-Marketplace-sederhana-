@@ -1,0 +1,9 @@
+{
+  "devDependencies": {
+    "tailwindcss": "^4.3.5"
+  },
+  "scripts": {
+    "build:css": "tailwindcss -i src/tailwind.css -o dist/tailwind.css --minify --cwd ."
+  },
+  "private": true
+}
