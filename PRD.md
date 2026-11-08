@@ -173,7 +173,7 @@ Aplikasi dibangun dengan **HTML, Tailwind CSS (CDN), dan Vanilla JavaScript**. S
 ## 8. Tech Stack
 
 - **HTML** — markup
-- **CSS** — styling
+- **Tailwind CSS (CDN)** — styling, pendekatan mobile-first (`md:`/`lg:` untuk layar lebih besar)
 - **Vanilla JavaScript** — logika aplikasi
 - **localStorage** — penyimpan data persisten di browser
 - **data.json** — seed data awal (produk, kategori, user contoh)
