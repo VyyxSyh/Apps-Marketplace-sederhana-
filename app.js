@@ -49,27 +49,27 @@
   }
 
   function renderCategories() {
-    $("categories").innerHTML = Store.categories.map(name => `<button class="category-chip ${state.category === name ? "is-active" : ""}" type="button" data-category="${safe(name)}" aria-pressed="${state.category === name}">${safe(name)}</button>`).join("");
+    $("categories").innerHTML = Store.categories.map(name => `<button class="min-h-11 shrink-0 snap-start rounded-[10px] border px-3 py-[7px] text-[13px] font-[750] transition-colors hover:border-[#9eaa91] ${state.category === name ? "border-(--green) bg-(--green) text-white" : "border-(--line) bg-(--surface) text-[#384337]"}" type="button" data-category="${safe(name)}" aria-pressed="${state.category === name}">${safe(name)}</button>`).join("");
   }
 
   function productCard(product) {
     const stock = Number(product.stock) || 0;
     const rating = Number(String(product.rating ?? "4,8").replace(",", "."));
     const sold = Number(product.sold) || 0;
-    return `<article class="product-card">
-      <button class="product-art w-full border-0" type="button" data-detail="${safe(product.id)}" aria-label="Lihat detail ${safe(product.name)}">
-        <span class="product-category">${safe(product.category)}</span>${product.image ? `<img class="product-image" src="${safe(product.image)}" alt="${safe(product.name)}" width="640" height="560" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.hidden=false">` : ""}<span class="product-emoji" aria-hidden="true" ${product.image ? "hidden" : ""}>${safe(product.icon || "□")}</span>
+    return `<article class="min-w-0 overflow-hidden rounded-[18px] border border-[#d6d3d1] bg-[#fffaf2] shadow-[0_5px_18px_#242a2010]">
+      <button class="relative grid aspect-[1.13] w-full place-items-center overflow-hidden border-0 bg-[#eeeadc] after:absolute after:right-[-19px] after:bottom-[-32px] after:size-[82px] after:rounded-full after:border after:border-[#d2ceb9] after:content-[''] max-[520px]:aspect-square min-[768px]:aspect-[1.25]" type="button" data-detail="${safe(product.id)}" aria-label="Lihat detail ${safe(product.name)}">
+        <span class="absolute top-[9px] left-[9px] max-w-[calc(100%-18px)] overflow-hidden rounded-[7px] border border-[#ffffff80] bg-[#fffdf0cc] px-2 py-[5px] text-[10px] font-extrabold text-[#47533f] text-ellipsis whitespace-nowrap backdrop-blur-[4px]">${safe(product.category)}</span>${product.image ? `<img class="h-full w-full object-cover" src="${safe(product.image)}" alt="${safe(product.name)}" width="640" height="560" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.hidden=false">` : ""}<span class="text-[clamp(42px,13vw,74px)] saturate-[.82]" aria-hidden="true" ${product.image ? "hidden" : ""}>${safe(product.icon || "□")}</span>
       </button>
-      <div class="product-info">
-        <button class="product-name w-full border-0 bg-transparent p-0 text-left" type="button" data-detail="${safe(product.id)}">${safe(product.name)}</button>
-        <div class="product-price text-emerald-800">${money(product.price)}${product.oldPrice ? `<span class="product-old-price">${money(product.oldPrice)}</span>` : ""}</div>
-        ${product.oldPrice ? `<div class="product-promo">Hemat ${Math.max(1, Math.round((1 - product.price / product.oldPrice) * 100))}%</div>` : ""}
-        <div class="product-rating" aria-label="Rating ${rating.toFixed(1)} dari 5, ${sold} terjual"><span class="text-amber-500" aria-hidden="true">★</span><span>${rating.toFixed(1)}</span><span class="rating-separator">·</span><span>${sold}+ terjual</span></div>
-        <div class="product-foot">
-          <span class="product-store">${safe(productStore(product))}</span>
-          ${stock ? `<span class="stock-chip">Stok ${stock}</span>` : `<span class="stock-chip is-empty">Habis</span>`}
+      <div class="min-w-0 p-[9px] min-[768px]:p-[13px]">
+        <button class="line-clamp-2 flex min-h-11 w-full border-0 bg-transparent p-0 text-left text-[12px] leading-[1.38] font-[750] text-(--ink) min-[768px]:text-sm" type="button" data-detail="${safe(product.id)}">${safe(product.name)}</button>
+        <div class="mt-1.5 flex flex-wrap items-baseline gap-1 text-[14px] font-black tracking-[-0.03em] text-(--green-deep) md:text-base">${money(product.price)}${product.oldPrice ? `<span class="ml-1 text-[11px] font-normal text-(--muted) line-through max-[520px]:mt-0.5 max-[520px]:ml-0 max-[520px]:block">${money(product.oldPrice)}</span>` : ""}</div>
+        ${product.oldPrice ? `<div class="mt-[5px] text-[11px] font-extrabold text-[#e56b12]">Hemat ${Math.max(1, Math.round((1 - product.price / product.oldPrice) * 100))}%</div>` : ""}
+        <div class="mt-[5px] flex items-center gap-[5px] text-xs text-[#62685c]" aria-label="Rating ${rating.toFixed(1)} dari 5, ${sold} terjual"><span class="text-[17px] leading-none text-amber-500" aria-hidden="true">★</span><span>${rating.toFixed(1)}</span><span class="text-[#62685c]">·</span><span>${sold}+ terjual</span></div>
+        <div class="mt-[7px] flex min-w-0 items-center gap-1.5">
+          <span class="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap text-[11px] font-bold text-(--muted)">${safe(productStore(product))}</span>
+          ${stock ? `<span class="ml-auto shrink-0 rounded-full bg-[#e7efe6] px-[7px] py-0.5 text-[10px] font-extrabold whitespace-nowrap text-(--green-deep)">Stok ${stock}</span>` : `<span class="ml-auto shrink-0 rounded-full bg-[#f6e4df] px-[7px] py-0.5 text-[10px] font-extrabold whitespace-nowrap text-[#a03224]">Habis</span>`}
         </div>
-      <button class="product-add active:brightness-[.88] disabled:cursor-not-allowed disabled:border-[#c5c5bb] disabled:text-(--muted)" type="button" data-add="${safe(product.id)}" ${stock ? "" : "disabled"}>${stock ? "Tambah ke keranjang" : "Stok habis"}</button>
+      <button class="relative mt-2.5 min-h-11 w-full rounded-[9px] border border-(--green) bg-transparent text-xs font-[850] text-(--green) [touch-action:manipulation] [user-select:none] transition-[transform,background-color,color,border-color,box-shadow] duration-150 hover:not-disabled:not-[.is-added]:bg-(--green) hover:not-disabled:not-[.is-added]:text-white active:enabled:scale-[.95] active:enabled:bg-(--green-deep) active:enabled:text-white active:brightness-[.88] disabled:cursor-not-allowed disabled:border-[#c5c5bb] disabled:text-(--muted)" type="button" data-add="${safe(product.id)}" ${stock ? "" : "disabled"}>${stock ? "Tambah ke keranjang" : "Stok habis"}</button>
       </div>
     </article>`;
   }
