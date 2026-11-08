@@ -30,7 +30,7 @@ TOKOKO adalah prototipe marketplace untuk kebutuhan sehari-hari. Penjual bisa me
 
 ## 🚀 Menjalankan
 
-> Aplikasi memakai Tailwind CSS yang sudah dibangun ke `dist/tailwind.css`; file tersebut dimuat langsung oleh halaman dan harus disertakan saat konversi Web-to-APK. Untuk memuat `data.json`, gunakan static server seperti Live Server VS Code.
+> Jalankan `npm install` lalu `npm run build:css` setelah mengubah utility Tailwind. Halaman memuat hasil build `dist/tailwind.css`; sertakan file itu saat konversi Web-to-APK. Untuk memuat `data.json`, gunakan static server seperti Live Server VS Code.
 
 ## 🧭 Alur penggunaan
 

@@ -15,15 +15,15 @@
   <script src="app.js" defer></script>
 </head>
 <body>
-  <div class="app-shell">
-    <header class="site-header">
-      <div class="header-inner">
-        <a class="brand shrink-0" href="#home" aria-label="TOKOKO, beranda">TOKOKO</a>
-        <form id="searchForm" class="search-box" role="search">
+  <div class="app-shell mx-auto w-full max-w-[1180px] pb-[calc(78px_+_env(safe-area-inset-bottom))]">
+    <header class="site-header sticky top-0 z-20 border-b border-[var(--line)] bg-[var(--paper)] px-3 py-2.5 sm:px-5">
+      <div class="header-inner mx-auto flex w-full min-w-0 max-w-[1080px] items-center gap-[7px] sm:gap-[14px]">
+        <a class="brand shrink-0 whitespace-nowrap text-[17px] sm:text-[19px]" href="#home" aria-label="TOKOKO, beranda">TOKOKO</a>
+        <form id="searchForm" class="search-box flex min-h-[46px] min-w-0 flex-1 items-center gap-1.5 rounded-[11px] border border-[var(--line)] bg-[var(--surface)] py-0 pl-2 pr-[5px] sm:gap-[9px] sm:pl-3" role="search">
           <label class="sr-only" for="searchInput">Cari produk</label>
           <span aria-hidden="true" class="search-mark">Cari</span>
           <input id="searchInput" type="search" placeholder="Cari kebutuhanmu" autocomplete="off">
-          <button class="search-submit" type="submit">Cari</button>
+          <button class="search-submit min-h-11 shrink-0 rounded-[9px] px-2.5 text-[13px] sm:px-[14px]" type="submit">Cari</button>
         </form>
         <button class="header-cart" type="button" data-action="cart" aria-label="Buka keranjang">
           <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 4h2l2.1 10.1a2 2 0 0 0 2 1.6h8.4a2 2 0 0 0 1.9-1.4L21 8H6M10 20h.01M18 20h.01"/></svg>
@@ -33,27 +33,27 @@
     </header>
 
     <main id="mainContent">
-      <section id="home" class="market-intro" aria-labelledby="pageTitle">
-        <div>
+      <section id="home" class="market-intro mt-4 flex min-h-[176px] items-center justify-between gap-[14px] rounded-[18px_18px_18px_6px] px-[15px] py-[18px] max-[520px]:overflow-hidden min-[840px]:mt-[26px] min-[840px]:min-h-[250px] min-[840px]:px-[42px] min-[840px]:py-[38px]" aria-labelledby="pageTitle">
+        <div class="max-w-[620px] min-w-0">
           <p class="intro-kicker">Belanja berbagai kebutuhan</p>
-          <h1 id="pageTitle">Cari barang, lalu Checkout.</h1>
+          <h1 id="pageTitle" class="m-0 max-w-[520px] font-[family:var(--font-heading)] text-[clamp(27px,8vw,36px)] leading-[1.04] tracking-[-0.055em] min-[840px]:text-[clamp(29px,6vw,46px)]">Cari barang, lalu Checkout.</h1>
           <p class="intro-copy">Jelajahi produk dari berbagai kategori, bandingkan pilihan, lalu pesan dari satu tempat.</p>
         </div>
-        <div class="market-stamp" aria-hidden="true"><span>Pilih</span><strong>barang</strong></div>
+        <div class="market-stamp hidden h-[62px] w-[62px] shrink-0 rotate-[7deg] flex-col items-center justify-center rounded-full min-[400px]:flex min-[840px]:h-[122px] min-[840px]:w-[122px]" aria-hidden="true"><span>Pilih</span><strong>barang</strong></div>
       </section>
 
-      <section class="catalog-section" aria-labelledby="categoryTitle">
-        <div class="section-heading">
-          <div><h2 id="categoryTitle">Kategori</h2><p>Pilih kategori untuk menyaring produk.</p></div>
+      <section class="catalog-section mt-[23px] sm:mt-[30px]" aria-labelledby="categoryTitle">
+        <div class="section-heading mb-[13px] flex items-end justify-between gap-3 max-[520px]:items-start">
+          <div class="min-w-0"><h2 class="m-0 font-[family:var(--font-heading)] text-[19px] font-bold tracking-[-0.04em]" id="categoryTitle">Kategori</h2><p class="mt-1 max-w-[220px] text-[13px] text-[var(--muted)]">Pilih kategori untuk menyaring produk.</p></div>
         </div>
         <div id="categories" class="category-list" aria-label="Kategori produk"></div>
       </section>
 
-      <section id="catalog" class="catalog-section products-section" aria-labelledby="productHeading">
-        <div class="section-heading product-heading-row">
-          <div><h2 id="productHeading">Semua produk</h2><p id="productSubheading">Produk dari berbagai toko</p></div>
-          <label class="sort-control">Urutkan
-            <select id="sortSelect" aria-label="Urutkan produk">
+      <section id="catalog" class="catalog-section products-section mt-[22px] sm:mt-[33px]" aria-labelledby="productHeading">
+        <div class="section-heading product-heading-row mb-[13px] flex items-end justify-between gap-3 max-[520px]:items-start">
+          <div class="min-w-0"><h2 class="m-0 font-[family:var(--font-heading)] text-[19px] font-bold tracking-[-0.04em]" id="productHeading">Semua produk</h2><p id="productSubheading" class="mt-1 max-w-[220px] text-[13px] text-[var(--muted)]">Produk dari berbagai toko</p></div>
+          <label class="sort-control flex shrink-0 items-center gap-[7px] whitespace-nowrap text-xs text-[var(--muted)] max-[520px]:flex-col max-[520px]:items-end max-[520px]:gap-[3px]">Urutkan
+            <select class="min-h-10 max-w-[132px] rounded-[9px] border border-[var(--line)] bg-[var(--surface)] px-2 text-xs text-[var(--ink)]" id="sortSelect" aria-label="Urutkan produk">
               <option value="featured">Pilihan</option>
               <option value="price-asc">Harga terendah</option>
               <option value="price-desc">Harga tertinggi</option>
@@ -62,33 +62,33 @@
             </select>
           </label>
         </div>
-        <div id="products" class="product-grid" aria-live="polite"></div>
+        <div id="products" class="product-grid grid grid-cols-2 gap-2.5 min-[840px]:grid-cols-3 min-[840px]:gap-4 min-[1120px]:grid-cols-4" aria-live="polite"></div>
       </section>
     </main>
 
-    <nav class="bottom-nav" aria-label="Navigasi utama">
-      <a class="nav-item is-active" href="#home" data-nav="home">
+    <nav class="bottom-nav fixed inset-x-0 bottom-0 z-20 flex min-h-[calc(64px_+_env(safe-area-inset-bottom))] justify-center border-t border-[var(--line)] bg-[var(--surface)] px-2 py-[5px] pb-[calc(5px_+_env(safe-area-inset-bottom))] min-[840px]:left-1/2 min-[840px]:w-full min-[840px]:max-w-[1180px] min-[840px]:-translate-x-1/2" aria-label="Navigasi utama">
+      <a class="nav-item is-active flex min-h-12 min-w-[70px] flex-1 flex-col items-center justify-center gap-0.5 text-[10px] font-bold min-[840px]:max-w-[150px] min-[840px]:flex-row min-[840px]:gap-2 min-[840px]:text-xs" href="#home" data-nav="home">
         <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg><span>Beranda</span>
       </a>
-      <a class="nav-item" href="#catalog" data-nav="catalog">
+      <a class="nav-item flex min-h-12 min-w-[70px] flex-1 flex-col items-center justify-center gap-0.5 text-[10px] font-bold min-[840px]:max-w-[150px] min-[840px]:flex-row min-[840px]:gap-2 min-[840px]:text-xs" href="#catalog" data-nav="catalog">
         <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 5h7v7H4zM14 5h6v7h-6zM4 15h7v5H4zM14 15h6v5h-6z"/></svg><span>Katalog</span>
       </a>
-      <button class="nav-item" type="button" data-action="seller-products" data-seller-nav hidden>
+      <button class="nav-item flex min-h-12 min-w-[70px] flex-1 flex-col items-center justify-center gap-0.5 text-[10px] font-bold min-[840px]:max-w-[150px] min-[840px]:flex-row min-[840px]:gap-2 min-[840px]:text-xs" type="button" data-action="seller-products" data-seller-nav hidden>
         <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 7h16v14H4zM8 7V4h8v3M8 12h8M8 16h5"/></svg><span>Produk saya</span>
       </button>
-      <button class="nav-item" type="button" data-action="orders" data-buyer-nav>
+      <button class="nav-item flex min-h-12 min-w-[70px] flex-1 flex-col items-center justify-center gap-0.5 text-[10px] font-bold min-[840px]:max-w-[150px] min-[840px]:flex-row min-[840px]:gap-2 min-[840px]:text-xs" type="button" data-action="orders" data-buyer-nav>
         <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 3h14v18l-3-2-4 2-4-2-3 2zM8 8h8M8 12h8M8 16h4"/></svg><span>Pesanan</span>
       </button>
-      <button class="nav-item" type="button" data-action="account">
+      <button class="nav-item flex min-h-12 min-w-[70px] flex-1 flex-col items-center justify-center gap-0.5 text-[10px] font-bold min-[840px]:max-w-[150px] min-[840px]:flex-row min-[840px]:gap-2 min-[840px]:text-xs" type="button" data-action="account">
         <svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span>Akun</span>
       </button>
     </nav>
   </div>
 
-  <div id="overlay" class="overlay" hidden>
-    <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="modalTitle" tabindex="-1">
-      <header class="dialog-header"><h2 id="modalTitle"></h2><button class="icon-button" type="button" data-action="close" aria-label="Tutup">×</button></header>
-      <div id="modalBody" class="dialog-body"></div>
+  <div id="overlay" class="overlay fixed inset-0 z-40 flex items-end justify-center bg-[#1d261db3] p-0 min-[840px]:items-center min-[840px]:p-[18px]" hidden>
+    <section class="dialog max-h-[min(88vh,820px)] w-full max-w-[560px] overflow-auto rounded-t-[20px] bg-[var(--surface)] shadow-[0_-8px_35px_#10170e24] min-[840px]:rounded-[18px]" role="dialog" aria-modal="true" aria-labelledby="modalTitle" tabindex="-1">
+      <header class="dialog-header sticky top-0 z-[1] flex min-h-[60px] items-center justify-between border-b border-[var(--line)] bg-[var(--surface)] px-[18px] py-2"><h2 id="modalTitle"></h2><button class="icon-button" type="button" data-action="close" aria-label="Tutup">×</button></header>
+      <div id="modalBody" class="dialog-body p-[17px_18px_calc(22px_+_env(safe-area-inset-bottom))]"></div>
     </section>
   </div>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>

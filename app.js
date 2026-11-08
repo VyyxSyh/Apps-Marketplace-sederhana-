@@ -82,7 +82,7 @@
     if (state.sort === "newest") products.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     $("productHeading").textContent = state.category === "Semua" ? "Semua produk" : state.category;
     $("productSubheading").textContent = state.query ? `Hasil pencarian: ${safe(state.query)}` : "Data contoh untuk katalog tugas";
-    $("products").innerHTML = products.length ? products.map(productCard).join("") : `<div class="empty-state"><strong>Produk tidak ditemukan</strong>Coba kata kunci lain atau pilih kategori berbeda.</div>`;
+    $("products").innerHTML = products.length ? products.map(productCard).join("") : `<div class="empty-state col-span-full px-[18px] py-9 text-center"><strong class="mb-[5px] block">Produk tidak ditemukan</strong>Coba kata kunci lain atau pilih kategori berbeda.</div>`;
   }
 
   function render() { renderCategories(); renderProducts(); setNav(); }
