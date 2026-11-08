@@ -141,12 +141,12 @@ select:disabled {
   place-items: center;
   border: 0;
   border-radius: 10px;
-  background: var(--green);
-  color: white;
+  background: transparent;
+  color: var(--green);
   transition: background-color 0.15s ease, transform 0.12s ease;
 }
 
-.search-submit:hover { background: var(--green-deep); }
+.search-submit:hover { background: #e8ead8; }
 .search-submit:active { transform: scale(0.94); }
 
 .search-submit svg {
@@ -680,6 +680,52 @@ select:disabled {
   padding: 10px 12px;
 }
 
+.password-control {
+  position: relative;
+}
+
+.password-control input {
+  padding-right: 54px;
+}
+
+.password-toggle {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  display: grid;
+  width: 44px;
+  height: calc(100% - 2px);
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+}
+
+.password-toggle:hover {
+  background: #eeece4;
+  color: var(--green-deep);
+}
+
+.password-toggle svg {
+  width: 21px;
+  height: 21px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.password-visible-icon,
+.password-toggle.is-visible .password-hidden-icon {
+  display: none;
+}
+
+.password-toggle.is-visible .password-visible-icon {
+  display: block;
+}
+
 .field textarea {
   resize: vertical;
 }
@@ -695,6 +741,42 @@ select:disabled {
   color: #a03224;
   font-size: 13px;
 }
+
+.auth-switch {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 16px 0 0;
+  font-size: 14px;
+}
+
+.text-link {
+  min-height: 44px;
+  border: 0;
+  background: transparent;
+  color: var(--green-deep);
+  padding: 0 4px;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.text-link:hover { color: var(--green); }
+
+.demo-accounts {
+  margin-top: 14px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.demo-accounts summary {
+  min-height: 44px;
+  align-content: center;
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.demo-accounts p { margin: 6px 0; }
 
 .primary-button,
 .secondary-button,

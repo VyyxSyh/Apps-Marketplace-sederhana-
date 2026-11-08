@@ -135,11 +135,11 @@
       <form id="authForm" novalidate>
         ${register ? `<div class="field"><label for="authName">Nama</label><input id="authName" name="name" autocomplete="name" required></div>` : ""}
         <div class="field"><label for="authEmail">Email</label><input id="authEmail" name="email" type="email" autocomplete="email" required></div>
-        <div class="field"><label for="authPassword">Kata sandi</label><input id="authPassword" name="password" type="password" autocomplete="${register ? "new-password" : "current-password"}" required minlength="6"></div>
+        <div class="field"><label for="authPassword">Kata sandi</label><div class="password-control"><input id="authPassword" name="password" type="password" autocomplete="${register ? "new-password" : "current-password"}" required minlength="6"><button class="password-toggle" type="button" data-action="toggle-password" aria-label="Tampilkan kata sandi" aria-pressed="false"><svg class="password-hidden-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M3 3 21 21M10.6 10.6a2 2 0 0 0 2.8 2.8M9.9 5.2A10.8 10.8 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3 3.8M6.2 6.2C3.5 8 2 12 2 12s3.6 7 10 7c1.1 0 2.1-.2 3-.5"/></svg><svg class="password-visible-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
         ${register ? `<div class="field"><label for="authRole">Daftar sebagai</label><select id="authRole" name="role"><option value="buyer">Pembeli</option><option value="seller">Penjual</option></select></div>` : ""}
         <p id="authError" class="form-error" role="alert"></p><button class="primary-button full-width active:brightness-[.88]" type="submit">${register ? "Buat akun" : "Masuk"}</button>
       </form>
-      <p class="auth-switch">${register ? "Sudah punya akun?" : "Belum punya akun?"} <button class="text-link" type="button" data-auth-mode="${register ? "login" : "register"}" data-next="${safe(next)}">${register ? "Masuk" : "Daftar"}</button></p>
+      <p class="auth-switch"><span>${register ? "Sudah punya akun?" : "Belum punya akun?"}</span><button class="text-link" type="button" data-auth-mode="${register ? "login" : "register"}" data-next="${safe(next)}">${register ? "Masuk" : "Daftar"}</button></p>
       <details class="demo-accounts"><summary>Akun contoh</summary><p>Penjual: penjual@tokoko.test / tokoko123</p><p>Pembeli: pembeli@tokoko.test / tokoko123</p></details>`, "auth");
   }
 
@@ -375,6 +375,15 @@
     const action = target.dataset.action;
     if (!action) return;
     switch (action) {
+      case "toggle-password": {
+        const input = $("authPassword");
+        const visible = input.type === "password";
+        input.type = visible ? "text" : "password";
+        target.classList.toggle("is-visible", visible);
+        target.setAttribute("aria-label", visible ? "Sembunyikan kata sandi" : "Tampilkan kata sandi");
+        target.setAttribute("aria-pressed", String(visible));
+        break;
+      }
       case "cart": showCart(); break;
       case "close": closeDialog(); break;
       case "checkout": showCheckout(); break;
