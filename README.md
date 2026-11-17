@@ -1,10 +1,14 @@
-# TOKOKO Tailwind clone
+# Gambar produk
 
-Standalone Tailwind CSS v4 copy. The parent project remains untouched.
+Taruh foto produk di folder ini. Gunakan nama file sederhana, huruf kecil, tanpa spasi, misalnya `headphone-bluetooth.jpg`.
 
-```sh
-npm install
-npm run build:css
+Isi field `image` di `data.json` dengan path relatif dari `index.html`:
+
+```json
+{
+  "name": "Headphone Bluetooth",
+  "image": "src/images/headphone-bluetooth.jpg"
+}
 ```
 
-Open this folder with a static server so `users.json` and `data.json` can load.
+Format yang diterima: JPG, PNG, WebP. Foto lokal belum disertakan; produk memakai placeholder sampai file ditambahkan.

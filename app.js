@@ -49,27 +49,27 @@
   }
 
   function renderCategories() {
-    $("categories").innerHTML = Store.categories.map(name => `<button class="min-h-11 shrink-0 snap-start rounded-2.5 border px-3 py-1.75 text-[13px] font-bold transition-colors hover:border-[#9eaa91] ${state.category === name ? "border-(--green) bg-(--green) text-white" : "border-(--line) bg-(--surface) text-[#384337]"}" type="button" data-category="${safe(name)}" aria-pressed="${state.category === name}">${safe(name)}</button>`).join("");
+    $("categories").innerHTML = Store.categories.map(name => `<button class="category-chip ${state.category === name ? "is-active" : ""}" type="button" data-category="${safe(name)}" aria-pressed="${state.category === name}">${safe(name)}</button>`).join("");
   }
 
   function productCard(product) {
     const stock = Number(product.stock) || 0;
     const rating = Number(String(product.rating ?? "4,8").replace(",", "."));
     const sold = Number(product.sold) || 0;
-    return `<article class="min-w-0 overflow-hidden rounded-[18px] border border-[#d6d3d1] bg-[#fffaf2] shadow-[0_5px_18px_#242a2010]">
-      <button class="relative grid aspect-[1.13] w-full place-items-center overflow-hidden border-0 bg-[#eeeadc] max-[520px]:aspect-square min-[768px]:aspect-[1.25]" type="button" data-detail="${safe(product.id)}" aria-label="Lihat detail ${safe(product.name)}">
-        <span class="absolute top-2.25 left-2.25 max-w-[calc(100%-18px)] overflow-hidden rounded-[7px] border border-[#ffffff80] bg-[#fffdf0cc] px-2 py-1.25 text-[10px] font-extrabold text-[#47533f] text-ellipsis whitespace-nowrap backdrop-blur-[4px]">${safe(product.category)}</span>${product.image ? `<img class="h-full w-full object-cover" src="${safe(product.image)}" alt="${safe(product.name)}" width="640" height="560" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.hidden=false">` : ""}<span class="text-[clamp(42px,13vw,74px)] saturate-[.82]" aria-hidden="true" ${product.image ? "hidden" : ""}>${safe(product.icon || "□")}</span>
+    return `<article class="product-card">
+      <button class="product-art w-full border-0" type="button" data-detail="${safe(product.id)}" aria-label="Lihat detail ${safe(product.name)}">
+        <span class="product-category">${safe(product.category)}</span>${product.image ? `<img class="product-image" src="${safe(product.image)}" alt="${safe(product.name)}" width="640" height="560" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.hidden=false">` : ""}<span class="product-emoji" aria-hidden="true" ${product.image ? "hidden" : ""}>${safe(product.icon || "□")}</span>
       </button>
-      <div class="min-w-0 p-[9px] min-[768px]:p-[13px]">
-        <button class="line-clamp-2 flex min-h-11 w-full border-0 bg-transparent p-0 text-left text-xs leading-[1.38] font-bold text-(--ink) min-[768px]:text-sm" type="button" data-detail="${safe(product.id)}">${safe(product.name)}</button>
-        <div class="mt-1.5 flex flex-wrap items-baseline gap-1 text-[14px] font-black tracking-[-0.03em] text-(--green-deep) md:text-base">${money(product.price)}${product.oldPrice ? `<span class="ml-1 text-[11px] font-normal text-(--muted) line-through max-[520px]:mt-0.5 max-[520px]:ml-0 max-[520px]:block">${money(product.oldPrice)}</span>` : ""}</div>
-        ${product.oldPrice ? `<div class="mt-1.25 text-[11px] font-extrabold text-[#e56b12]">Hemat ${Math.max(1, Math.round((1 - product.price / product.oldPrice) * 100))}%</div>` : ""}
-        <div class="mt-1.25 flex items-center gap-1.25 text-xs text-[#62685c]" aria-label="Rating ${rating.toFixed(1)} dari 5, ${sold} terjual"><span class="text-[17px] leading-none text-amber-500" aria-hidden="true">★</span><span>${rating.toFixed(1)}</span><span class="text-[#62685c]">·</span><span>${sold}+ terjual</span></div>
-        <div class="mt-1.75 flex min-w-0 items-center gap-1.5">
-          <span class="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap text-[11px] font-bold text-(--muted)">${safe(productStore(product))}</span>
-          ${stock ? `<span class="ml-auto shrink-0 rounded-full bg-[#e7efe6] px-1.75 py-0.5 text-[10px] font-extrabold whitespace-nowrap text-(--green-deep)">Stok ${stock}</span>` : `<span class="ml-auto shrink-0 rounded-full bg-[#f6e4df] px-1.75 py-0.5 text-[10px] font-extrabold whitespace-nowrap text-[#a03224]">Habis</span>`}
+      <div class="product-info">
+        <button class="product-name w-full border-0 bg-transparent p-0 text-left" type="button" data-detail="${safe(product.id)}">${safe(product.name)}</button>
+        <div class="product-price text-emerald-800">${money(product.price)}${product.oldPrice ? `<span class="product-old-price">${money(product.oldPrice)}</span>` : ""}</div>
+        ${product.oldPrice ? `<div class="product-promo">Hemat ${Math.max(1, Math.round((1 - product.price / product.oldPrice) * 100))}%</div>` : ""}
+        <div class="product-rating" aria-label="Rating ${rating.toFixed(1)} dari 5, ${sold} terjual"><span class="text-amber-500" aria-hidden="true">★</span><span>${rating.toFixed(1)}</span><span class="rating-separator">·</span><span>${sold}+ terjual</span></div>
+        <div class="product-foot">
+          <span class="product-store">${safe(productStore(product))}</span>
+          ${stock ? `<span class="stock-chip">Stok ${stock}</span>` : `<span class="stock-chip is-empty">Habis</span>`}
         </div>
-      <button class="relative mt-2.5 min-h-11 w-full rounded-[9px] border border-(--green) bg-transparent text-xs font-[850] text-(--green) [touch-action:manipulation] [user-select:none] transition-[transform,background-color,color,border-color,box-shadow] duration-150 hover:not-disabled:not-[.is-added]:bg-(--green) hover:not-disabled:not-[.is-added]:text-white active:enabled:scale-[.95] active:enabled:bg-(--green-deep) active:enabled:text-white active:brightness-[.88] disabled:cursor-not-allowed disabled:border-[#c5c5bb] disabled:text-(--muted)" type="button" data-add="${safe(product.id)}" ${stock ? "" : "disabled"}>${stock ? "Tambah ke keranjang" : "Stok habis"}</button>
+        <button class="product-add" type="button" data-add="${safe(product.id)}" ${stock ? "" : "disabled"}>${stock ? "Tambah ke keranjang" : "Stok habis"}</button>
       </div>
     </article>`;
   }
@@ -82,7 +82,7 @@
     if (state.sort === "newest") products.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     $("productHeading").textContent = state.category === "Semua" ? "Semua produk" : state.category;
     $("productSubheading").textContent = state.query ? `Hasil pencarian: ${safe(state.query)}` : "Data contoh untuk katalog tugas";
-    $("products").innerHTML = products.length ? products.map(productCard).join("") : `<div class="col-span-full rounded-xl border border-dashed border-[#bdb9ab] p-9 text-center text-(--muted)"><strong class="mb-1 block text-(--ink)">Produk tidak ditemukan</strong>Coba kata kunci lain atau pilih kategori berbeda.</div>`;
+    $("products").innerHTML = products.length ? products.map(productCard).join("") : `<div class="empty-state"><strong>Produk tidak ditemukan</strong>Coba kata kunci lain atau pilih kategori berbeda.</div>`;
   }
 
   function render() { renderCategories(); renderProducts(); setNav(); }
@@ -135,11 +135,11 @@
       <form id="authForm" novalidate>
         ${register ? `<div class="field"><label for="authName">Nama</label><input id="authName" name="name" autocomplete="name" required></div>` : ""}
         <div class="field"><label for="authEmail">Email</label><input id="authEmail" name="email" type="email" autocomplete="email" required></div>
-        <div class="field"><label for="authPassword">Kata sandi</label><div class="password-control"><input id="authPassword" name="password" type="password" autocomplete="${register ? "new-password" : "current-password"}" required minlength="6"><button class="password-toggle" type="button" data-action="toggle-password" aria-label="Tampilkan kata sandi" aria-pressed="false"><svg class="password-hidden-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M3 3 21 21M10.6 10.6a2 2 0 0 0 2.8 2.8M9.9 5.2A10.8 10.8 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3 3.8M6.2 6.2C3.5 8 2 12 2 12s3.6 7 10 7c1.1 0 2.1-.2 3-.5"/></svg><svg class="password-visible-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
+        <div class="field"><label for="authPassword">Kata sandi</label><input id="authPassword" name="password" type="password" autocomplete="${register ? "new-password" : "current-password"}" required minlength="6"></div>
         ${register ? `<div class="field"><label for="authRole">Daftar sebagai</label><select id="authRole" name="role"><option value="buyer">Pembeli</option><option value="seller">Penjual</option></select></div>` : ""}
-        <p id="authError" class="form-error" role="alert"></p><button class="primary-button full-width active:brightness-[.88]" type="submit">${register ? "Buat akun" : "Masuk"}</button>
+        <p id="authError" class="form-error" role="alert"></p><button class="primary-button full-width" type="submit">${register ? "Buat akun" : "Masuk"}</button>
       </form>
-      <p class="auth-switch"><span>${register ? "Sudah punya akun?" : "Belum punya akun?"}</span><button class="text-link" type="button" data-auth-mode="${register ? "login" : "register"}" data-next="${safe(next)}">${register ? "Masuk" : "Daftar"}</button></p>
+      <p class="auth-switch">${register ? "Sudah punya akun?" : "Belum punya akun?"} <button class="text-link" type="button" data-auth-mode="${register ? "login" : "register"}" data-next="${safe(next)}">${register ? "Masuk" : "Daftar"}</button></p>
       <details class="demo-accounts"><summary>Akun contoh</summary><p>Penjual: penjual@tokoko.test / tokoko123</p><p>Pembeli: pembeli@tokoko.test / tokoko123</p></details>`, "auth");
   }
 
@@ -151,28 +151,16 @@
     const items = cartForUser(user.id);
     const rows = items.map(item => `<div class="list-row"><div><strong>${safe(item.name)}</strong><div>${money(item.price)} × ${item.quantity}</div></div>
       <div class="quantity-control"><button type="button" data-quantity="${safe(item.productId)}" data-delta="-1" aria-label="Kurangi ${safe(item.name)}">−</button><span>${item.quantity}</span><button type="button" data-quantity="${safe(item.productId)}" data-delta="1" aria-label="Tambah ${safe(item.name)}">+</button></div></div>`).join("");
-    openDialog("Keranjang", `${rows || `<div class="rounded-xl border border-dashed border-[#bdb9ab] p-5 text-center text-(--muted)"><strong class="mb-1 block text-(--ink)">Keranjang masih kosong</strong>Pilih produk di katalog untuk mulai berbelanja.</div>`}
-      ${items.length ? `<div class="cart-total"><span>Total belanja</span><span>${money(cartTotal(items))}</span></div><button class="primary-button full-width active:brightness-[.88]" type="button" data-action="checkout">Lanjut ke checkout</button>` : ""}`, "cart");
+    openDialog("Keranjang", `${rows || `<div class="empty-state"><strong>Keranjang masih kosong</strong>Pilih produk di katalog untuk mulai berbelanja.</div>`}
+      ${items.length ? `<div class="cart-total"><span>Total belanja</span><span>${money(cartTotal(items))}</span></div><button class="primary-button full-width" type="button" data-action="checkout">Lanjut ke checkout</button>` : ""}`, "cart");
   }
 
   function showDetail(id) {
     const product = Store.products.find(item => item.id === id);
     if (!product) return toast("Produk tidak ditemukan.");
-    const stock = Number(product.stock) || 0;
-    const rating = Number(String(product.rating ?? "").replace(",", "."));
-    const sold = Number(product.sold) || 0;
-    const discount = product.oldPrice ? Math.round((1 - product.price / product.oldPrice) * 100) : 0;
-    openDialog(product.name, `<div class="detail-layout">
-      <div class="detail-art">${product.image ? `<img class="detail-image" src="${safe(product.image)}" alt="${safe(product.name)}" width="640" height="560" onerror="this.hidden=true;this.nextElementSibling.hidden=false">` : ""}<span aria-hidden="true" ${product.image ? "hidden" : ""}>${safe(product.icon || "□")}</span></div>
-      <div class="detail-info">
-        <h3 class="detail-name">${safe(product.name)}</h3>
-        <div class="detail-price-block"><div class="detail-price">${money(product.price)}</div>${product.oldPrice ? `<div class="detail-old-price"><span class="detail-old-amount">${money(product.oldPrice)}</span><span class="detail-discount">-${discount}%</span></div>` : ""}</div>
-        <div class="detail-stats">${Number.isFinite(rating) && rating > 0 ? `<span class="detail-rating"><span aria-hidden="true">★</span> ${rating.toFixed(1)}</span>` : ""}${sold ? `<span>${sold}+ terjual</span>` : ""}${stock ? `<span>Stok ${stock}</span>` : `<span class="detail-out-of-stock">Stok habis</span>`}</div>
-        <section class="detail-section"><h4>Deskripsi produk</h4><p class="detail-copy">${safe(product.description || "Deskripsi belum tersedia.")}</p></section>
-        <section class="detail-seller"><div class="detail-seller-mark" aria-hidden="true">${safe((sellerName(product.sellerId)[0] || "T").toUpperCase())}</div><div class="detail-seller-copy"><strong>${safe(sellerName(product.sellerId))}</strong><span>${safe(product.city || "Lokasi belum tersedia")}</span></div></section>
-      </div>
-      <div class="detail-actions"><button class="secondary-button active:brightness-[.88] disabled:cursor-not-allowed" type="button" data-add="${safe(product.id)}" ${stock > 0 ? "" : "disabled"}>Tambah ke keranjang</button><button class="primary-button active:brightness-[.88] disabled:cursor-not-allowed" type="button" data-buy="${safe(product.id)}" ${stock > 0 ? "" : "disabled"}>Beli sekarang</button></div>
-    </div>`, "detail");
+    openDialog(product.name, `<div class="detail-art">${product.image ? `<img class="detail-image" src="${safe(product.image)}" alt="${safe(product.name)}" width="640" height="560" onerror="this.hidden=true;this.nextElementSibling.hidden=false">` : ""}<span aria-hidden="true" ${product.image ? "hidden" : ""}>${safe(product.icon || "□")}</span></div><p class="product-category">${safe(product.category)}</p><div class="detail-price">${money(product.price)}</div>
+      <p class="detail-copy">${safe(product.description || "Belum ada deskripsi produk.")}</p><p class="detail-copy">Penjual: ${safe(sellerName(product.sellerId))} · Stok ${Number(product.stock) || 0}</p>
+      <div class="form-actions"><button class="primary-button" type="button" data-add="${safe(product.id)}" ${product.stock > 0 ? "" : "disabled"}>Tambah ke keranjang</button><button class="secondary-button" type="button" data-buy="${safe(product.id)}" ${product.stock > 0 ? "" : "disabled"}>Beli sekarang</button></div>`, "detail");
   }
 
   function showCheckout(buyId = "") {
@@ -197,7 +185,7 @@
         <div class="field"><label for="checkoutAddress">Alamat pengiriman</label><textarea id="checkoutAddress" name="address" rows="3" autocomplete="street-address" required></textarea></div>
         <div class="field"><label for="paymentMethod">Metode pembayaran (simulasi)</label><select id="paymentMethod" name="payment"><option>Bayar di tempat</option><option>Transfer bank</option></select></div>
         <div class="cart-total"><span>Total</span><span>${money(cartTotal(items))}</span></div>
-        <p id="checkoutError" class="form-error" role="alert"></p><button class="primary-button full-width active:brightness-[.88]" type="submit">Buat pesanan demo</button>
+        <p id="checkoutError" class="form-error" role="alert"></p><button class="primary-button full-width" type="submit">Buat pesanan demo</button>
       </form>`, "checkout");
   }
 
@@ -205,21 +193,21 @@
     const user = requireRole("buyer");
     if (!user) return;
     const orders = Store.orders.filter(order => order.buyerId === user.id).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-    const content = orders.length ? orders.map(order => `<div class="list-row order-row"><div><strong>${safe(order.orderNumber)}</strong><div>${new Date(order.createdAt).toLocaleDateString("id-ID")} · ${safe(order.status)}</div><div>${order.items.map(item => safe(item.name)).join(", ")}</div></div><strong>${money(order.total)}</strong>${order.status === "Diproses" ? `<button class="secondary-button" type="button" data-cancel-order="${safe(order.id)}">Batalkan</button>` : ""}</div>`).join("") : `<div class="rounded-xl border border-dashed border-[#bdb9ab] p-5 text-center text-(--muted)"><strong class="mb-1 block text-(--ink)">Belum ada pesanan</strong>Pesanan yang kamu buat akan muncul di sini.</div>`;
+    const content = orders.length ? orders.map(order => `<div class="list-row order-row"><div><strong>${safe(order.orderNumber)}</strong><div>${new Date(order.createdAt).toLocaleDateString("id-ID")} · ${safe(order.status)}</div><div>${order.items.map(item => safe(item.name)).join(", ")}</div></div><strong>${money(order.total)}</strong>${order.status === "Diproses" ? `<button class="secondary-button" type="button" data-cancel-order="${safe(order.id)}">Batalkan</button>` : ""}</div>`).join("") : `<div class="empty-state"><strong>Belum ada pesanan</strong>Pesanan yang kamu buat akan muncul di sini.</div>`;
     openDialog("Pesanan saya", content, "orders");
   }
 
   function showAccount() {
     const user = currentUser();
-    openDialog("Akun", user ? `<div class="list-row"><span>Nama</span><strong>${safe(user.name)}</strong></div><div class="list-row"><span>Email</span><span>${safe(user.email)}</span></div><div class="list-row"><span>Peran</span><span>${user.role === "seller" ? "Penjual" : "Pembeli"}</span></div><button class="danger-button full-width mt-4 active:brightness-[.88]" type="button" data-action="logout">Keluar</button>` : `<div class="notice">Masuk untuk memakai keranjang atau mengelola produk.</div><button class="primary-button full-width active:brightness-[.88]" type="button" data-action="login">Masuk</button><button class="secondary-button full-width mt-2 active:brightness-[.88]" type="button" data-auth-mode="register">Buat akun</button>`, "account");
+    openDialog("Akun", user ? `<div class="list-row"><span>Nama</span><strong>${safe(user.name)}</strong></div><div class="list-row"><span>Email</span><span>${safe(user.email)}</span></div><div class="list-row"><span>Peran</span><span>${user.role === "seller" ? "Penjual" : "Pembeli"}</span></div><button class="danger-button full-width mt-4" type="button" data-action="logout">Keluar</button>` : `<div class="notice">Masuk untuk memakai keranjang atau mengelola produk.</div><button class="primary-button full-width" type="button" data-action="login">Masuk</button><button class="secondary-button full-width mt-2" type="button" data-auth-mode="register">Buat akun</button>`, "account");
   }
 
   function showSellerProducts() {
     const seller = requireRole("seller");
     if (!seller) return;
     const products = Store.products.filter(product => product.sellerId === seller.id);
-    const rows = products.map(product => `<div class="list-row"><div><strong>${safe(product.name)}</strong><div>${money(product.price)} · Stok ${product.stock}</div></div><div class="form-actions"><button class="secondary-button active:brightness-[.88]" type="button" data-edit-product="${safe(product.id)}">Edit</button><button class="danger-button active:brightness-[.88]" type="button" data-delete-product="${safe(product.id)}">Hapus</button></div></div>`).join("");
-    openDialog("Produk saya", `${rows || `<div class="rounded-xl border border-dashed border-[#bdb9ab] p-5 text-center text-(--muted)"><strong class="mb-1 block text-(--ink)">Belum ada produk</strong>Tambahkan produk pertama tokomu.</div>`}<button class="primary-button full-width mt-4 active:brightness-[.88]" type="button" data-action="new-product">Tambah produk</button>`, "seller-products");
+    const rows = products.map(product => `<div class="list-row"><div><strong>${safe(product.name)}</strong><div>${money(product.price)} · Stok ${product.stock}</div></div><div class="form-actions"><button class="secondary-button" type="button" data-edit-product="${safe(product.id)}">Edit</button><button class="danger-button" type="button" data-delete-product="${safe(product.id)}">Hapus</button></div></div>`).join("");
+    openDialog("Produk saya", `${rows || `<div class="empty-state"><strong>Belum ada produk</strong>Tambahkan produk pertama tokomu.</div>`}<button class="primary-button full-width mt-4" type="button" data-action="new-product">Tambah produk</button>`, "seller-products");
   }
 
   function showProductForm(productId = "") {
@@ -234,7 +222,7 @@
       <div class="field"><label for="productStock">Stok</label><input id="productStock" name="stock" type="number" inputmode="numeric" min="0" step="1" required value="${safe(product?.stock ?? "")}"></div>
       <div class="field"><label for="productCategory">Kategori</label><select id="productCategory" name="category">${Store.categories.filter(category => category !== "Semua").map(category => `<option ${product?.category === category ? "selected" : ""}>${safe(category)}</option>`).join("")}</select></div>
       <div class="field"><label for="productImage">Path gambar (opsional)</label><input id="productImage" name="image" placeholder="src/images/nama-produk.jpg" value="${safe(product?.image || "")}"></div>
-        <p id="productError" class="form-error" role="alert"></p><button class="primary-button full-width active:brightness-[.88]" type="submit">Simpan produk</button>
+      <p id="productError" class="form-error" role="alert"></p><button class="primary-button full-width" type="submit">Simpan produk</button>
     </form>`, "product-form");
   }
 
@@ -259,7 +247,7 @@
     Store.orders = [order, ...Store.orders];
     Store.carts = Store.carts.filter(item => item.userId !== user.id);
     closeDialog();
-    openDialog("Pesanan dibuat", `<div class="notice">Pesanan demo berhasil dibuat. Tidak ada pembayaran atau pengiriman sungguhan.</div><div class="list-row"><span>Nomor pesanan</span><strong>${safe(order.orderNumber)}</strong></div><div class="list-row"><span>Total</span><strong>${money(order.total)}</strong></div><button class="primary-button full-width mt-4 active:brightness-[.88]" type="button" data-action="orders">Lihat pesanan</button>`, "confirmation");
+    openDialog("Pesanan dibuat", `<div class="notice">Pesanan demo berhasil dibuat. Tidak ada pembayaran atau pengiriman sungguhan.</div><div class="list-row"><span>Nomor pesanan</span><strong>${safe(order.orderNumber)}</strong></div><div class="list-row"><span>Total</span><strong>${money(order.total)}</strong></div><button class="primary-button full-width mt-4" type="button" data-action="orders">Lihat pesanan</button>`, "confirmation");
     render();
   }
 
@@ -387,15 +375,6 @@
     const action = target.dataset.action;
     if (!action) return;
     switch (action) {
-      case "toggle-password": {
-        const input = $("authPassword");
-        const visible = input.type === "password";
-        input.type = visible ? "text" : "password";
-        target.classList.toggle("is-visible", visible);
-        target.setAttribute("aria-label", visible ? "Sembunyikan kata sandi" : "Tampilkan kata sandi");
-        target.setAttribute("aria-pressed", String(visible));
-        break;
-      }
       case "cart": showCart(); break;
       case "close": closeDialog(); break;
       case "checkout": showCheckout(); break;
@@ -421,10 +400,10 @@
   });
 
   async function start() {
-    $("products").innerHTML = `<p class="col-span-full py-6 text-center text-(--ink)" role="status">Memuat produk...</p>`;
+    $("products").innerHTML = `<p class="loading-state" role="status">Memuat produk...</p>`;
     try { await Store.init(); render(); updateNav(); }
     catch (error) {
-      $("products").innerHTML = `<div class="col-span-full rounded-xl border border-dashed border-[#bdb9ab] p-5 text-center text-(--muted)"><strong class="mb-1 block text-(--ink)">Data produk belum tersedia</strong>${safe(error.message)}<p><button class="secondary-button active:brightness-[.88]" type="button" data-action="retry">Coba lagi</button></p></div>`;
+      $("products").innerHTML = `<div class="empty-state"><strong>Data produk belum tersedia</strong>${safe(error.message)}<p><button class="secondary-button" type="button" data-action="retry">Coba lagi</button></p></div>`;
     }
   }
   document.addEventListener("click", event => { if (event.target.closest('[data-action="retry"]')) start(); });
