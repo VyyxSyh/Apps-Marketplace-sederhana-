@@ -165,8 +165,11 @@
         <p class="detail-category">${safe(product.category)}</p>
         <div class="detail-price-row"><strong class="detail-price">${money(product.price)}</strong>${product.oldPrice ? `<del class="detail-old-price">${money(product.oldPrice)}</del>` : ""}${discount ? `<span class="detail-discount">Hemat ${discount}%</span>` : ""}</div>
         <h3 class="detail-name">${safe(product.name)}</h3>
-        <p class="detail-rating">${product.rating ? `<span aria-hidden="true">★</span> ${safe(String(product.rating))} <span aria-hidden="true">·</span> ` : ""}${Number(product.sold) || 0}+ terjual</p>
-        <section class="detail-seller" aria-label="Informasi penjual"><strong>${safe(sellerName(product.sellerId))}</strong><span>Stok ${Number(product.stock) || 0}</span></section>
+        <div class="detail-meta"><p class="detail-rating">${product.rating ? `<span aria-hidden="true">★</span> ${safe(String(product.rating))} <span aria-hidden="true">·</span> ` : ""}${Number(product.sold) || 0}+ terjual</p><span class="detail-stock">Stok ${Number(product.stock) || 0}</span></div>
+        <section class="store-details" aria-label="Detail toko">
+          <div class="store-heading"><span class="store-mark" aria-hidden="true">${safe(sellerName(product.sellerId).slice(0, 1).toUpperCase())}</span><div class="store-identity"><h3>${safe(sellerName(product.sellerId))}</h3>${product.city ? `<p>Lokasi produk · ${safe(product.city)}</p>` : ""}</div><button class="store-follow" type="button" data-follow="${safe(product.sellerId)}" aria-pressed="${localStorage.getItem(`tokoko-follow-${product.sellerId}`) === "true"}">${localStorage.getItem(`tokoko-follow-${product.sellerId}`) === "true" ? "Mengikuti" : "Ikuti"}</button></div>
+          <p class="store-inventory">${Store.products.filter(item => item.sellerId === product.sellerId).length.toLocaleString("id-ID")} produk di toko</p>
+        </section>
         <section class="detail-description"><h3>Deskripsi produk</h3><p>${safe(product.description || "Belum ada deskripsi produk.")}</p></section>
       </div>
       <div class="detail-actions"><button class="secondary-button" type="button" data-add="${safe(product.id)}" ${product.stock > 0 ? "" : "disabled"}>Tambah ke keranjang</button><button class="primary-button" type="button" data-buy="${safe(product.id)}" ${product.stock > 0 ? "" : "disabled"}>Beli sekarang</button></div>`, "detail");
@@ -361,12 +364,21 @@
   });
   window.addEventListener("hashchange", updateNav);
   document.addEventListener("click", async event => {
-    const target = event.target.closest("[data-category], [data-add], [data-detail], [data-buy], [data-action], [data-auth-mode], [data-quantity], [data-cancel-order], [data-edit-product], [data-delete-product]");
+    const target = event.target.closest("[data-category], [data-add], [data-detail], [data-buy], [data-follow], [data-action], [data-auth-mode], [data-quantity], [data-cancel-order], [data-edit-product], [data-delete-product]");
     if (!target) return;
     if (target.dataset.category) { state.category = target.dataset.category; render(); return; }
     if (target.dataset.add) { addToCart(target.dataset.add, false, target); return; }
     if (target.dataset.detail) { showDetail(target.dataset.detail); return; }
     if (target.dataset.buy) { addToCart(target.dataset.buy, true); return; }
+    if (target.dataset.follow) {
+      const key = `tokoko-follow-${target.dataset.follow}`;
+      const following = target.getAttribute("aria-pressed") !== "true";
+      try { localStorage.setItem(key, String(following)); }
+      catch { return toast("Status ikuti gagal disimpan di browser."); }
+      target.setAttribute("aria-pressed", String(following));
+      target.textContent = following ? "Mengikuti" : "Ikuti";
+      return;
+    }
     if (target.dataset.authMode) { showAuth(target.dataset.authMode, target.dataset.next || ""); return; }
     if (target.dataset.quantity) {
       const user = currentUser(); const delta = Number(target.dataset.delta); const product = Store.products.find(item => item.id === target.dataset.quantity);
