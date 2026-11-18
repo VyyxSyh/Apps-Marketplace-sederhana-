@@ -7,6 +7,7 @@
     orders: "tokoko-orders",
     session: "tokoko-session"
   };
+  const apiAvailable = location.port === "3000";
   const read = (key, fallback) => {
     try { return JSON.parse(localStorage.getItem(key)) ?? fallback; }
     catch { return fallback; }
@@ -55,6 +56,17 @@
     catch { throw new Error("Penyimpanan browser penuh atau tidak tersedia. Kosongkan ruang, lalu muat ulang aplikasi."); }
   };
   async function init() {
+    try {
+      if (!apiAvailable) throw new Error("Static mode");
+      const response = await fetch("/api/data");
+      if (response.ok) {
+        const data = await response.json();
+        write(keys.products, data.products);
+        write(keys.categories, data.categories);
+        if (!localStorage.getItem(keys.users)) write(keys.users, data.users || []);
+        return;
+      }
+    } catch { /* Use local seed data when not running through the Node server. */ }
     if (localStorage.getItem(keys.users) && localStorage.getItem(keys.products)) {
       migrateCategories();
       if (localStorage.getItem("tokoko-seed-version") !== "5") {
@@ -87,6 +99,20 @@
 
   window.Store = {
     init,
+    async save() {
+      const data = { users: this.users, products: this.products, categories: this.categories, carts: this.carts, orders: this.orders };
+      try {
+        if (!apiAvailable) throw new Error("Static mode");
+        const response = await fetch("/api/data", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
+        if (!response.ok) throw new Error("API penyimpanan tidak tersedia.");
+      } catch {
+        Object.entries(data).forEach(([name, value]) => write(keys[name], value));
+      }
+    },
     get users() { return read(keys.users, []); },
     set users(value) { write(keys.users, value); },
     get products() { return read(keys.products, []); },

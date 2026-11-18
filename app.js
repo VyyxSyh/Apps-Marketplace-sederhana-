@@ -225,7 +225,7 @@
     </form>`, "product-form");
   }
 
-  function saveOrder(form) {
+  async function saveOrder(form) {
     const user = currentUser();
     if (user?.role !== "buyer") return showAuth("login", "checkout");
     const items = cartForUser(user.id);
@@ -245,6 +245,8 @@
     });
     Store.orders = [order, ...Store.orders];
     Store.carts = Store.carts.filter(item => item.userId !== user.id);
+    try { await Store.save(); }
+    catch { $("checkoutError").textContent = "Pesanan gagal disimpan ke data.json. Pastikan Node.js masih berjalan."; return; }
     closeDialog();
     openDialog("Pesanan dibuat", `<div class="notice">Pesanan demo berhasil dibuat. Tidak ada pembayaran atau pengiriman sungguhan.</div><div class="list-row"><span>Nomor pesanan</span><strong>${safe(order.orderNumber)}</strong></div><div class="list-row"><span>Total</span><strong>${money(order.total)}</strong></div><button class="primary-button full-width mt-4" type="button" data-action="orders">Lihat pesanan</button>`, "confirmation");
     render();
@@ -252,7 +254,7 @@
 
   function validate(form) { return form.reportValidity(); }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     const form = event.target;
     if (!(form instanceof HTMLFormElement)) return;
     if (form.id === "searchForm") {
@@ -275,6 +277,8 @@
         if (!user) { error.textContent = "Email atau kata sandi tidak cocok."; return; }
         Store.session = { userId: user.id, role: user.role };
       }
+      try { await Store.save(); }
+      catch { error.textContent = "Akun gagal disimpan ke data.json. Pastikan Node.js masih berjalan."; return; }
       const next = state.authNext;
       state.authNext = "";
       closeDialog(); render(); toast("Berhasil masuk.");
@@ -282,7 +286,7 @@
       else if (next.startsWith("add:")) addToCart(next.slice(4));
       return;
     }
-    if (form.id === "checkoutForm") { saveOrder(form); return; }
+    if (form.id === "checkoutForm") { await saveOrder(form); return; }
     if (form.id === "productForm") {
       const seller = currentUser();
       const price = Number(data.get("price")); const stock = Number(data.get("stock"));
@@ -293,6 +297,8 @@
       if (image && !/^src\/images\/[\w.-]+\.(?:png|jpe?g|webp)$/i.test(image)) { $("productError").textContent = "Path gambar gunakan format src/images/nama-file.jpg, png, atau webp."; return; }
       const product = { ...current, id: current?.id || crypto.randomUUID(), sellerId: seller.id, name: String(data.get("name")).trim(), description: String(data.get("description")).trim(), price, stock, category: data.get("category"), image, icon: current?.icon || "📦", city: current?.city || "", createdAt: current?.createdAt || new Date().toISOString() };
       Store.products = current ? Store.products.map(item => item.id === product.id ? product : item) : [product, ...Store.products];
+      try { await Store.save(); }
+      catch (error) { $("productError").textContent = error.message; return; }
       closeDialog(); render(); showSellerProducts(); toast(current ? "Produk diperbarui." : "Produk ditambahkan.");
     }
   }
@@ -318,7 +324,7 @@
     }, 900);
   }
 
-  function addToCart(productId, buyNow = false, trigger = null) {
+  async function addToCart(productId, buyNow = false, trigger = null) {
     const user = requireRole("buyer", buyNow ? "checkout" : `add:${productId}`);
     if (!user) return;
     const product = Store.products.find(item => item.id === productId);
@@ -328,6 +334,8 @@
     if (existing?.quantity >= product.stock) return toast("Jumlah sudah mencapai stok tersedia.");
     const next = existing ? items.map(item => item.productId === product.id ? { ...item, quantity: item.quantity + 1 } : item) : [...items, { userId: user.id, productId: product.id, name: product.name, price: product.price, quantity: 1 }];
     Store.carts = [...Store.carts.filter(item => item.userId !== user.id), ...next];
+    try { await Store.save(); }
+    catch { return toast("Keranjang gagal disimpan ke data.json."); }
     if (buyNow) { closeDialog(); showCheckout(); }
     else {
       setNav();
@@ -342,7 +350,7 @@
     if (event.target.id === "sortSelect") { state.sort = event.target.value; renderProducts(); }
   });
   window.addEventListener("hashchange", updateNav);
-  document.addEventListener("click", event => {
+  document.addEventListener("click", async event => {
     const target = event.target.closest("[data-category], [data-add], [data-detail], [data-buy], [data-action], [data-auth-mode], [data-quantity], [data-cancel-order], [data-edit-product], [data-delete-product]");
     if (!target) return;
     if (target.dataset.category) { state.category = target.dataset.category; render(); return; }
@@ -357,19 +365,27 @@
         const quantity = Math.min(product?.stock ?? 0, item.quantity + delta);
         return quantity > 0 ? [{ ...item, quantity }] : [];
       });
+      try { await Store.save(); }
+      catch { return toast("Keranjang gagal disimpan ke data.json."); }
       render(); showCart(); return;
     }
     if (target.dataset.cancelOrder) {
       const user = currentUser(); const order = Store.orders.find(item => item.id === target.dataset.cancelOrder && item.buyerId === user.id && item.status === "Diproses");
       if (!order || !confirm("Batalkan pesanan ini? Stok produk akan dikembalikan.")) return;
       Store.products = Store.products.map(product => { const line = order.items.find(item => item.productId === product.id); return line ? { ...product, stock: product.stock + line.quantity, sold: Math.max(0, (product.sold || 0) - line.quantity) } : product; });
-      Store.orders = Store.orders.map(item => item.id === order.id ? { ...item, status: "Dibatalkan" } : item); showOrders(); render(); return;
+      Store.orders = Store.orders.map(item => item.id === order.id ? { ...item, status: "Dibatalkan" } : item);
+      try { await Store.save(); }
+      catch { return toast("Pesanan gagal diperbarui di data.json."); }
+      showOrders(); render(); return;
     }
     if (target.dataset.editProduct) { showProductForm(target.dataset.editProduct); return; }
     if (target.dataset.deleteProduct) {
       const seller = currentUser(); const product = Store.products.find(item => item.id === target.dataset.deleteProduct && item.sellerId === seller?.id);
       if (!product || !confirm(`Hapus produk “${product.name}”?`)) return;
-      Store.products = Store.products.filter(item => item.id !== product.id); closeDialog(); showSellerProducts(); toast("Produk dihapus."); return;
+      Store.products = Store.products.filter(item => item.id !== product.id);
+      try { await Store.save(); }
+      catch { return toast("Produk gagal dihapus dari data.json."); }
+      closeDialog(); showSellerProducts(); toast("Produk dihapus."); return;
     }
     const action = target.dataset.action;
     if (!action) return;

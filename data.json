@@ -15,25 +15,20 @@
       "role": "buyer"
     }
   ],
-  "categories": [
-    "Semua",
-    "Agres Id",
-    "Sentral Komputer"
-  ],
   "products": [
     {
       "id": "samsung-galaxy-a16-5g",
       "sellerId": "seller-demo",
       "name": "Samsung Galaxy A16 5G 8/256 GB",
       "description": "Samsung Galaxy A16 5G RAM 8 GB, penyimpanan 256 GB, layar Super AMOLED 6,7 inci 90 Hz, kamera utama 50 MP, baterai 5000 mAh, pengisian 25 W. Garansi resmi Indonesia.",
-      "price": 3699000,
+      "price": 2000,
       "rating": "4,8",
       "sold": 186,
       "oldPrice": 4199000,
       "stock": 8,
-      "category": "Handphone & Tablet",
+      "category": "Agres Id",
       "brand": "Samsung",
-      "image": "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?w=640&auto=format&fit=crop&q=80",
+      "image": "",
       "icon": "Samsung",
       "city": "Jakarta",
       "createdAt": "2026-10-28T10:00:00Z"
@@ -43,14 +38,14 @@
       "sellerId": "seller-demo",
       "name": "Xiaomi Redmi Note 14 5G 8/256 GB",
       "description": "Xiaomi Redmi Note 14 5G RAM 8 GB, penyimpanan 256 GB, kamera utama 108 MP dengan OIS, layar AMOLED 6,67 inci 120 Hz, baterai 5110 mAh, pengisian turbo 45 W, chipset MediaTek Dimensity 7025-Ultra.",
-      "price": 3299000,
+      "price": 50000,
       "rating": "4,9",
       "sold": 242,
       "oldPrice": 3799000,
       "stock": 11,
-      "category": "Handphone & Tablet",
+      "category": "Agres Id",
       "brand": "Xiaomi",
-      "image": "https://images.unsplash.com/photo-1598327105666-5b89351aff97?w=640&auto=format&fit=crop&q=80",
+      "image": "",
       "icon": "Xiaomi",
       "city": "Tangerang",
       "createdAt": "2026-10-27T10:00:00Z"
@@ -347,7 +342,14 @@
       "createdAt": "2026-09-26T10:00:00Z"
     }
   ],
+  "categories": [
+    "Semua",
+    "Agres Id",
+    "Sentral Komputer",
+    "GAMER ID",
+    "Enter Komputer",
+    "KLA Computer"
+  ],
   "carts": [],
   "orders": []
 }
-

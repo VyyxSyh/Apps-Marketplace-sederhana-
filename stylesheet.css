@@ -373,11 +373,14 @@ textarea:focus-visible {
 /* Product Cards */
 .product-grid {
   display: grid;
+  align-items: stretch;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 }
 
 .product-card {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
   overflow: hidden;
   border: 1px solid #d6d3d1;
@@ -389,7 +392,8 @@ textarea:focus-visible {
 .product-art {
   position: relative;
   display: grid;
-  aspect-ratio: 1.13;
+  width: 100%;
+  aspect-ratio: 1 / 1;
   place-items: center;
   overflow: hidden;
   background: #eeeadc;
@@ -398,20 +402,12 @@ textarea:focus-visible {
 }
 
 .product-image {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
+  object-position: center;
   object-fit: cover;
-}
-
-.product-art::after {
-  position: absolute;
-  right: -19px;
-  bottom: -32px;
-  width: 82px;
-  height: 82px;
-  border: 1px solid #d2ceb9;
-  border-radius: 50%;
-  content: "";
 }
 
 .product-emoji {
@@ -439,6 +435,9 @@ textarea:focus-visible {
 }
 
 .product-info {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
   padding: 11px 11px 12px;
 }
 
@@ -558,6 +557,8 @@ textarea:focus-visible {
               color 0.15s ease,
               border-color 0.15s ease,
               box-shadow 0.15s ease;
+  margin-top: auto;
+  padding-inline: 6px;
 }
 
 @media (hover: hover) {
@@ -1038,10 +1039,6 @@ textarea:focus-visible {
     gap: 10px;
   }
 
-  .product-art {
-    aspect-ratio: 1;
-  }
-
   .product-info {
     padding: 9px;
   }
@@ -1083,10 +1080,6 @@ textarea:focus-visible {
 
   .product-name {
     font-size: 14px;
-  }
-
-  .product-art {
-    aspect-ratio: 1.25;
   }
 
   .bottom-nav {
