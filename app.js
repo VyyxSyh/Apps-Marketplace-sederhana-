@@ -102,6 +102,8 @@
     state.modal = name;
     $("modalTitle").textContent = title;
     $("modalBody").innerHTML = content;
+    $("modalBody").classList.toggle("detail-body", name === "detail");
+    $("overlay").querySelector(".dialog").classList.toggle("detail-dialog", name === "detail");
     $("overlay").hidden = false;
     document.body.classList.add("dialog-open");
     requestAnimationFrame(() => {
@@ -157,9 +159,17 @@
   function showDetail(id) {
     const product = Store.products.find(item => item.id === id);
     if (!product) return toast("Produk tidak ditemukan.");
-    openDialog(product.name, `<div class="detail-art">${product.image ? `<img class="detail-image" src="${safe(product.image)}" alt="${safe(product.name)}" width="640" height="560" onerror="this.hidden=true;this.nextElementSibling.hidden=false">` : ""}<span aria-hidden="true" ${product.image ? "hidden" : ""}>${safe(product.icon || "□")}</span></div><p class="product-category">${safe(product.category)}</p><div class="detail-price">${money(product.price)}</div>
-      <p class="detail-copy">${safe(product.description || "Belum ada deskripsi produk.")}</p><p class="detail-copy">Penjual: ${safe(sellerName(product.sellerId))} · Stok ${Number(product.stock) || 0}</p>
-      <div class="form-actions"><button class="primary-button" type="button" data-add="${safe(product.id)}" ${product.stock > 0 ? "" : "disabled"}>Tambah ke keranjang</button><button class="secondary-button" type="button" data-buy="${safe(product.id)}" ${product.stock > 0 ? "" : "disabled"}>Beli sekarang</button></div>`, "detail");
+    const discount = product.oldPrice > product.price ? Math.round((1 - product.price / product.oldPrice) * 100) : 0;
+    openDialog(product.name, `<div class="detail-art">${product.image ? `<img class="detail-image" src="${safe(product.image)}" alt="${safe(product.name)}" width="640" height="640" onerror="this.hidden=true;this.nextElementSibling.hidden=false">` : ""}<span class="detail-placeholder" aria-hidden="true" ${product.image ? "hidden" : ""}>${safe(product.icon || "□")}</span></div>
+      <div class="detail-content">
+        <p class="detail-category">${safe(product.category)}</p>
+        <div class="detail-price-row"><strong class="detail-price">${money(product.price)}</strong>${product.oldPrice ? `<del class="detail-old-price">${money(product.oldPrice)}</del>` : ""}${discount ? `<span class="detail-discount">Hemat ${discount}%</span>` : ""}</div>
+        <h3 class="detail-name">${safe(product.name)}</h3>
+        <p class="detail-rating">${product.rating ? `<span aria-hidden="true">★</span> ${safe(String(product.rating))} <span aria-hidden="true">·</span> ` : ""}${Number(product.sold) || 0}+ terjual</p>
+        <section class="detail-seller" aria-label="Informasi penjual"><strong>${safe(sellerName(product.sellerId))}</strong><span>Stok ${Number(product.stock) || 0}</span></section>
+        <section class="detail-description"><h3>Deskripsi produk</h3><p>${safe(product.description || "Belum ada deskripsi produk.")}</p></section>
+      </div>
+      <div class="detail-actions"><button class="secondary-button" type="button" data-add="${safe(product.id)}" ${product.stock > 0 ? "" : "disabled"}>Tambah ke keranjang</button><button class="primary-button" type="button" data-buy="${safe(product.id)}" ${product.stock > 0 ? "" : "disabled"}>Beli sekarang</button></div>`, "detail");
   }
 
   function showCheckout(buyId = "") {

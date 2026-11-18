@@ -682,7 +682,7 @@ textarea:focus-visible {
 .dialog {
   width: 100%;
   max-width: 560px;
-  max-height: min(88vh, 820px);
+  max-height: min(92dvh, 820px);
   overflow: auto;
   border-radius: 20px 20px 0 0;
   background: var(--surface);
@@ -720,6 +720,37 @@ textarea:focus-visible {
 
 .dialog-body {
   padding: 17px 18px calc(22px + env(safe-area-inset-bottom));
+}
+
+.dialog-body.detail-body {
+  padding: 0 0 calc(18px + env(safe-area-inset-bottom));
+}
+
+.detail-dialog .dialog-header {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  right: 0;
+  left: 0;
+  border: 0;
+  background: transparent;
+  pointer-events: none;
+}
+
+.detail-dialog .dialog-header h2 {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.detail-dialog .dialog-header .icon-button {
+  margin-left: auto;
+  border: 1px solid #62685c;
+  background: var(--surface);
+  pointer-events: auto;
 }
 
 .dialog a {
@@ -925,29 +956,126 @@ textarea:focus-visible {
 }
 
 .detail-art {
+  position: relative;
   display: grid;
-  min-height: 170px;
+  width: 100%;
+  aspect-ratio: 1;
   place-items: center;
   overflow: hidden;
-  margin-bottom: 16px;
-  border-radius: 14px;
   background: #eeeadc;
   font-size: 72px;
 }
 
 .detail-image {
-  display: block;
+  position: absolute;
+  inset: 0;
   width: 100%;
-  max-height: 360px;
-  aspect-ratio: 1.2;
-  object-fit: contain;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.detail-placeholder {
+  font-size: clamp(64px, 22vw, 120px);
+}
+
+.detail-content {
+  padding: 16px 18px 0;
+}
+
+.detail-category {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.detail-price-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
 }
 
 .detail-price {
-  margin: 8px 0;
+  margin: 0;
   color: var(--green-deep);
   font-size: 22px;
   font-weight: 1000;
+}
+
+.detail-old-price {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.detail-discount {
+  color: var(--clay);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.detail-name {
+  margin: 14px 0 8px;
+  font-family: var(--font-heading);
+  font-size: 19px;
+  line-height: 1.35;
+}
+
+.detail-rating {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.detail-rating span:first-child {
+  color: #b47700;
+}
+
+.detail-seller {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+  border-block: 1px solid var(--line);
+  padding: 13px 0;
+  font-size: 13px;
+}
+
+.detail-seller span {
+  color: var(--muted);
+}
+
+.detail-description h3 {
+  margin: 15px 0 5px;
+  font-size: 14px;
+}
+
+.detail-description p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.detail-actions {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  gap: 9px;
+  margin-top: 16px;
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+  padding: 12px 18px calc(12px + env(safe-area-inset-bottom));
+}
+
+.detail-actions > * {
+  flex: 1;
+  min-height: 44px;
+}
+
+.detail-dialog {
+  position: relative;
 }
 
 .detail-copy {
