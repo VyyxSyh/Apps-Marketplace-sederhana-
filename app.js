@@ -57,14 +57,14 @@
     const rating = Number(String(product.rating ?? "4,8").replace(",", "."));
     const sold = Number(product.sold) || 0;
     return `<article class="product-card">
-      <button class="product-art w-full border-0" type="button" data-detail="${safe(product.id)}" aria-label="Lihat detail ${safe(product.name)}">
+      <button class="product-art" type="button" data-detail="${safe(product.id)}" aria-label="Lihat detail ${safe(product.name)}">
         <span class="product-category">${safe(product.category)}</span>${product.image ? `<img class="product-image" src="${safe(product.image)}" alt="${safe(product.name)}" width="640" height="560" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.hidden=false">` : ""}<span class="product-emoji" aria-hidden="true" ${product.image ? "hidden" : ""}>${safe(product.icon || "□")}</span>
       </button>
       <div class="product-info">
-        <button class="product-name w-full border-0 bg-transparent p-0 text-left" type="button" data-detail="${safe(product.id)}">${safe(product.name)}</button>
-        <div class="product-price text-emerald-800">${money(product.price)}${product.oldPrice ? `<span class="product-old-price">${money(product.oldPrice)}</span>` : ""}</div>
+        <button class="product-name" type="button" data-detail="${safe(product.id)}">${safe(product.name)}</button>
+        <div class="product-price">${money(product.price)}${product.oldPrice ? `<span class="product-old-price">${money(product.oldPrice)}</span>` : ""}</div>
         ${product.oldPrice ? `<div class="product-promo">Hemat ${Math.max(1, Math.round((1 - product.price / product.oldPrice) * 100))}%</div>` : ""}
-        <div class="product-rating" aria-label="Rating ${rating.toFixed(1)} dari 5, ${sold} terjual"><span class="text-amber-500" aria-hidden="true">★</span><span>${rating.toFixed(1)}</span><span class="rating-separator">·</span><span>${sold}+ terjual</span></div>
+        <div class="product-rating" aria-label="Rating ${rating.toFixed(1)} dari 5, ${sold} terjual"><span class="rating-star" aria-hidden="true">★</span><span>${rating.toFixed(1)}</span><span class="rating-separator">·</span><span>${sold}+ terjual</span></div>
         <div class="product-foot">
           <span class="product-store">${safe(productStore(product))}</span>
           ${stock ? `<span class="stock-chip">Stok ${stock}</span>` : `<span class="stock-chip is-empty">Habis</span>`}
@@ -81,7 +81,7 @@
     if (state.sort === "name") products.sort((a, b) => a.name.localeCompare(b.name, "id"));
     if (state.sort === "newest") products.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     $("productHeading").textContent = state.category === "Semua" ? "Semua produk" : state.category;
-    $("productSubheading").textContent = state.query ? `Hasil pencarian: ${safe(state.query)}` : "Data contoh untuk katalog tugas";
+    $("productSubheading").textContent = state.query ? `Hasil pencarian: ${state.query}` : "Produk dari berbagai toko";
     $("products").innerHTML = products.length ? products.map(productCard).join("") : `<div class="empty-state"><strong>Produk tidak ditemukan</strong>Coba kata kunci lain atau pilih kategori berbeda.</div>`;
   }
 
@@ -102,7 +102,6 @@
     state.modal = name;
     $("modalTitle").textContent = title;
     $("modalBody").innerHTML = content;
-    $("overlay").querySelector(".dialog").setAttribute("aria-describedby", "modalTitle");
     $("overlay").hidden = false;
     document.body.classList.add("dialog-open");
     requestAnimationFrame(() => {

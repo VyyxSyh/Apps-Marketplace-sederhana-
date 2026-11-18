@@ -1,4 +1,4 @@
-﻿{
+{
   "users": [
     {
       "id": "seller-demo",
@@ -17,20 +17,8 @@
   ],
   "categories": [
     "Semua",
-    "Elektronik",
-    "Handphone & Tablet",
-    "Komputer & Laptop",
-    "Fashion Pria",
-    "Fashion Wanita",
-    "Ibu & Bayi",
-    "Kecantikan",
-    "Kesehatan",
-    "Makanan & Minuman",
-    "Rumah Tangga",
-    "Otomotif",
-    "Olahraga",
-    "Buku & Alat Tulis",
-    "Hobi & Koleksi"
+    "Agres Id",
+    "Sentral Komputer"
   ],
   "products": [
     {
@@ -130,7 +118,7 @@
       "stock": 7,
       "category": "Fashion Pria",
       "image": "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=640&auto=format&fit=crop&q=80",
-      "icon": "ðŸ‘•",
+      "icon": "??",
       "createdAt": "2026-10-25T10:00:00Z"
     },
     {
@@ -145,7 +133,7 @@
       "stock": 14,
       "category": "Elektronik",
       "image": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=640&auto=format&fit=crop&q=80",
-      "icon": "ðŸŽ§",
+      "icon": "??",
       "createdAt": "2026-10-22T10:00:00Z"
     },
     {
@@ -160,7 +148,7 @@
       "stock": 20,
       "category": "Makanan & Minuman",
       "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=640&auto=format&fit=crop&q=80",
-      "icon": "ðŸ¥—",
+      "icon": "??",
       "createdAt": "2026-10-20T10:00:00Z"
     },
     {
@@ -175,7 +163,7 @@
       "stock": 20,
       "category": "Kecantikan",
       "image": "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?w=640&auto=format&fit=crop&q=80",
-      "icon": "ðŸ§´",
+      "icon": "??",
       "tag": "Perawatan",
       "city": "Jakarta Pusat",
       "discount": "18%",
@@ -193,7 +181,7 @@
       "stock": 20,
       "category": "Kesehatan",
       "image": "https://images.unsplash.com/photo-1550572017-edd951b55104?w=640&auto=format&fit=crop&q=80",
-      "icon": "ðŸ’Š",
+      "icon": "??",
       "tag": "Kesehatan",
       "city": "Jakarta Pusat",
       "discount": "21%",
@@ -211,7 +199,7 @@
       "stock": 15,
       "category": "Rumah Tangga",
       "image": "https://images.unsplash.com/photo-1605379399642-870262d3d051?w=640&auto=format&fit=crop&q=80",
-      "icon": "ðŸ§´",
+      "icon": "??",
       "tag": "Isi 1 liter",
       "city": "Bekasi",
       "discount": "21%",
@@ -229,7 +217,7 @@
       "stock": 11,
       "category": "Kecantikan",
       "image": "https://images.unsplash.com/photo-1600857544200-b2f666a9a2ec?w=640&auto=format&fit=crop&q=80",
-      "icon": "ðŸ§¼",
+      "icon": "??",
       "tag": "Paket isi 3",
       "city": "Yogyakarta",
       "discount": "20%",
@@ -247,7 +235,7 @@
       "stock": 5,
       "category": "Rumah Tangga",
       "image": "https://images.unsplash.com/photo-1556911220-bff31c812dba?w=640&auto=format&fit=crop&q=80",
-      "icon": "ðŸ³",
+      "icon": "??",
       "tag": "Paket 5 pcs",
       "city": "Semarang",
       "discount": "31%",
@@ -265,7 +253,7 @@
       "stock": 6,
       "category": "Komputer & Laptop",
       "image": "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=640&auto=format&fit=crop&q=80",
-      "icon": "ðŸ’»",
+      "icon": "??",
       "createdAt": "2026-10-06T10:00:00Z"
     },
     {
@@ -280,7 +268,7 @@
       "stock": 30,
       "category": "Buku & Alat Tulis",
       "image": "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=640&auto=format&fit=crop&q=80",
-      "icon": "ðŸ“š",
+      "icon": "??",
       "tag": "Alat tulis",
       "city": "Depok",
       "discount": "20%",
@@ -298,7 +286,7 @@
       "stock": 13,
       "category": "Otomotif",
       "image": "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=640&auto=format&fit=crop&q=80",
-      "icon": "ðŸš˜",
+      "icon": "??",
       "tag": "Aksesori",
       "city": "Bekasi",
       "discount": "16%",
@@ -316,7 +304,7 @@
       "stock": 10,
       "category": "Olahraga",
       "image": "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=640&auto=format&fit=crop&q=80",
-      "icon": "ðŸ‘Ÿ",
+      "icon": "??",
       "tag": "Olahraga",
       "city": "Bandung",
       "discount": "15%",
@@ -334,7 +322,7 @@
       "stock": 9,
       "category": "Ibu & Bayi",
       "image": "https://images.unsplash.com/photo-1519689680058-324335c77eba?w=640&auto=format&fit=crop&q=80",
-      "icon": "ðŸ§¸",
+      "icon": "??",
       "tag": "Perlengkapan bayi",
       "city": "Bogor",
       "discount": "20%",
@@ -352,7 +340,7 @@
       "stock": 16,
       "category": "Komputer & Laptop",
       "image": "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=640&auto=format&fit=crop&q=80",
-      "icon": "ðŸ–±ï¸",
+      "icon": "???",
       "tag": "Aksesori komputer",
       "city": "Tangerang",
       "discount": "18%",
