@@ -138,7 +138,6 @@
     const discount = product.oldPrice > product.price ? Math.round((1 - product.price / product.oldPrice) * 100) : 0;
     openDialog(product.name, `<div class="detail-art">${product.image ? `<img class="detail-image" src="${safe(product.image)}" alt="${safe(product.name)}" width="640" height="640" onerror="this.hidden=true;this.nextElementSibling.hidden=false">` : ""}<span class="detail-placeholder" aria-hidden="true" ${product.image ? "hidden" : ""}>${safe(product.icon || "□")}</span></div>
       <div class="detail-content">
-        <p class="detail-category">${safe(sellerName(product.sellerId))}</p>
         <div class="detail-price-row"><strong class="detail-price">${money(product.price)}</strong>${product.oldPrice ? `<del class="detail-old-price">${money(product.oldPrice)}</del>` : ""}${discount ? `<span class="detail-discount">Hemat ${discount}%</span>` : ""}</div>
         <h3 class="detail-name">${safe(product.name)}</h3>
         <div class="detail-meta"><p class="detail-rating">${product.rating ? `<span aria-hidden="true">★</span> ${safe(String(product.rating))} <span aria-hidden="true">·</span> ` : ""}${Number(product.sold) || 0}+ terjual</p><span class="detail-stock">Stok ${Number(product.stock) || 0}</span></div>
@@ -205,7 +204,7 @@
     if (productId && !product) return toast("Produk ini bukan milik tokomu.");
     openDialog(product ? "Edit produk" : "Tambah produk", `<form id="productForm" data-product-id="${safe(product?.id || "")}" novalidate>
       <div class="field"><label for="productName">Nama produk</label><input id="productName" name="name" required value="${safe(product?.name || "")}"></div>
-      <div class="field"><label for="productDescription">Deskripsi</label><textarea id="productDescription" name="description" rows="3">${safe(product?.description || "")}</textarea></div>
+      <div class="field"><label for="productDescription">Deskripsi</label><textarea id="productDescription" name="description" rows="6" aria-describedby="descriptionHint">${safe(product?.description || "")}</textarea><small id="descriptionHint">Tekan Enter untuk baris baru. Pakai • di awal baris untuk poin.</small></div>
       <div class="field"><label for="productPrice">Harga (rupiah)</label><input id="productPrice" name="price" type="number" inputmode="numeric" min="0" step="1" required value="${safe(product?.price ?? "")}"></div>
       <div class="field"><label for="productStock">Stok</label><input id="productStock" name="stock" type="number" inputmode="numeric" min="0" step="1" required value="${safe(product?.stock ?? "")}"></div>
       <div class="field"><label for="productCategory">Kategori</label><select id="productCategory" name="category">${Store.categories.filter(category => category !== "Semua").map(category => `<option ${product?.category === category ? "selected" : ""}>${safe(category)}</option>`).join("")}</select></div>
