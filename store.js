@@ -63,22 +63,30 @@
         const data = await response.json();
         write(keys.products, data.products);
         write(keys.categories, data.categories);
-        if (!localStorage.getItem(keys.users)) write(keys.users, data.users || []);
+        const users = read(keys.users, []);
+        const demoIds = new Set(["seller-demo", ...((data.users || []).filter(user => user.role === "seller").map(user => user.id))]);
+        write(keys.users, [...(data.users || []).filter(user => user.demo), ...users.filter(user => !demoIds.has(user.id) && !user.demo)]);
+        const session = read(keys.session, null);
+        if (session?.userId === "seller-demo") write(keys.session, { userId: "seller-agres", role: "seller" });
         return;
       }
     } catch { /* Use local seed data when not running through the Node server. */ }
     if (localStorage.getItem(keys.users) && localStorage.getItem(keys.products)) {
       migrateCategories();
-      if (localStorage.getItem("tokoko-seed-version") !== "5") {
+      if (localStorage.getItem("tokoko-seed-version") !== "6") {
         try {
           const response = await fetch("data.json");
           if (response.ok) {
             const seed = await response.json();
             const demoIds = new Set(["beras-premium", "minyak-goreng", "telur-ayam", "mi-instan", "paket-p3k", "vitamin-c", "kaos-katun", "deterjen-cair", "sabun-mandi", "alat-dapur", "smartphone-demo", "samsung-galaxy-a16-5g", "xiaomi-redmi-note-14-5g", "oppo-a3x", "vivo-y28", "realme-c75", "headphone-demo", "salad-demo", "skincare-demo", "laptop-demo", "buku-demo", "otomotif-demo", "sepatu-lari", "perlengkapan-bayi", "mouse-wireless"]);
+            const demoSellerIds = new Set(["seller-demo", ...seed.users.filter(user => user.role === "seller").map(user => user.id)]);
             const custom = read(keys.products, []).filter(product => !demoIds.has(product.id));
             write(keys.products, [...seed.products, ...custom]);
             write(keys.categories, seed.categories);
-            localStorage.setItem("tokoko-seed-version", "5");
+            write(keys.users, [...seed.users, ...read(keys.users, []).filter(user => !demoSellerIds.has(user.id) && !user.demo)]);
+            const session = read(keys.session, null);
+            if (session?.userId === "seller-demo") write(keys.session, { userId: "seller-agres", role: "seller" });
+            localStorage.setItem("tokoko-seed-version", "6");
           }
         } catch { /* Keep existing browser data when seed file is unavailable. */ }
       }
@@ -91,7 +99,7 @@
       Object.entries({ users: seed.users, products: seed.products, categories: seed.categories, carts: seed.carts, orders: seed.orders }).forEach(([name, value]) => {
         if (!localStorage.getItem(keys[name])) write(keys[name], value);
       });
-      write("tokoko-seed-version", "5");
+      write("tokoko-seed-version", "6");
     } catch {
       throw new Error("Data awal gagal dimuat. Jalankan lewat Live Server atau pastikan data.json tersedia.");
     }

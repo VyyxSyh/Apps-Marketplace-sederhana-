@@ -6,30 +6,6 @@
   const cartForUser = userId => Store.carts.filter(item => item.userId === userId);
   const currentUser = () => Store.users.find(user => user.id === Store.session?.userId) || null;
   const sellerName = id => Store.users.find(user => user.id === id)?.name || "Penjual lokal";
-  const brandStore = {
-    Samsung: "Samsung Official Store",
-    Xiaomi: "Xiaomi Official Store",
-    OPPO: "OPPO Official Store",
-    vivo: "vivo Official Store",
-    realme: "realme Official Store"
-  };
-  const productStore = product => brandStore[product.brand] || ({
-    "Handphone & Tablet": "Xiaomi Official Store",
-    "Komputer & Laptop": "Lenovo Official Store",
-    "Elektronik": "JBL Official Store",
-    "Fashion Pria": "Erigo Official Store",
-    "Fashion Wanita": "Cottonink Official Store",
-    "Makanan & Minuman": "Dapur Segar",
-    "Kecantikan": "Wardah Official Store",
-    "Kesehatan": "Kimia Farma Official Store",
-    "Rumah Tangga": "Maspion Official Store",
-    "Buku & Alat Tulis": "Gramedia Official Store",
-    "Otomotif": "Planet Ban Official Store",
-    "Olahraga": "Decathlon Official Store",
-    "Ibu & Bayi": "MamyPoko Official Store",
-    "Hobi & Koleksi": "Multi Toys Official Store"
-  })[product.category] || sellerName(product.sellerId);
-
   function toast(message) {
     const el = $("toast");
     el.textContent = message;
@@ -66,7 +42,7 @@
         ${product.oldPrice ? `<div class="product-promo">Hemat ${Math.max(1, Math.round((1 - product.price / product.oldPrice) * 100))}%</div>` : ""}
         <div class="product-rating" aria-label="Rating ${rating.toFixed(1)} dari 5, ${sold} terjual"><span class="rating-star" aria-hidden="true">★</span><span>${rating.toFixed(1)}</span><span class="rating-separator">·</span><span>${sold}+ terjual</span></div>
         <div class="product-foot">
-          <span class="product-store">${safe(productStore(product))}</span>
+          <span class="product-store">${safe(sellerName(product.sellerId))}</span>
           ${stock ? `<span class="stock-chip">Stok ${stock}</span>` : `<span class="stock-chip is-empty">Habis</span>`}
         </div>
         <button class="product-add" type="button" data-add="${safe(product.id)}" ${stock ? "" : "disabled"}>${stock ? "Tambah ke keranjang" : "Stok habis"}</button>
@@ -141,7 +117,7 @@
         <p id="authError" class="form-error" role="alert"></p><button class="primary-button full-width" type="submit">${register ? "Buat akun" : "Masuk"}</button>
       </form>
       <p class="auth-switch">${register ? "Sudah punya akun?" : "Belum punya akun?"} <button class="text-link" type="button" data-auth-mode="${register ? "login" : "register"}" data-next="${safe(next)}">${register ? "Masuk" : "Daftar"}</button></p>
-      <details class="demo-accounts"><summary>Akun contoh</summary><p>Penjual: penjual@tokoko.test / tokoko123</p><p>Pembeli: pembeli@tokoko.test / tokoko123</p></details>`, "auth");
+       <details class="demo-accounts"><summary>Akun contoh</summary>${Store.users.filter(user => user.demo).map(user => `<p>${safe(user.name)}: ${safe(user.email)} / ${safe(user.password)}</p>`).join("")}</details>`, "auth");
   }
 
   function cartTotal(items) { return items.reduce((sum, item) => sum + Number(item.price) * item.quantity, 0); }
@@ -162,7 +138,7 @@
     const discount = product.oldPrice > product.price ? Math.round((1 - product.price / product.oldPrice) * 100) : 0;
     openDialog(product.name, `<div class="detail-art">${product.image ? `<img class="detail-image" src="${safe(product.image)}" alt="${safe(product.name)}" width="640" height="640" onerror="this.hidden=true;this.nextElementSibling.hidden=false">` : ""}<span class="detail-placeholder" aria-hidden="true" ${product.image ? "hidden" : ""}>${safe(product.icon || "□")}</span></div>
       <div class="detail-content">
-        <p class="detail-category">${safe(product.category)}</p>
+        <p class="detail-category">${safe(sellerName(product.sellerId))}</p>
         <div class="detail-price-row"><strong class="detail-price">${money(product.price)}</strong>${product.oldPrice ? `<del class="detail-old-price">${money(product.oldPrice)}</del>` : ""}${discount ? `<span class="detail-discount">Hemat ${discount}%</span>` : ""}</div>
         <h3 class="detail-name">${safe(product.name)}</h3>
         <div class="detail-meta"><p class="detail-rating">${product.rating ? `<span aria-hidden="true">★</span> ${safe(String(product.rating))} <span aria-hidden="true">·</span> ` : ""}${Number(product.sold) || 0}+ terjual</p><span class="detail-stock">Stok ${Number(product.stock) || 0}</span></div>
@@ -286,7 +262,7 @@
         const user = { id: crypto.randomUUID(), name: String(data.get("name")).trim(), email, password, role: data.get("role") };
         Store.users = [...Store.users, user]; Store.session = { userId: user.id, role: user.role };
       } else {
-        const user = Store.users.find(item => item.email.toLowerCase() === email && item.password === password);
+      const user = Store.users.find(item => item.email.toLowerCase() === email && item.password === password);
         if (!user) { error.textContent = "Email atau kata sandi tidak cocok."; return; }
         Store.session = { userId: user.id, role: user.role };
       }
