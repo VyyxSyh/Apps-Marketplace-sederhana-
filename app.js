@@ -617,6 +617,7 @@
   async function start() {
     const page = document.body.dataset.page;
     if (!page) $("products").innerHTML = `<p class="loading-state" role="status">Memuat produk...</p>`;
+    setNav();
     try {
       await Store.init();
       setNav();
