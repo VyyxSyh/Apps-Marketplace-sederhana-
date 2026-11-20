@@ -77,6 +77,17 @@
   }
 
   function openDialog(title, content, name) {
+    if (["seller-products", "account", "warehouse", "password-form", "store-profile", "product-form", "orders", "buyer-chats"].includes(name)) {
+      state.lastFocus = document.activeElement;
+      state.modal = name;
+      $("fullPageTitle").textContent = title;
+      $("fullPageBody").innerHTML = content;
+      $("fullPage").hidden = false;
+      document.body.classList.add("dialog-open");
+      requestAnimationFrame(() => $("fullPage").querySelector("button, input, select, textarea")?.focus() || $("fullPageTitle").focus());
+      return;
+    }
+    $("fullPage").hidden = true;
     state.lastFocus = document.activeElement;
     state.modal = name;
     $("modalTitle").textContent = title;
@@ -92,6 +103,14 @@
   }
 
   function closeDialog() {
+    if (!$("fullPage").hidden) {
+      $("fullPage").hidden = true;
+      document.body.classList.remove("dialog-open");
+      state.modal = "";
+      state.lastFocus?.focus?.();
+      render();
+      return;
+    }
     if ($("overlay").hidden) return;
     $("overlay").hidden = true;
     document.body.classList.remove("dialog-open");
@@ -191,16 +210,9 @@
 
   const statusLabel = status => ({ "Diproses": "Menunggu penjualan", "Diteruskan ke gudang": "Menunggu gudang", "Disiapkan": "Sedang disiapkan", "Dikemas": "Siap dikirim", "Dikirim": "Dalam pengiriman", "Selesai": "Selesai", "Dibatalkan": "Dibatalkan" }[status] || status);
   function showSalesOrders() {
-    const seller = requireRole("seller");
-    if (!seller) return;
-    const orders = Store.orders.filter(order => order.items.some(item => item.sellerId === seller.id)).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-    const rows = orders.map(order => {
-      const items = order.items.filter(item => item.sellerId === seller.id);
-      const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-      const action = order.status === "Diproses" ? `<button class="primary-button" type="button" data-handoff="${safe(order.id)}">Teruskan ke gudang</button>` : "";
-      return `<article class="list-row order-row"><div><strong>${safe(order.orderNumber)}</strong><div>${new Date(order.createdAt).toLocaleDateString("id-ID")} · ${safe(statusLabel(order.status))}</div><div>${items.map(item => `${safe(item.name)} × ${item.quantity}`).join(", ")}</div><div>Pembeli: ${safe(order.shipping?.name || "—")} · ${money(total)}</div></div>${action}</article>`;
-    }).join("");
-    openDialog("Pesanan penjualan", rows || `<div class="empty-state"><strong>Belum ada pesanan toko</strong>Pesanan pembeli untuk produk tokomu akan tampil di sini.</div>`, "sales-orders");
+    if (!requireRole("seller")) return;
+    state.sellerTab = "orders";
+    return showSellerProducts();
   }
 
   function showWarehouse() {
@@ -214,10 +226,9 @@
   }
 
   function showSalesTools() {
-    const seller = requireRole("seller");
-    if (!seller) return;
-    const products = Store.products.filter(product => product.sellerId === seller.id);
-    openDialog("Penjualan", `<h3>Atur harga</h3>${products.map(product => `<form class="price-form list-row" data-price-product="${safe(product.id)}"><div><strong>${safe(product.name)}</strong><div>Stok tersedia: ${product.stock}</div></div><label>Harga <input name="price" type="number" min="0" step="1" required value="${product.price}"></label><button class="secondary-button" type="submit">Simpan</button></form>`).join("") || `<div class="empty-state"><strong>Belum ada produk</strong>Tambahkan produk dari menu Produk saya.</div>`}<h3 class="mt-4">Laporan penjualan</h3>${salesReport(seller.id)}<h3 class="mt-4">Pesan pelanggan</h3>${showChatList(seller.id)}`, "sales-tools");
+    if (!requireRole("seller")) return;
+    state.sellerTab = "sales";
+    return showSellerProducts();
   }
 
   function salesReport(sellerId) {
@@ -509,7 +520,7 @@
       if (!order) return toast("Pesanan tidak dapat diteruskan.");
       order.status = "Diteruskan ke gudang"; (order.history ||= []).push({ status: order.status, at: new Date().toISOString(), userId: seller.id });
       try { await Store.save(); } catch (error) { return toast(error.message); }
-      showSalesOrders(); return;
+      showSellerProducts(); return;
     }
     if (target.dataset.fulfill) {
       const warehouse = currentUser(); const order = Store.orders.find(item => item.id === target.dataset.order); const next = { pick: ["Diteruskan ke gudang", "Disiapkan"], pack: ["Disiapkan", "Dikemas"], ship: ["Dikemas", "Dikirim"] }[target.dataset.fulfill];
@@ -560,7 +571,7 @@
       Store.products = Store.products.filter(item => item.id !== product.id);
       try { await Store.save(); }
       catch { return toast("Produk gagal dihapus dari data.json."); }
-      closeDialog(); showSellerProducts(); toast("Produk dihapus."); return;
+      showSellerProducts(); toast("Produk dihapus."); return;
     }
     const action = target.dataset.action;
     if (!action) return;
@@ -570,23 +581,22 @@
       case "checkout": showCheckout(); break;
       case "orders": showOrders(); break;
       case "sales-orders": showSalesOrders(); break;
-      case "warehouse": showWarehouse(); break;
       case "sales-tools": showSalesTools(); break;
       case "buyer-chats": showBuyerChats(); break;
       case "account": showAccount(); break;
       case "edit-store-profile": showStoreProfile(); break;
       case "change-password": showPasswordForm(); break;
-      case "login": showAuth(); break;
-      case "seller-products": showSellerProducts(); break;
       case "new-product": showProductForm(); break;
       case "logout": Store.session = null; closeDialog(); render(); toast("Kamu sudah keluar."); break;
+      case "seller-products": state.sellerTab = "products"; showSellerProducts(); break;
+      case "login": showAuth(); break;
     }
   });
   $("overlay").addEventListener("click", event => { if (event.target === $("overlay")) closeDialog(); });
   document.addEventListener("keydown", event => {
     if (event.key === "Escape") closeDialog();
-    if (event.key === "Tab" && !$("overlay").hidden) {
-      const dialog = $("overlay").querySelector(".dialog");
+    if (event.key === "Tab" && (!$("overlay").hidden || !$("fullPage").hidden)) {
+      const dialog = !$("fullPage").hidden ? $("fullPage") : $("overlay").querySelector(".dialog");
       const focusable = [...dialog.querySelectorAll("a[href], button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), summary, [tabindex='0']")];
       if (!focusable.length) { event.preventDefault(); dialog.focus(); return; }
       const first = focusable[0], last = focusable[focusable.length - 1];
