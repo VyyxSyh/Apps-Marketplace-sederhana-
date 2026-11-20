@@ -5,18 +5,11 @@
       "name": "Pembeli Demo",
       "email": "pembeli@tokoko.test",
       "password": "tokoko123",
-      "role": "buyer"
+      "role": "buyer",
+      "demo": true
     }
   ],
   "seller": [
-    {
-      "id": "seller-agres",
-      "name": "Agres Id",
-      "email": "agres@tokoko.test",
-      "password": "tokoko123",
-      "role": "seller",
-      "demo": true
-    },
     {
       "id": "seller-sentral",
       "name": "Sentral Komputer",
@@ -48,7 +41,24 @@
       "password": "tokoko123",
       "role": "seller",
       "demo": true
+    },
+    {
+      "id": "seller-agres",
+      "name": "Agres Id",
+      "email": "agres@tokoko.test",
+      "password": "tokoko123",
+      "role": "seller",
+      "demo": true
     }
   ],
-  "gudang": []
+  "gudang": [
+    {
+      "id": "warehouse-demo",
+      "name": "Gudang Demo",
+      "email": "gudang@tokoko.test",
+      "password": "tokoko123",
+      "role": "gudang",
+      "demo": true
+    }
+  ]
 }

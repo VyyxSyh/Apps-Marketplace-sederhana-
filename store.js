@@ -5,6 +5,8 @@
     categories: "tokoko-categories",
     carts: "tokoko-carts",
     orders: "tokoko-orders",
+    chats: "tokoko-chats",
+    stockMovements: "tokoko-stock-movements",
     session: "tokoko-session"
   };
   let apiAvailable = false;
@@ -14,6 +16,7 @@
   };
   const flattenUsers = data => ["buyer", "seller", "gudang"].flatMap(role => Array.isArray(data[role]) ? data[role] : []);
   const groupUsers = users => Object.fromEntries(["buyer", "seller", "gudang"].map(role => [role, users.filter(user => user.role === role)]));
+  const isDemoUser = user => user.demo || ["buyer-demo", "seller-agres", "seller-sentral", "seller-gamer", "seller-enter", "seller-kla", "warehouse-demo"].includes(user.id);
   const categoryMap = {
     "Sembako": "Makanan & Minuman",
     "Obat & P3K": "Kesehatan",
@@ -68,9 +71,12 @@
         apiAvailable = true;
         write(keys.products, data.products);
         write(keys.categories, data.categories);
+        write(keys.orders, data.orders || []);
+        write(keys.chats, data.chats || []);
+        write(keys.stockMovements, data.stockMovements || []);
         const users = read(keys.users, []);
         const seededUsers = flattenUsers(userData);
-        const demoIds = new Set(seededUsers.filter(user => user.demo).map(user => user.id));
+        const demoIds = new Set(seededUsers.filter(isDemoUser).map(user => user.id));
         const localUsers = new Map(users.filter(user => !demoIds.has(user.id) && !user.demo).map(user => [user.id, user]));
         const mergedUsers = new Map(seededUsers.map(user => [user.id, user]));
         for (const user of localUsers.values()) if (![...mergedUsers.values()].some(seed => seed.id === user.id || seed.email.toLowerCase() === user.email.toLowerCase())) mergedUsers.set(user.id, user);
@@ -81,6 +87,7 @@
       }
     } catch { /* Use local seed data when not running through the Node server. */ }
     if (localStorage.getItem(keys.users) && localStorage.getItem(keys.products)) {
+      for (const [key, value] of [[keys.orders, []], [keys.chats, []], [keys.stockMovements, []]]) if (!localStorage.getItem(key)) write(key, value);
       migrateCategories();
       if (localStorage.getItem("tokoko-seed-version") !== "6") {
         try {
@@ -89,7 +96,7 @@
             const [seed, userSeed] = await Promise.all([response.json(), usersResponse.json()]);
             const demoIds = new Set(["beras-premium", "minyak-goreng", "telur-ayam", "mi-instan", "paket-p3k", "vitamin-c", "kaos-katun", "deterjen-cair", "sabun-mandi", "alat-dapur", "smartphone-demo", "samsung-galaxy-a16-5g", "xiaomi-redmi-note-14-5g", "oppo-a3x", "vivo-y28", "realme-c75", "headphone-demo", "salad-demo", "skincare-demo", "laptop-demo", "buku-demo", "otomotif-demo", "sepatu-lari", "perlengkapan-bayi", "mouse-wireless"]);
             const seededUsers = flattenUsers(userSeed);
-            const demoSellerIds = new Set(["seller-demo", ...seededUsers.filter(user => user.role === "seller").map(user => user.id)]);
+            const demoSellerIds = new Set(["seller-demo", ...seededUsers.filter(isDemoUser).map(user => user.id)]);
             const custom = read(keys.products, []).filter(product => !demoIds.has(product.id));
             write(keys.products, [...seed.products, ...custom]);
             write(keys.categories, seed.categories);
@@ -109,7 +116,7 @@
       const [response, usersResponse] = await Promise.all([fetch("data.json"), fetch("users.json")]);
       if (!response.ok || !usersResponse.ok) throw new Error("seed fetch failed");
       const [seed, userSeed] = await Promise.all([response.json(), usersResponse.json()]);
-      Object.entries({ users: flattenUsers(userSeed), products: seed.products, categories: seed.categories, carts: seed.carts, orders: seed.orders }).forEach(([name, value]) => {
+       Object.entries({ users: flattenUsers(userSeed), products: seed.products, categories: seed.categories, carts: seed.carts, orders: seed.orders, chats: seed.chats || [], stockMovements: seed.stockMovements || [] }).forEach(([name, value]) => {
         if (!localStorage.getItem(keys[name])) write(keys[name], value);
       });
       write("tokoko-seed-version", "6");
@@ -120,19 +127,41 @@
 
   window.Store = {
     init,
+    async authenticate(credentials) {
+      if (apiAvailable) {
+        const response = await fetch("/api/auth", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(credentials) });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "Autentikasi gagal.");
+        return credentials.action === "register" ? { ...result.user, password: credentials.password } : result.user;
+      }
+      if (credentials.action === "register") {
+        const user = { id: crypto.randomUUID(), name: credentials.name.trim(), email: credentials.email.trim().toLowerCase(), password: credentials.password, role: credentials.role };
+        if (this.users.some(item => item.email.toLowerCase() === user.email)) throw new Error("Email sudah terdaftar.");
+        this.users = [...this.users, (({ password, ...safeUser }) => safeUser)(user)];
+        return user;
+      }
+      const user = this.users.find(item => item.email.toLowerCase() === credentials.email.trim().toLowerCase() && item.password === credentials.password);
+      if (!user) throw new Error("Email atau kata sandi tidak cocok.");
+      return user;
+    },
+    async changePassword(userId, currentPassword, newPassword) {
+      if (!apiAvailable) throw new Error("Ubah kata sandi hanya tersedia saat memakai server Node.js.");
+      const response = await fetch("/api/password", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ userId, currentPassword, newPassword }) });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Kata sandi gagal diubah.");
+    },
     async save() {
-      const data = { users: this.users, products: this.products, categories: this.categories, carts: this.carts, orders: this.orders };
+    const data = { users: this.users, products: this.products, categories: this.categories, carts: this.carts, orders: this.orders, chats: this.chats, stockMovements: this.stockMovements };
       try {
         if (!apiAvailable) throw new Error("Static mode");
-        const [usersResponse, dataResponse] = await Promise.all([
-          fetch("/api/users", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(groupUsers(data.users)) }),
-          fetch("/api/data", {
+        const usersResponse = await fetch("/api/users", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(groupUsers(data.users)) });
+        if (!usersResponse.ok) throw new Error("Penyimpanan akun gagal.");
+        const dataResponse = await fetch("/api/data", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ products: data.products, categories: data.categories, carts: data.carts, orders: data.orders })
-          })
-        ]);
-        if (!usersResponse.ok || !dataResponse.ok) throw new Error("API penyimpanan tidak tersedia.");
+          body: JSON.stringify({ products: data.products, categories: data.categories, carts: data.carts, orders: data.orders, chats: data.chats, stockMovements: data.stockMovements })
+        });
+        if (!dataResponse.ok) throw new Error("Penyimpanan data gagal.");
       } catch {
         Object.entries(data).forEach(([name, value]) => write(keys[name], value));
       }
@@ -146,6 +175,10 @@
     set carts(value) { write(keys.carts, value); },
     get orders() { return read(keys.orders, []); },
     set orders(value) { write(keys.orders, value); },
+    get chats() { return read(keys.chats, []); },
+    set chats(value) { write(keys.chats, value); },
+    get stockMovements() { return read(keys.stockMovements, []); },
+    set stockMovements(value) { write(keys.stockMovements, value); },
     get session() { return read(keys.session, null); },
     set session(value) { value ? write(keys.session, value) : localStorage.removeItem(keys.session); },
     reset() { Object.values(keys).forEach(key => localStorage.removeItem(key)); }

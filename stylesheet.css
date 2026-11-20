@@ -895,6 +895,44 @@ textarea:focus-visible {
   flex: 1;
 }
 
+.seller-tabs {
+  position: sticky;
+  z-index: 2;
+  top: 0;
+  display: flex;
+  gap: 4px;
+  margin: -16px -16px 18px;
+  padding: 8px 12px 0;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.seller-tabs button {
+  position: relative;
+  flex: 1 0 0;
+  min-width: 88px;
+  min-height: 48px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-weight: 700;
+}
+
+.seller-tabs button.is-active {
+  color: var(--green-deep);
+}
+
+.seller-tabs button.is-active::after {
+  position: absolute;
+  right: 12px;
+  bottom: -1px;
+  left: 12px;
+  border-bottom: 3px solid var(--green);
+  content: "";
+}
+
 .notice {
   margin-bottom: 14px;
   border-radius: 9px;

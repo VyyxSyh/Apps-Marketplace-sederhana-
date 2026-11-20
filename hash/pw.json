@@ -1,0 +1,30 @@
+{
+  "buyer-demo": {
+    "salt": "97498a984982153dd57184299fcd11b0",
+    "hash": "cf6c66fac576d4554254897bc0fb812d94afa898b5ddbcaeab0d48596b470ee1004cf664726705b05f6db88fc8c8f9547d3de3a13971d758b75b16c7f035af02"
+  },
+  "seller-sentral": {
+    "salt": "216ae4e4ed6b2268b7df5ea09843ec33",
+    "hash": "9c8860a092d013b7acfcd7bad4ebd904d90436f7a238fee46d8eb33f696a3915e9540588c4655206b4afc7e975ff6dd90092cea2de577d28bc6451ac77dab055"
+  },
+  "seller-gamer": {
+    "salt": "a2ff8698f0f1a46b55c624dccfdeacc3",
+    "hash": "2db0f0f734b26cc9cedc583867ac838f0e218814973eb84d8b641cb749f86e8fb239b6eda3f5897d8a0f8ad9cbc016b8e3deefeff161dc7f7324e482538172c8"
+  },
+  "seller-enter": {
+    "salt": "e2c7694f9384b8923254704130d80074",
+    "hash": "5d4c947cc67732425ccaee9ed1d1e78ecd6418f50917a47adc5032aa112d5d61b18ef2c9d0429209c2359f08f5bb509e929b6028be5037bf01b26ee8218cd945"
+  },
+  "seller-kla": {
+    "salt": "ccc19242a50401b6e932dae44fe73bb3",
+    "hash": "637fc349548e4fa974d96723248089cd047c4c83abf9423f54a0027533849939d61c6d59b6f178f128bb40609dbfcebbd4edfe21c9bd753876a4fdce81f1fea7"
+  },
+  "seller-agres": {
+    "salt": "1e3f4dae12e4c488fcdfab460daa3f41",
+    "hash": "4e41247da9638feb588cefdd80cec843ea1efe9424565b3d66265fe85d39af94c2e9155cb78979e142807ac3889096aabbb42cfb0006264d0d77e398ad689855"
+  },
+  "warehouse-demo": {
+    "salt": "3dbabf5f99927a80cdf7dff62e8e04c8",
+    "hash": "bc1c84aca6e4c36c553a841384af821aac9ffd0f0e983f29d0afaf6351787598b8f346cb55ecdb84b3c68146e5561664b346a24b7ae6b4b34db9f1b47b92fffc"
+  }
+}
