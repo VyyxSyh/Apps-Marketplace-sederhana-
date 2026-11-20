@@ -142,7 +142,7 @@
         <h3 class="detail-name">${safe(product.name)}</h3>
         <div class="detail-meta"><p class="detail-rating">${product.rating ? `<span aria-hidden="true">★</span> ${safe(String(product.rating))} <span aria-hidden="true">·</span> ` : ""}${Number(product.sold) || 0}+ terjual</p><span class="detail-stock">Stok ${Number(product.stock) || 0}</span></div>
         <section class="store-details" aria-label="Detail toko">
-          <div class="store-heading"><span class="store-mark" aria-hidden="true">${safe(sellerName(product.sellerId).slice(0, 1).toUpperCase())}</span><div class="store-identity"><h3>${safe(sellerName(product.sellerId))}</h3>${product.city ? `<p>Lokasi produk · ${safe(product.city)}</p>` : ""}</div><button class="store-follow" type="button" data-follow="${safe(product.sellerId)}" aria-pressed="${localStorage.getItem(`tokoko-follow-${product.sellerId}`) === "true"}">${localStorage.getItem(`tokoko-follow-${product.sellerId}`) === "true" ? "Mengikuti" : "Ikuti"}</button></div>
+          <div class="store-heading"><span class="store-mark" aria-hidden="true">${safe(sellerName(product.sellerId).slice(0, 1).toUpperCase())}</span><div class="store-identity"><h3>${safe(sellerName(product.sellerId))}</h3>${Store.users.find(user => user.id === product.sellerId)?.city ? `<p>Lokasi toko · ${safe(Store.users.find(user => user.id === product.sellerId).city)}</p>` : ""}</div><button class="store-follow" type="button" data-follow="${safe(product.sellerId)}" aria-pressed="${localStorage.getItem(`tokoko-follow-${product.sellerId}`) === "true"}">${localStorage.getItem(`tokoko-follow-${product.sellerId}`) === "true" ? "Mengikuti" : "Ikuti"}</button></div>
           <p class="store-inventory">${Store.products.filter(item => item.sellerId === product.sellerId).length.toLocaleString("id-ID")} produk di toko</p>
         </section>
         <section class="detail-description"><h3>Deskripsi produk</h3><p>${safe(product.description || "Belum ada deskripsi produk.")}</p></section>
@@ -186,7 +186,17 @@
 
   function showAccount() {
     const user = currentUser();
-    openDialog("Akun", user ? `<div class="list-row"><span>Nama</span><strong>${safe(user.name)}</strong></div><div class="list-row"><span>Email</span><span>${safe(user.email)}</span></div><div class="list-row"><span>Peran</span><span>${user.role === "seller" ? "Penjual" : "Pembeli"}</span></div><button class="danger-button full-width mt-4" type="button" data-action="logout">Keluar</button>` : `<div class="notice">Masuk untuk memakai keranjang atau mengelola produk.</div><button class="primary-button full-width" type="button" data-action="login">Masuk</button><button class="secondary-button full-width mt-2" type="button" data-auth-mode="register">Buat akun</button>`, "account");
+    openDialog("Akun", user ? `<div class="list-row"><span>Nama</span><strong>${safe(user.name)}</strong></div><div class="list-row"><span>Email</span><span>${safe(user.email)}</span></div><div class="list-row"><span>Peran</span><span>${user.role === "seller" ? "Penjual" : "Pembeli"}</span></div>${user.role === "seller" ? `<div class="list-row"><span>Lokasi toko</span><span>${safe(user.city || "Belum diatur")}</span></div><button class="secondary-button full-width mt-2" type="button" data-action="edit-store-profile">Edit profil toko</button>` : ""}<button class="danger-button full-width mt-4" type="button" data-action="logout">Keluar</button>` : `<div class="notice">Masuk untuk memakai keranjang atau mengelola produk.</div><button class="primary-button full-width" type="button" data-action="login">Masuk</button><button class="secondary-button full-width mt-2" type="button" data-auth-mode="register">Buat akun</button>`, "account");
+  }
+
+  function showStoreProfile() {
+    const seller = requireRole("seller");
+    if (!seller) return;
+    openDialog("Profil toko", `<form id="storeProfileForm" novalidate>
+      <div class="field"><label for="storeName">Nama toko</label><input id="storeName" name="name" autocomplete="organization" required minlength="2" maxlength="80" value="${safe(seller.name)}"></div>
+      <div class="field"><label for="storeCity">Kota toko</label><input id="storeCity" name="city" autocomplete="address-level2" required minlength="2" maxlength="80" value="${safe(seller.city || "")}"></div>
+      <p id="storeProfileError" class="form-error" role="alert" aria-live="polite"></p><button class="primary-button full-width" type="submit">Simpan perubahan</button>
+    </form>`, "store-profile");
   }
 
   function showSellerProducts() {
@@ -274,6 +284,18 @@
       else if (next.startsWith("add:")) addToCart(next.slice(4));
       return;
     }
+    if (form.id === "storeProfileForm") {
+      const seller = currentUser();
+      if (seller?.role !== "seller") return;
+      const name = String(data.get("name")).trim();
+      const city = String(data.get("city")).trim();
+      if (name.length < 2 || city.length < 2) { $("storeProfileError").textContent = "Isi nama toko dan kota minimal 2 karakter."; return; }
+      Store.users = Store.users.map(user => user.id === seller.id ? { ...user, name, city } : user);
+      try { await Store.save(); }
+      catch (error) { $("storeProfileError").textContent = error.message || "Profil toko gagal disimpan."; return; }
+      closeDialog(); render(); showAccount(); toast("Profil toko diperbarui.");
+      return;
+    }
     if (form.id === "checkoutForm") { await saveOrder(form); return; }
     if (form.id === "productForm") {
       const seller = currentUser();
@@ -283,7 +305,7 @@
       const current = Store.products.find(item => item.id === productId);
       const image = String(data.get("image")).trim();
       if (image && !/^src\/images\/[\w.-]+\.(?:png|jpe?g|webp)$/i.test(image)) { $("productError").textContent = "Path gambar gunakan format src/images/nama-file.jpg, png, atau webp."; return; }
-      const product = { ...current, id: current?.id || crypto.randomUUID(), sellerId: seller.id, name: String(data.get("name")).trim(), description: String(data.get("description")).trim(), price, stock, category: data.get("category"), image, icon: current?.icon || "📦", city: current?.city || "", createdAt: current?.createdAt || new Date().toISOString() };
+      const product = { ...current, id: current?.id || crypto.randomUUID(), sellerId: seller.id, name: String(data.get("name")).trim(), description: String(data.get("description")).trim(), price, stock, category: data.get("category"), image, icon: current?.icon || "📦", createdAt: current?.createdAt || new Date().toISOString() };
       Store.products = current ? Store.products.map(item => item.id === product.id ? product : item) : [product, ...Store.products];
       try { await Store.save(); }
       catch (error) { $("productError").textContent = error.message; return; }
@@ -392,6 +414,7 @@
       case "checkout": showCheckout(); break;
       case "orders": showOrders(); break;
       case "account": showAccount(); break;
+      case "edit-store-profile": showStoreProfile(); break;
       case "login": showAuth(); break;
       case "seller-products": showSellerProducts(); break;
       case "new-product": showProductForm(); break;

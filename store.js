@@ -7,11 +7,13 @@
     orders: "tokoko-orders",
     session: "tokoko-session"
   };
-  const apiAvailable = location.port === "3000";
+  let apiAvailable = false;
   const read = (key, fallback) => {
     try { return JSON.parse(localStorage.getItem(key)) ?? fallback; }
     catch { return fallback; }
   };
+  const flattenUsers = data => ["buyer", "seller", "gudang"].flatMap(role => Array.isArray(data[role]) ? data[role] : []);
+  const groupUsers = users => Object.fromEntries(["buyer", "seller", "gudang"].map(role => [role, users.filter(user => user.role === role)]));
   const categoryMap = {
     "Sembako": "Makanan & Minuman",
     "Obat & P3K": "Kesehatan",
@@ -57,15 +59,22 @@
   };
   async function init() {
     try {
-      if (!apiAvailable) throw new Error("Static mode");
       const response = await fetch("/api/data");
       if (response.ok) {
         const data = await response.json();
+        const usersResponse = await fetch("/api/users");
+        if (!usersResponse.ok) throw new Error("Akun gagal dimuat.");
+        const userData = await usersResponse.json();
+        apiAvailable = true;
         write(keys.products, data.products);
         write(keys.categories, data.categories);
         const users = read(keys.users, []);
-        const demoIds = new Set(["seller-demo", ...((data.users || []).filter(user => user.role === "seller").map(user => user.id))]);
-        write(keys.users, [...(data.users || []).filter(user => user.demo), ...users.filter(user => !demoIds.has(user.id) && !user.demo)]);
+        const seededUsers = flattenUsers(userData);
+        const demoIds = new Set(seededUsers.filter(user => user.demo).map(user => user.id));
+        const localUsers = new Map(users.filter(user => !demoIds.has(user.id) && !user.demo).map(user => [user.id, user]));
+        const mergedUsers = new Map(seededUsers.map(user => [user.id, user]));
+        for (const user of localUsers.values()) if (![...mergedUsers.values()].some(seed => seed.id === user.id || seed.email.toLowerCase() === user.email.toLowerCase())) mergedUsers.set(user.id, user);
+        write(keys.users, [...mergedUsers.values()]);
         const session = read(keys.session, null);
         if (session?.userId === "seller-demo") write(keys.session, { userId: "seller-agres", role: "seller" });
         return;
@@ -75,15 +84,19 @@
       migrateCategories();
       if (localStorage.getItem("tokoko-seed-version") !== "6") {
         try {
-          const response = await fetch("data.json");
-          if (response.ok) {
-            const seed = await response.json();
+          const [response, usersResponse] = await Promise.all([fetch("data.json"), fetch("users.json")]);
+          if (response.ok && usersResponse.ok) {
+            const [seed, userSeed] = await Promise.all([response.json(), usersResponse.json()]);
             const demoIds = new Set(["beras-premium", "minyak-goreng", "telur-ayam", "mi-instan", "paket-p3k", "vitamin-c", "kaos-katun", "deterjen-cair", "sabun-mandi", "alat-dapur", "smartphone-demo", "samsung-galaxy-a16-5g", "xiaomi-redmi-note-14-5g", "oppo-a3x", "vivo-y28", "realme-c75", "headphone-demo", "salad-demo", "skincare-demo", "laptop-demo", "buku-demo", "otomotif-demo", "sepatu-lari", "perlengkapan-bayi", "mouse-wireless"]);
-            const demoSellerIds = new Set(["seller-demo", ...seed.users.filter(user => user.role === "seller").map(user => user.id)]);
+            const seededUsers = flattenUsers(userSeed);
+            const demoSellerIds = new Set(["seller-demo", ...seededUsers.filter(user => user.role === "seller").map(user => user.id)]);
             const custom = read(keys.products, []).filter(product => !demoIds.has(product.id));
             write(keys.products, [...seed.products, ...custom]);
             write(keys.categories, seed.categories);
-            write(keys.users, [...seed.users, ...read(keys.users, []).filter(user => !demoSellerIds.has(user.id) && !user.demo)]);
+            const localUsers = new Map(read(keys.users, []).filter(user => !demoSellerIds.has(user.id) && !user.demo).map(user => [user.id, user]));
+            const mergedUsers = new Map(seededUsers.map(user => [user.id, user]));
+            for (const user of localUsers.values()) if (![...mergedUsers.values()].some(seedUser => seedUser.id === user.id || seedUser.email.toLowerCase() === user.email.toLowerCase())) mergedUsers.set(user.id, user);
+            write(keys.users, [...mergedUsers.values()]);
             const session = read(keys.session, null);
             if (session?.userId === "seller-demo") write(keys.session, { userId: "seller-agres", role: "seller" });
             localStorage.setItem("tokoko-seed-version", "6");
@@ -93,10 +106,10 @@
       return;
     }
     try {
-      const response = await fetch("data.json");
-      if (!response.ok) throw new Error("seed fetch failed");
-      const seed = await response.json();
-      Object.entries({ users: seed.users, products: seed.products, categories: seed.categories, carts: seed.carts, orders: seed.orders }).forEach(([name, value]) => {
+      const [response, usersResponse] = await Promise.all([fetch("data.json"), fetch("users.json")]);
+      if (!response.ok || !usersResponse.ok) throw new Error("seed fetch failed");
+      const [seed, userSeed] = await Promise.all([response.json(), usersResponse.json()]);
+      Object.entries({ users: flattenUsers(userSeed), products: seed.products, categories: seed.categories, carts: seed.carts, orders: seed.orders }).forEach(([name, value]) => {
         if (!localStorage.getItem(keys[name])) write(keys[name], value);
       });
       write("tokoko-seed-version", "6");
@@ -111,12 +124,15 @@
       const data = { users: this.users, products: this.products, categories: this.categories, carts: this.carts, orders: this.orders };
       try {
         if (!apiAvailable) throw new Error("Static mode");
-        const response = await fetch("/api/data", {
+        const [usersResponse, dataResponse] = await Promise.all([
+          fetch("/api/users", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(groupUsers(data.users)) }),
+          fetch("/api/data", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data)
-        });
-        if (!response.ok) throw new Error("API penyimpanan tidak tersedia.");
+          body: JSON.stringify({ products: data.products, categories: data.categories, carts: data.carts, orders: data.orders })
+          })
+        ]);
+        if (!usersResponse.ok || !dataResponse.ok) throw new Error("API penyimpanan tidak tersedia.");
       } catch {
         Object.entries(data).forEach(([name, value]) => write(keys[name], value));
       }
