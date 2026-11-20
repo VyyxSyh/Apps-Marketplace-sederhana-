@@ -220,12 +220,12 @@ textarea:focus-visible {
 /* Banner / Intro */
 .market-intro {
   display: flex;
-  min-height: 190px;
+  min-height: 148px;
   align-items: center;
   justify-content: space-between;
   gap: 14px;
-  margin-top: 16px;
-  padding: 22px 18px;
+  margin-top: 12px;
+  padding: 18px;
   border: 1px solid #d6d9bd;
   border-radius: 18px 18px 18px 6px;
   background: #e8ead8;
@@ -287,11 +287,11 @@ textarea:focus-visible {
 
 /* Sections & Heading */
 .catalog-section {
-  margin-top: 30px;
+  margin-top: 22px;
 }
 
 .products-section {
-  margin-top: 33px;
+  margin-top: 24px;
 }
 
 .section-heading {
@@ -299,7 +299,7 @@ textarea:focus-visible {
   align-items: end;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 13px;
+  margin-bottom: 9px;
 }
 
 .section-heading h2 {
@@ -319,7 +319,7 @@ textarea:focus-visible {
 /* Categories */
 .category-list {
   display: flex;
-  gap: 9px;
+  gap: 7px;
   overflow-x: auto;
   padding: 2px 1px 9px;
   scrollbar-width: thin;
@@ -377,7 +377,7 @@ textarea:focus-visible {
   display: grid;
   align-items: stretch;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  gap: 9px;
 }
 
 .product-card {
@@ -386,16 +386,15 @@ textarea:focus-visible {
   min-width: 0;
   overflow: hidden;
   border: 1px solid #d6d3d1;
-  border-radius: var(--radius-card);
+  border-radius: 14px;
   background: #fffaf2;
-  box-shadow: 0 5px 18px #242a2010;
 }
 
 .product-art {
   position: relative;
   display: grid;
   width: 100%;
-  aspect-ratio: 1 / 1;
+  aspect-ratio: 1.18 / 1;
   place-items: center;
   overflow: hidden;
   background: #eeeadc;
@@ -440,7 +439,7 @@ textarea:focus-visible {
   display: flex;
   flex: 1;
   flex-direction: column;
-  padding: 11px 11px 12px;
+  padding: 9px 10px 10px;
 }
 
 .product-name {
@@ -484,25 +483,6 @@ textarea:focus-visible {
   color: #e56b12;
   font-size: 11px;
   font-weight: 800;
-}
-
-.product-rating {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  margin-top: 5px;
-  color: #62685c;
-  font-size: 12px;
-}
-
-.product-rating .rating-star {
-  font-size: 17px;
-  line-height: 1;
-  color: #b47700;
-}
-
-.rating-separator {
-  color: #62685c;
 }
 
 .product-foot {
@@ -702,7 +682,7 @@ textarea:focus-visible {
   flex: 1;
   width: min(100%, 760px);
   margin-inline: auto;
-  padding: 16px 18px calc(28px + env(safe-area-inset-bottom));
+  padding: 12px 16px calc(22px + env(safe-area-inset-bottom));
 }
 
 .full-page .seller-tabs { top: -16px; }
@@ -747,7 +727,7 @@ textarea:focus-visible {
 .seller-account-metrics strong { overflow-wrap: anywhere; color: var(--green-deep); font-size: clamp(16px, 4vw, 22px); }
 .seller-account-metrics span { color: var(--muted); font-size: 12px; }
 
-.seller-account-section { margin-top: 24px; }
+.seller-account-section { margin-top: 18px; }
 .seller-account-section h3 { margin: 0 0 8px; }
 .seller-account-link {
   display: flex;
@@ -774,7 +754,6 @@ textarea:focus-visible {
     inset-block-start: 68px;
     inset-block-end: calc(64px + env(safe-area-inset-bottom));
   }
-  .full-page.is-account { inset-block-start: 0; }
 }
 
 @media (min-width: 840px) {
@@ -782,7 +761,6 @@ textarea:focus-visible {
     inset-block-start: 82px;
     inset-block-end: 72px;
   }
-  .full-page.is-account { inset-block-start: 0; }
 }
 
 /* Dialog & Toast */
@@ -1342,37 +1320,26 @@ textarea:focus-visible {
   }
 
   #mainContent {
-    width: calc(100% - 24px);
+    width: calc(100% - 20px);
   }
 
   .market-intro {
-    min-height: 176px;
-    padding: 18px 15px;
+    min-height: 132px;
+    padding: 15px 13px;
   }
 
   .market-intro h1 {
     font-size: clamp(27px, 8vw, 36px);
   }
 
-  .market-stamp {
-    width: 62px;
-    height: 62px;
-  }
-
-  .market-stamp span {
-    font-size: 9px;
-  }
-
-  .market-stamp strong {
-    font-size: 15px;
-  }
+  .market-stamp { display: none; }
 
   .catalog-section {
-    margin-top: 23px;
+    margin-top: 18px;
   }
 
   .products-section {
-    margin-top: 22px;
+    margin-top: 20px;
   }
 
   .section-heading {
@@ -1380,7 +1347,7 @@ textarea:focus-visible {
   }
 
   .section-heading p {
-    max-width: 220px;
+    max-width: 240px;
   }
 
   .sort-control {
@@ -1394,11 +1361,11 @@ textarea:focus-visible {
   }
 
   .product-grid {
-    gap: 10px;
+    gap: 8px;
   }
 
   .product-info {
-    padding: 9px;
+    padding: 8px;
   }
 
   .product-name {
@@ -1406,7 +1373,7 @@ textarea:focus-visible {
   }
 
   .product-price {
-    font-size: 14px;
+    font-size: 13px;
   }
 
   .product-old-price {
@@ -1417,9 +1384,9 @@ textarea:focus-visible {
 
 @media (min-width: 840px) {
   .market-intro {
-    min-height: 250px;
-    margin-top: 26px;
-    padding: 38px 42px;
+    min-height: 176px;
+    margin-top: 18px;
+    padding: 24px 28px;
   }
 
   .market-stamp {
@@ -1428,8 +1395,8 @@ textarea:focus-visible {
   }
 
   .product-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
   }
 
   .product-info {

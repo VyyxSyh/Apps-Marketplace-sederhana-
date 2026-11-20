@@ -1,7 +1,7 @@
 (() => {
   const $ = id => document.getElementById(id);
   const money = value => `Rp ${Number(value).toLocaleString("id-ID")}`;
-  const state = { category: "Semua", storeId: "", sellerTab: "products", query: "", modal: "", sort: "featured", authNext: "", lastFocus: null, toastTimer: 0 };
+  const state = { storeId: "", sellerTab: "products", query: "", modal: "", sort: "featured", authNext: "", lastFocus: null, toastTimer: 0 };
   const safe = value => String(value ?? "").replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
   const cartForUser = userId => Store.carts.filter(item => item.userId === userId);
   const currentUser = () => Store.users.find(user => user.id === Store.session?.userId) || null;
@@ -33,8 +33,6 @@
 
   function productCard(product) {
     const stock = availableStock(product);
-    const rating = Number(String(product.rating ?? "4,8").replace(",", "."));
-    const sold = Number(product.sold) || 0;
     return `<article class="product-card">
       <button class="product-art" type="button" data-detail="${safe(product.id)}" aria-label="Lihat detail ${safe(product.name)}">
         <span class="product-category">${safe(product.category)}</span>${product.image ? `<img class="product-image" src="${safe(product.image)}" alt="${safe(product.name)}" width="640" height="560" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.hidden=false">` : ""}<span class="product-emoji" aria-hidden="true" ${product.image ? "hidden" : ""}>${safe(product.icon || "□")}</span>
@@ -43,7 +41,6 @@
         <button class="product-name" type="button" data-detail="${safe(product.id)}">${safe(product.name)}</button>
         <div class="product-price">${money(product.price)}${product.oldPrice ? `<span class="product-old-price">${money(product.oldPrice)}</span>` : ""}</div>
         ${product.oldPrice ? `<div class="product-promo">Hemat ${Math.max(1, Math.round((1 - product.price / product.oldPrice) * 100))}%</div>` : ""}
-        <div class="product-rating" aria-label="Rating ${rating.toFixed(1)} dari 5, ${sold} terjual"><span class="rating-star" aria-hidden="true">★</span><span>${rating.toFixed(1)}</span><span class="rating-separator">·</span><span>${sold}+ terjual</span></div>
         <div class="product-foot">
           <span class="product-store">${safe(sellerName(product.sellerId))}</span>
           ${stock ? `<span class="stock-chip">Stok ${stock}</span>` : `<span class="stock-chip is-empty">Habis</span>`}
@@ -170,7 +167,7 @@
       <div class="detail-content">
         <div class="detail-price-row"><strong class="detail-price">${money(product.price)}</strong>${product.oldPrice ? `<del class="detail-old-price">${money(product.oldPrice)}</del>` : ""}${discount ? `<span class="detail-discount">Hemat ${discount}%</span>` : ""}</div>
         <h3 class="detail-name">${safe(product.name)}</h3>
-         <div class="detail-meta"><p class="detail-rating">${product.rating ? `<span aria-hidden="true">★</span> ${safe(String(product.rating))} <span aria-hidden="true">·</span> ` : ""}${Number(product.sold) || 0}+ terjual</p><span class="detail-stock">Stok tersedia ${availableStock(product)}</span></div>
+          <div class="detail-meta"><span class="detail-stock">Stok tersedia ${availableStock(product)}</span></div>
         <section class="store-details" aria-label="Detail toko">
           <div class="store-heading"><span class="store-mark" aria-hidden="true">${safe(sellerName(product.sellerId).slice(0, 1).toUpperCase())}</span><div class="store-identity"><h3>${safe(sellerName(product.sellerId))}</h3>${Store.users.find(user => user.id === product.sellerId)?.city ? `<p>Lokasi toko · ${safe(Store.users.find(user => user.id === product.sellerId).city)}</p>` : ""}</div><button class="store-follow" type="button" data-follow="${safe(product.sellerId)}" aria-pressed="${localStorage.getItem(`tokoko-follow-${product.sellerId}`) === "true"}">${localStorage.getItem(`tokoko-follow-${product.sellerId}`) === "true" ? "Mengikuti" : "Ikuti"}</button></div>
           <p class="store-inventory">${Store.products.filter(item => item.sellerId === product.sellerId).length.toLocaleString("id-ID")} produk di toko</p>
@@ -210,7 +207,7 @@
     const user = requireRole("buyer");
     if (!user) return;
     const orders = Store.orders.filter(order => order.buyerId === user.id).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-    const content = orders.length ? orders.map(order => `<div class="list-row order-row"><div><strong>${safe(order.orderNumber)}</strong><div>${new Date(order.createdAt).toLocaleDateString("id-ID")} · ${safe(order.status)}</div><div>${order.items.map(item => safe(item.name)).join(", ")}</div></div><strong>${money(order.total)}</strong>${order.status === "Diproses" ? `<button class="secondary-button" type="button" data-cancel-order="${safe(order.id)}">Batalkan</button>` : ""}</div>`).join("") : `<div class="empty-state"><strong>Belum ada pesanan</strong>Pesanan yang kamu buat akan muncul di sini.</div>`;
+    const content = orders.length ? orders.map(order => `<article class="list-row order-row"><div><strong>${safe(order.orderNumber)}</strong><div>${new Date(order.createdAt).toLocaleDateString("id-ID")} · ${safe(order.status)}</div><div>${order.items.map(item => safe(item.name)).join(", ")}</div></div><strong>${money(order.total)}</strong>${order.status === "Diproses" ? `<button class="secondary-button" type="button" data-cancel-order="${safe(order.id)}">Batalkan</button>` : ""}</article>`).join("") : `<div class="empty-state"><strong>Belum ada pesanan</strong>Pesanan yang kamu buat akan muncul di sini.</div>`;
     openDialog("Pesanan saya", content, "orders");
   }
 
