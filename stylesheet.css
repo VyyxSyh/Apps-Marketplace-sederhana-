@@ -123,7 +123,7 @@ textarea:focus-visible {
   align-items: center;
   gap: 9px;
   border: 1px solid var(--line);
-  border-radius: 11px;
+  border-radius: 15px;
   background: var(--surface);
   padding: 0 5px 0 12px;
 }
@@ -1232,7 +1232,7 @@ textarea:focus-visible {
   min-width: 76px;
   min-height: 44px;
   border: 1px solid var(--green-deep);
-  border-radius: 8px;
+  border-radius: 12px;
   background: var(--surface);
   color: var(--green-deep);
   font-size: 13px;

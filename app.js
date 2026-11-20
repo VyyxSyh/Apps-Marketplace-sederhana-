@@ -21,6 +21,7 @@
     document.querySelectorAll("[data-buyer-nav]").forEach(el => { el.hidden = user?.role === "seller" || user?.role === "gudang"; });
     document.querySelectorAll("[data-warehouse-nav]").forEach(el => { el.hidden = user?.role !== "gudang"; });
     const badge = $("cartBadge");
+    if (!badge) return;
     const count = user?.role === "buyer" ? cartForUser(user.id).reduce((sum, item) => sum + item.quantity, 0) : 0;
     badge.textContent = count;
     badge.hidden = !count;
@@ -74,20 +75,7 @@
   }
 
   function openDialog(title, content, name) {
-    if (["seller-products", "account", "warehouse", "password-form", "store-profile", "product-form", "orders", "buyer-chats"].includes(name)) {
-      state.lastFocus = document.activeElement;
-      state.modal = name;
-      $("fullPageTitle").textContent = title;
-      $("fullPageBody").innerHTML = content;
-      $("fullPage").classList.toggle("is-account", name === "account");
-      $("siteHeader").hidden = name === "account";
-      document.querySelector(".bottom-nav").hidden = false;
-      $("fullPage").hidden = false;
-      document.body.classList.add("dialog-open");
-      requestAnimationFrame(() => $("fullPage").querySelector("[data-focus-page]")?.focus() || $("fullPage").querySelector(".full-page-body").focus());
-      return;
-    }
-    $("fullPage").hidden = true;
+    state.lastFocus = document.activeElement;
     state.lastFocus = document.activeElement;
     state.modal = name;
     $("modalTitle").textContent = title;
@@ -103,17 +91,6 @@
   }
 
   function closeDialog() {
-    if (!$("fullPage").hidden) {
-      $("fullPage").hidden = true;
-      $("fullPage").classList.remove("is-account");
-      document.body.classList.remove("dialog-open");
-      state.modal = "";
-      $("siteHeader").hidden = false;
-      document.querySelector(".bottom-nav").hidden = false;
-      state.lastFocus?.focus?.();
-      render();
-      return;
-    }
     if ($("overlay").hidden) return;
     $("overlay").hidden = true;
     document.body.classList.remove("dialog-open");
@@ -271,10 +248,14 @@
       const revenue = lines.reduce((sum, item) => sum + item.price * item.quantity, 0);
       const unread = Store.chats.filter(chat => chat.sellerId === user.id && chat.unread).length;
       const lowStock = products.filter(product => availableStock(product) <= (product.lowStockThreshold ?? 5)).length;
-      openDialog("Akun toko", `<section class="seller-account-profile"><div class="seller-avatar" aria-hidden="true">${safe(user.name.trim().slice(0, 1).toUpperCase())}</div><div><h2>${safe(user.name)}</h2><p>${safe(user.email)}</p><p>${safe(user.city || "Lokasi toko belum diatur")}</p></div><button class="secondary-button" type="button" data-action="edit-store-profile">Edit profil</button></section><section class="seller-account-metrics" aria-label="Ringkasan toko"><div><strong>${products.length}</strong><span>Produk</span></div><div><strong>${waiting}</strong><span>Perlu diproses</span></div><div><strong>${money(revenue)}</strong><span>Nilai pesanan tersimpan</span></div></section><section class="seller-account-section"><h3>Perlu perhatian</h3><button class="seller-account-link" type="button" data-account-destination="orders"><span>Pesanan aktif</span><strong>${waiting}</strong></button><button class="seller-account-link" type="button" data-account-destination="sales"><span>Pesan belum dibaca</span><strong>${unread}</strong></button><button class="seller-account-link" type="button" data-account-destination="products"><span>Produk stok menipis</span><strong>${lowStock}</strong></button></section><section class="seller-account-section"><h3>Kelola toko</h3><button class="seller-account-link" type="button" data-account-destination="products"><span>Produk saya</span><span>Kelola katalog</span></button><button class="seller-account-link" type="button" data-account-destination="orders"><span>Pesanan</span><span>Lihat antrean toko</span></button><button class="seller-account-link" type="button" data-account-destination="sales"><span>Penjualan</span><span>Harga, laporan, chat</span></button></section><section class="seller-account-section"><h3>Akun & keamanan</h3><div class="list-row"><span>Email akun</span><strong>${safe(user.email)}</strong></div><button class="secondary-button full-width mt-2" type="button" data-action="change-password">Ubah kata sandi</button><button class="danger-button full-width mt-4" type="button" data-action="logout">Keluar</button></section>`, "account");
+      const content = `<section class="seller-account-profile"><div class="seller-avatar" aria-hidden="true">${safe(user.name.trim().slice(0, 1).toUpperCase())}</div><div><h2>${safe(user.name)}</h2><p>${safe(user.email)}</p><p>${safe(user.city || "Lokasi toko belum diatur")}</p></div><button class="secondary-button" type="button" data-action="edit-store-profile">Edit profil</button></section><section class="seller-account-metrics" aria-label="Ringkasan toko"><div><strong>${products.length}</strong><span>Produk</span></div><div><strong>${waiting}</strong><span>Perlu diproses</span></div><div><strong>${money(revenue)}</strong><span>Nilai pesanan tersimpan</span></div></section><section class="seller-account-section"><h3>Perlu perhatian</h3><button class="seller-account-link" type="button" data-account-destination="orders"><span>Pesanan aktif</span><strong>${waiting}</strong></button><button class="seller-account-link" type="button" data-account-destination="sales"><span>Pesan belum dibaca</span><strong>${unread}</strong></button><button class="seller-account-link" type="button" data-account-destination="products"><span>Produk stok menipis</span><strong>${lowStock}</strong></button></section><section class="seller-account-section"><h3>Kelola toko</h3><a class="seller-account-link" href="seller.html"><span>Produk saya</span><span>Kelola toko</span></a><button class="seller-account-link" type="button" data-account-destination="orders"><span>Pesanan</span><span>Lihat antrean toko</span></button><button class="seller-account-link" type="button" data-account-destination="sales"><span>Penjualan</span><span>Harga, laporan, chat</span></button></section><section class="seller-account-section"><h3>Akun & keamanan</h3><div class="list-row"><span>Email akun</span><strong>${safe(user.email)}</strong></div><button class="secondary-button full-width mt-2" type="button" data-action="change-password">Ubah kata sandi</button><button class="danger-button full-width mt-4" type="button" data-action="logout">Keluar</button></section>`;
+      if (document.body.dataset.page === "account") { $("accountContent").innerHTML = content; return; }
+      openDialog("Akun toko", content, "account");
       return;
     }
-    openDialog("Akun", user ? `<div class="list-row"><span>Nama</span><strong>${safe(user.name)}</strong></div><div class="list-row"><span>Email</span><span>${safe(user.email)}</span></div><div class="list-row"><span>Peran</span><span>${roleName[user.role] || "—"}</span></div><button class="secondary-button full-width mt-2" type="button" data-action="change-password">Ubah kata sandi</button><button class="danger-button full-width mt-4" type="button" data-action="logout">Keluar</button>` : `<div class="notice">Masuk untuk memakai keranjang atau mengelola produk.</div><button class="primary-button full-width" type="button" data-action="login">Masuk</button><button class="secondary-button full-width mt-2" type="button" data-auth-mode="register">Buat akun</button>`, "account");
+    const content = user ? `<div class="list-row"><span>Nama</span><strong>${safe(user.name)}</strong></div><div class="list-row"><span>Email</span><span>${safe(user.email)}</span></div><div class="list-row"><span>Peran</span><span>${roleName[user.role] || "—"}</span></div><button class="secondary-button full-width mt-2" type="button" data-action="change-password">Ubah kata sandi</button><button class="danger-button full-width mt-4" type="button" data-action="logout">Keluar</button>` : `<div class="notice">Masuk untuk memakai keranjang atau mengelola produk.</div><button class="primary-button full-width" type="button" data-action="login">Masuk</button><button class="secondary-button full-width mt-2" type="button" data-auth-mode="register">Buat akun</button>`;
+    if (document.body.dataset.page === "account") { $("accountContent").innerHTML = content; return; }
+    openDialog("Akun", content, "account");
   }
 
   function showPasswordForm() {
@@ -308,17 +289,23 @@
         const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
         return `<article class="list-row order-row"><div><strong>${safe(order.orderNumber)}</strong><div>${new Date(order.createdAt).toLocaleDateString("id-ID")} · ${safe(statusLabel(order.status))}</div><div>${items.map(item => `${safe(item.name)} × ${item.quantity}`).join(", ")}</div><div>Pembeli: ${safe(order.shipping?.name || "—")} · ${money(total)}</div></div>${order.status === "Diproses" ? `<button class="primary-button" type="button" data-handoff="${safe(order.id)}">Teruskan ke gudang</button>` : ""}</article>`;
       }).join("");
-      openDialog("Produk saya", `${tabs}<h3>Pesanan toko</h3>${rows || `<div class="empty-state"><strong>Belum ada pesanan</strong>Pesanan produk tokomu akan muncul di sini.</div>`}`, "seller-products");
+      const content = `${tabs}<h1 class="standalone-title">Pesanan toko</h1>${rows || `<div class="empty-state"><strong>Belum ada pesanan</strong>Pesanan produk tokomu akan muncul di sini.</div>`}`;
+      if (document.body.dataset.page === "seller") { $("sellerContent").innerHTML = content; return; }
+      openDialog("Produk saya", content, "seller-products");
       return;
     }
     if (state.sellerTab === "sales") {
       const products = Store.products.filter(product => product.sellerId === seller.id);
-      openDialog("Produk saya", `${tabs}<h3>Harga produk</h3>${products.map(product => `<form class="price-form list-row" data-price-product="${safe(product.id)}"><div><strong>${safe(product.name)}</strong><div>Stok tersedia: ${availableStock(product)}</div></div><label>Harga <input name="price" type="number" min="0" step="1" required value="${product.price}"></label><button class="secondary-button" type="submit">Simpan</button></form>`).join("")}<h3 class="mt-4">Laporan penjualan</h3>${salesReport(seller.id)}<h3 class="mt-4">Pesan pelanggan</h3>${showChatList(seller.id)}`, "seller-products");
+      const content = `${tabs}<h1 class="standalone-title">Harga & penjualan</h1>${products.map(product => `<form class="price-form list-row" data-price-product="${safe(product.id)}"><div><strong>${safe(product.name)}</strong><div>Stok tersedia: ${availableStock(product)}</div></div><label>Harga <input name="price" type="number" min="0" step="1" required value="${product.price}"></label><button class="secondary-button" type="submit">Simpan</button></form>`).join("")}<h2 class="mt-4">Laporan penjualan</h2>${salesReport(seller.id)}<h2 class="mt-4">Pesan pelanggan</h2>${showChatList(seller.id)}`;
+      if (document.body.dataset.page === "seller") { $("sellerContent").innerHTML = content; return; }
+      openDialog("Produk saya", content, "seller-products");
       return;
     }
     const products = Store.products.filter(product => product.sellerId === seller.id);
     const rows = products.map(product => `<div class="list-row"><div><strong>${safe(product.name)}</strong><div>${money(product.price)} · Stok ${product.stock}</div></div><div class="form-actions"><button class="secondary-button" type="button" data-edit-product="${safe(product.id)}">Edit</button><button class="danger-button" type="button" data-delete-product="${safe(product.id)}">Hapus</button></div></div>`).join("");
-    openDialog("Produk saya", `${tabs}${rows || `<div class="empty-state"><strong>Belum ada produk</strong>Tambahkan produk pertama tokomu.</div>`}<button class="primary-button full-width mt-4" type="button" data-action="new-product">Tambah produk</button>`, "seller-products");
+    const content = `${tabs}<h1 class="standalone-title">Produk toko</h1>${rows || `<div class="empty-state"><strong>Belum ada produk</strong>Tambahkan produk pertama tokomu.</div>`}<button class="primary-button full-width mt-4" type="button" data-action="new-product">Tambah produk</button>`;
+    if (document.body.dataset.page === "seller") { $("sellerContent").innerHTML = content; return; }
+    openDialog("Produk saya", content, "seller-products");
   }
 
   function showProductForm(productId = "") {
@@ -393,7 +380,8 @@
       catch { error.textContent = "Akun gagal disimpan ke data.json. Pastikan Node.js masih berjalan."; return; }
       const next = state.authNext;
       state.authNext = "";
-      closeDialog(); render(); toast("Berhasil masuk.");
+      closeDialog(); if (!document.body.dataset.page) render(); toast("Berhasil masuk.");
+      if (currentUser()?.role === "seller" && document.body.dataset.page !== "seller") { location.href = "seller.html"; return; }
       if (next === "checkout") showCheckout();
       else if (next.startsWith("add:")) addToCart(next.slice(4));
       return;
@@ -407,7 +395,7 @@
       Store.users = Store.users.map(user => user.id === seller.id ? { ...user, name, city } : user);
       try { await Store.save(); }
       catch (error) { $("storeProfileError").textContent = error.message || "Profil toko gagal disimpan."; return; }
-      closeDialog(); render(); showAccount(); toast("Profil toko diperbarui.");
+      closeDialog(); render(); if (document.body.dataset.page === "account") showAccount(); else if (document.body.dataset.page === "seller") showSellerProducts(); toast("Profil toko diperbarui.");
       return;
     }
     if (form.id === "passwordForm") {
@@ -419,7 +407,7 @@
       try { await Store.changePassword(user.id, currentPassword, newPassword); }
       catch (error) { $("passwordError").textContent = error.message; return; }
       Store.users = Store.users.map(item => item.id === user.id ? { ...item, password: newPassword } : item);
-      closeDialog(); showAccount(); toast("Kata sandi berhasil diubah.");
+      closeDialog(); if (document.body.dataset.page === "account") showAccount(); toast("Kata sandi berhasil diubah.");
       return;
     }
     if (form.id === "checkoutForm") { await saveOrder(form); return; }
@@ -516,7 +504,7 @@
     const target = event.target.closest("[data-store], [data-seller-tab], [data-account-destination], [data-add], [data-detail], [data-buy], [data-follow], [data-action], [data-auth-mode], [data-quantity], [data-cancel-order], [data-edit-product], [data-delete-product], [data-handoff], [data-fulfill], [data-order], [data-chat], [data-start-chat]");
     if (!target) return;
     if (target.dataset.sellerTab) { state.sellerTab = target.dataset.sellerTab; showSellerProducts(); return; }
-    if (target.dataset.accountDestination) { state.sellerTab = target.dataset.accountDestination; showSellerProducts(); return; }
+    if (target.dataset.accountDestination) { location.href = `seller.html?tab=${encodeURIComponent(target.dataset.accountDestination)}`; return; }
     if (target.hasAttribute("data-store")) { state.storeId = target.dataset.store; render(); return; }
     if (target.dataset.add) { addToCart(target.dataset.add, false, target); return; }
     if (target.dataset.detail) { showDetail(target.dataset.detail); return; }
@@ -598,12 +586,12 @@
       case "sales-orders": showSalesOrders(); break;
       case "sales-tools": showSalesTools(); break;
       case "buyer-chats": showBuyerChats(); break;
-      case "account": showAccount(); break;
+      case "account": location.href = "account.html"; break;
       case "edit-store-profile": showStoreProfile(); break;
       case "change-password": showPasswordForm(); break;
       case "new-product": showProductForm(); break;
       case "logout": Store.session = null; closeDialog(); render(); toast("Kamu sudah keluar."); break;
-      case "seller-products": state.sellerTab = "products"; showSellerProducts(); break;
+      case "seller-products": location.href = "seller.html"; break;
       case "login": showAuth(); break;
     }
   });
