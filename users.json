@@ -35,17 +35,17 @@
       "demo": true
     },
     {
-      "id": "seller-agres",
-      "name": "Agres Id",
-      "email": "agres@tokoko.test",
+      "id": "seller-sentral",
+      "name": "Sentral Komputer",
+      "email": "sentral@tokoko.test",
       "password": "tokoko123",
       "role": "seller",
       "demo": true
     },
     {
-      "id": "seller-sentral",
-      "name": "Sentral Komputer",
-      "email": "sentral@tokoko.test",
+      "id": "seller-agres",
+      "name": "Agres Id",
+      "email": "agres@tokoko.test",
       "password": "tokoko123",
       "role": "seller",
       "demo": true

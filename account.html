@@ -10,7 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;500;600;700;800&family=Rubik:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="stylesheet.css">
   <script src="store.js" defer></script>
-  <script src="account-page.js" defer></script>
+  <script src="app.js" defer></script>
 </head>
 <body data-page="account">
   <div class="app-shell">
@@ -20,13 +20,13 @@
         <span class="page-context">Akun</span>
       </div>
     </header>
-    <main id="accountContent" class="standalone-page" aria-live="polite"><p class="loading-state">Memuat akun...</p></main>
+    <main id="accountContent" class="standalone-page" aria-live="polite"><h1 class="standalone-title">Akun</h1><p class="loading-state">Memuat akun...</p></main>
     <nav class="bottom-nav" aria-label="Navigasi utama">
       <a class="nav-item" href="index.html#home"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg><span>Beranda</span></a>
       <a class="nav-item" href="index.html#catalog"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 5h7v7H4zM14 5h6v7h-6zM4 15h7v5H4zM14 15h6v5h-6z"/></svg><span>Katalog</span></a>
       <a class="nav-item" href="seller.html" data-seller-nav hidden><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 7h16v14H4zM8 7V4h8v3M8 12h8M8 16h5"/></svg><span>Produk saya</span></a>
       <button class="nav-item" type="button" data-action="orders" data-buyer-nav><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 3h14v18l-3-2-4 2-4-2-3 2zM8 8h8M8 12h8M8 16h4"/></svg><span>Pesanan</span></button>
-      <a class="nav-item is-active" href="account.html" aria-current="page"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span>Akun</span></a>
+      <a class="nav-item is-active" href="account.html" data-account-nav aria-current="page"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span>Akun</span></a>
     </nav>
   </div>
   <div id="overlay" class="overlay" hidden><section class="dialog" role="dialog" aria-modal="true" aria-labelledby="modalTitle" tabindex="-1"><header class="dialog-header"><h2 id="modalTitle"></h2><button class="icon-button" type="button" data-action="close" aria-label="Tutup">×</button></header><div id="modalBody" class="dialog-body"></div></section></div>
