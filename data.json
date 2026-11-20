@@ -335,5 +335,7 @@
     "KLA Computer"
   ],
   "carts": [],
-  "orders": []
+  "orders": [],
+  "chats": [],
+  "stockMovements": []
 }

@@ -144,6 +144,8 @@ textarea:focus-visible {
   font-size: 14px;
 }
 
+.site-header[hidden] { display: none; }
+
 .brand {
   flex: 0 0 auto;
 }
@@ -667,8 +669,8 @@ textarea:focus-visible {
 
 .full-page {
   position: fixed;
-  z-index: 35;
-  inset: 0;
+  z-index: 10;
+  inset: 74px 0 calc(64px + env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
   overflow: auto;
@@ -677,16 +679,7 @@ textarea:focus-visible {
 }
 
 .full-page-header {
-  position: sticky;
-  z-index: 2;
-  top: 0;
-  display: flex;
-  min-height: 64px;
-  align-items: center;
-  gap: 12px;
-  border-bottom: 1px solid var(--line);
-  background: var(--surface);
-  padding: 8px 16px;
+  display: none;
 }
 
 .full-page-header h1 {
@@ -712,7 +705,85 @@ textarea:focus-visible {
   padding: 16px 18px calc(28px + env(safe-area-inset-bottom));
 }
 
-.full-page .seller-tabs { top: 64px; }
+.full-page .seller-tabs { top: -16px; }
+
+.full-page.is-account { inset-block-start: 0; }
+.full-page.is-account .full-page-body { padding-top: calc(28px + env(safe-area-inset-top)); }
+
+.seller-account-profile {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 0 20px;
+}
+
+.seller-avatar {
+  display: grid;
+  width: 64px;
+  height: 64px;
+  flex: 0 0 64px;
+  place-items: center;
+  border-radius: 50%;
+  background: #e5e8d9;
+  color: var(--green-deep);
+  font-size: 26px;
+  font-weight: 800;
+}
+
+.seller-account-profile h2,
+.seller-account-profile p { margin: 0 0 4px; }
+.seller-account-profile p { color: var(--muted); font-size: 12px; }
+.seller-account-profile .secondary-button { margin-inline-start: auto; }
+
+.seller-account-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  border-block: 1px solid var(--line);
+  padding: 16px 0;
+}
+
+.seller-account-metrics > div { display: grid; gap: 4px; min-width: 0; }
+.seller-account-metrics strong { overflow-wrap: anywhere; color: var(--green-deep); font-size: clamp(16px, 4vw, 22px); }
+.seller-account-metrics span { color: var(--muted); font-size: 12px; }
+
+.seller-account-section { margin-top: 24px; }
+.seller-account-section h3 { margin: 0 0 8px; }
+.seller-account-link {
+  display: flex;
+  width: 100%;
+  min-height: 54px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+}
+.seller-account-link strong { color: var(--green-deep); }
+
+@media (max-width: 400px) {
+  .seller-account-profile { flex-wrap: wrap; }
+  .seller-account-profile .secondary-button { margin-inline-start: 78px; }
+}
+
+@media (max-width: 839px) {
+  .full-page {
+    inset-block-start: 68px;
+    inset-block-end: calc(64px + env(safe-area-inset-bottom));
+  }
+  .full-page.is-account { inset-block-start: 0; }
+}
+
+@media (min-width: 840px) {
+  .full-page {
+    inset-block-start: 82px;
+    inset-block-end: 72px;
+  }
+  .full-page.is-account { inset-block-start: 0; }
+}
 
 /* Dialog & Toast */
 .overlay[hidden] {
