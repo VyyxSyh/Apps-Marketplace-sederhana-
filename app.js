@@ -709,8 +709,29 @@
   $("overlay").addEventListener("click", event => { if (event.target === $("overlay")) closeDialog(); });
   const sheet = $("overlay").querySelector(".dialog");
   let sheetDragY = null, sheetStartHeight = 0, sheetStartScroll = 0, sheetPointer = null;
+  sheet.addEventListener("touchstart", event => {
+    if (state.modal !== "detail" || !matchMedia("(max-width: 839px)").matches) return;
+    sheetDragY = event.touches[0].clientY;
+    sheetStartHeight = sheet.getBoundingClientRect().height;
+    sheetStartScroll = sheet.scrollTop;
+  }, { passive: true });
+  sheet.addEventListener("touchmove", event => {
+    if (state.modal !== "detail" || sheetDragY == null) return;
+    const delta = sheetDragY - event.touches[0].clientY;
+    const atFull = sheetStartHeight >= innerHeight - 1;
+    if (atFull && (delta > 0 || sheetStartScroll > 0)) return;
+    if (delta <= 0 && sheetStartScroll > 0) return;
+    event.preventDefault();
+    const height = delta > 0
+      ? Math.min(innerHeight, sheetStartHeight + delta)
+      : Math.max(innerHeight * 0.45, sheetStartHeight + delta);
+    sheet.style.setProperty("--sheet-height", `${height}px`);
+    sheet.classList.toggle("is-expanded", height >= innerHeight - 1);
+    sheet.scrollTop = 0;
+  }, { passive: false });
+  sheet.addEventListener("touchend", () => { sheetDragY = null; }, { passive: true });
   sheet.addEventListener("pointerdown", event => {
-    if (state.modal !== "detail" || !matchMedia("(max-width: 839px)").matches || event.button > 0) return;
+    if (state.modal !== "detail" || event.pointerType === "touch" || !matchMedia("(max-width: 839px)").matches || event.button > 0 || !event.target.closest(".detail-toolbar")) return;
     sheetDragY = event.clientY;
     sheetStartHeight = sheet.getBoundingClientRect().height;
     sheetStartScroll = sheet.scrollTop;
@@ -740,6 +761,23 @@
   };
   sheet.addEventListener("pointerup", endSheetDrag);
   sheet.addEventListener("pointercancel", endSheetDrag);
+  sheet.addEventListener("wheel", event => {
+    if (state.modal !== "detail" || !matchMedia("(max-width: 839px)").matches) return;
+    const height = sheet.getBoundingClientRect().height;
+    const maxHeight = innerHeight;
+    if (event.deltaY > 0 && height < maxHeight) {
+      event.preventDefault();
+      const nextHeight = Math.min(maxHeight, height + event.deltaY);
+      sheet.style.setProperty("--sheet-height", `${nextHeight}px`);
+      sheet.classList.toggle("is-expanded", nextHeight >= maxHeight - 1);
+      sheet.scrollTop = 0;
+    } else if (event.deltaY < 0 && sheet.scrollTop <= 0 && height > innerHeight * 0.45) {
+      event.preventDefault();
+      const nextHeight = Math.max(innerHeight * 0.45, height + event.deltaY);
+      sheet.style.setProperty("--sheet-height", `${nextHeight}px`);
+      sheet.classList.toggle("is-expanded", nextHeight >= maxHeight - 1);
+    }
+  }, { passive: false });
   document.addEventListener("keydown", event => {
     if (event.key === "Escape") closeDialog();
     if (event.key === "Tab" && !$("overlay").hidden) {

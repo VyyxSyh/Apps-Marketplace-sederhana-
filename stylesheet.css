@@ -924,8 +924,9 @@ textarea:focus-visible {
     max-height: var(--sheet-height, 75dvh);
     overflow-y: auto;
     overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
     transition: border-radius 180ms ease-out;
-    touch-action: none;
+    touch-action: pan-y;
   }
 
   .detail-dialog.is-expanded {
@@ -948,6 +949,7 @@ textarea:focus-visible {
     position: absolute;
     background: var(--surface);
     border-bottom: 1px solid var(--line);
+    touch-action: none;
   }
 }
 
