@@ -1,7 +1,7 @@
 (() => {
   const $ = id => document.getElementById(id);
   const money = value => `Rp ${Number(value).toLocaleString("id-ID")}`;
-  const state = { storeId: "", sellerTab: "products", sellerSalesView: "report", pendingProductRestore: null, query: "", modal: "", sort: "featured", authNext: "", lastFocus: null, toastTimer: 0 };
+  const state = { storeId: "", sellerTab: "products", sellerSalesView: "report", pendingProductRestore: null, query: "", modal: "", sort: "featured", authNext: "", lastFocus: null, toastTimer: 0, detailProductId: "" };
   const safe = value => String(value ?? "").replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
   const cartForUser = userId => Store.carts.filter(item => item.userId === userId);
   const currentUser = () => Store.users.find(user => user.id === Store.session?.userId) || null;
@@ -100,13 +100,16 @@
     $("modalBody").classList.toggle("detail-body", name === "detail");
     $("overlay").querySelector(".dialog").classList.toggle("detail-dialog", name === "detail");
     $("overlay").querySelector(".dialog").classList.remove("is-expanded");
+    $("overlay").querySelector(".dialog").style.removeProperty("--sheet-height");
     const header = $("overlay").querySelector(".dialog-header");
-    let handle = header.querySelector(".detail-sheet-handle");
-    if (name === "detail" && !handle) { handle = document.createElement("span"); handle.className = "detail-sheet-handle"; handle.setAttribute("aria-hidden", "true"); header.insertBefore(handle, header.querySelector(".icon-button")); }
-    if (handle) handle.hidden = name !== "detail";
+    header.innerHTML = name === "detail" ? `<h2 id="modalTitle">${safe(title)}</h2><div class="detail-toolbar"><button class="toolbar-icon back-icon" type="button" data-detail-back aria-label="Kembali"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M19 12H5m7 7-7-7 7-7"/></svg></button><span class="detail-toolbar-spacer"></span><button class="toolbar-icon" type="button" data-detail-search aria-label="Cari produk"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5 5"/></svg></button><button class="toolbar-icon" type="button" data-detail-share aria-label="Bagikan produk"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 16V3m-5 5 5-5 5 5M5 12v8h14v-8"/></svg></button><button class="toolbar-icon cart-toolbar-button" type="button" data-detail-cart aria-label="Buka keranjang"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 4h2l2.2 11.2a2 2 0 0 0 2 1.6h8.5a2 2 0 0 0 1.9-1.5L22 8H6"/><circle cx="10" cy="21" r="1"/><circle cx="18" cy="21" r="1"/></svg><span class="detail-cart-count" hidden></span></button></div>` : `<h2 id="modalTitle">${safe(title)}</h2><button class="icon-button" type="button" data-action="close" aria-label="Tutup">×</button>`;
+    const cartCount = header.querySelector(".detail-cart-count");
+    if (cartCount) { const count = cartForUser(currentUser()?.id).reduce((sum, item) => sum + item.quantity, 0); cartCount.textContent = count; cartCount.hidden = !count; }
     $("overlay").hidden = false;
     document.body.classList.add("dialog-open");
     requestAnimationFrame(() => {
+      const dialog = $("overlay").querySelector(".dialog");
+      if (name === "detail") { dialog.scrollTop = 0; dialog.focus(); return; }
       const first = $("overlay").querySelector("input:not(:disabled), button:not(:disabled), select:not(:disabled), textarea:not(:disabled), summary");
       (first || $("overlay").querySelector(".dialog")).focus();
     });
@@ -161,6 +164,7 @@
   function showDetail(id) {
     const product = Store.products.find(item => item.id === id);
     if (!product) return toast("Produk tidak ditemukan.");
+    state.detailProductId = id;
     const discount = product.oldPrice > product.price ? Math.round((1 - product.price / product.oldPrice) * 100) : 0;
     openDialog(product.name, `<div class="detail-art">${product.image ? `<img class="detail-image" src="${safe(product.image)}" alt="${safe(product.name)}" width="640" height="640" onerror="this.hidden=true;this.nextElementSibling.hidden=false">` : ""}<span class="detail-placeholder" aria-hidden="true" ${product.image ? "hidden" : ""}>${safe(product.icon || "□")}</span></div>
       <div class="detail-content">
@@ -552,8 +556,17 @@
   });
   window.addEventListener("hashchange", updateNav);
   document.addEventListener("click", async event => {
-    const target = event.target.closest("[data-store], [data-seller-tab], [data-seller-sales-view], [data-account-destination], [data-add], [data-detail], [data-buy], [data-follow], [data-action], [data-auth-mode], [data-quantity], [data-cancel-order], [data-buyer-cancel-line], [data-seller-decision], [data-edit-product], [data-delete-product], [data-handoff], [data-fulfill], [data-order], [data-chat], [data-start-chat]");
+    const target = event.target.closest("[data-store], [data-seller-tab], [data-seller-sales-view], [data-account-destination], [data-detail-back], [data-detail-search], [data-detail-share], [data-detail-cart], [data-add], [data-detail], [data-buy], [data-follow], [data-action], [data-auth-mode], [data-quantity], [data-cancel-order], [data-buyer-cancel-line], [data-seller-decision], [data-edit-product], [data-delete-product], [data-handoff], [data-fulfill], [data-order], [data-chat], [data-start-chat]");
     if (!target) return;
+    if (target.hasAttribute("data-detail-back")) { closeDialog(); return; }
+    if (target.hasAttribute("data-detail-search")) { closeDialog(); $("searchInput")?.focus(); return; }
+    if (target.hasAttribute("data-detail-share")) {
+      const url = new URL(`index.html#product-${encodeURIComponent(state.detailProductId || "")}`, location.href).href;
+      try { if (navigator.share) await navigator.share({ title: $("modalTitle").textContent, url }); else { await navigator.clipboard.writeText(url); toast("Tautan produk disalin."); } }
+      catch (error) { if (error.name !== "AbortError") toast("Tautan produk gagal dibagikan."); }
+      return;
+    }
+    if (target.hasAttribute("data-detail-cart")) { showCart(); return; }
     if (target.dataset.sellerSalesView) { state.sellerSalesView = target.dataset.sellerSalesView; showSellerProducts(); return; }
     if (target.dataset.sellerTab) { state.sellerTab = target.dataset.sellerTab; history.replaceState(null, "", `seller.html?tab=${state.sellerTab}`); showSellerProducts(); return; }
     if (target.dataset.accountDestination) { location.href = `seller.html?tab=${encodeURIComponent(target.dataset.accountDestination)}`; return; }
@@ -694,21 +707,39 @@
     }
   });
   $("overlay").addEventListener("click", event => { if (event.target === $("overlay")) closeDialog(); });
-  $("overlay").addEventListener("touchstart", event => {
-    if (state.modal !== "detail" || !event.target.closest(".dialog-header, .detail-art")) return;
-    state.sheetTouchY = event.touches[0].clientY;
-  }, { passive: true });
-  $("overlay").addEventListener("touchend", event => {
-    if (state.modal !== "detail" || state.sheetTouchY == null) return;
-    const dialog = $("overlay").querySelector(".detail-dialog");
-    const delta = state.sheetTouchY - event.changedTouches[0].clientY;
-    if (delta > 40) dialog?.classList.add("is-expanded");
-    else if (delta < -40 && dialog?.scrollTop <= 0) dialog?.classList.remove("is-expanded");
-    state.sheetTouchY = null;
-  }, { passive: true });
-  $("overlay").querySelector(".dialog").addEventListener("scroll", event => {
-    if (state.modal === "detail" && event.target.scrollTop > 12) event.target.classList.add("is-expanded");
-  }, { passive: true });
+  const sheet = $("overlay").querySelector(".dialog");
+  let sheetDragY = null, sheetStartHeight = 0, sheetStartScroll = 0, sheetPointer = null;
+  sheet.addEventListener("pointerdown", event => {
+    if (state.modal !== "detail" || !matchMedia("(max-width: 839px)").matches || event.button > 0) return;
+    sheetDragY = event.clientY;
+    sheetStartHeight = sheet.getBoundingClientRect().height;
+    sheetStartScroll = sheet.scrollTop;
+    sheetPointer = event.pointerId;
+    sheet.setPointerCapture(event.pointerId);
+  });
+  sheet.addEventListener("pointermove", event => {
+    if (state.modal !== "detail" || sheetDragY == null || event.pointerId !== sheetPointer) return;
+    const delta = sheetDragY - event.clientY;
+    let height, scroll;
+    if (delta >= 0) {
+      height = Math.min(innerHeight, sheetStartHeight + delta);
+      scroll = sheetStartScroll + Math.max(0, sheetStartHeight + delta - innerHeight);
+    } else {
+      const downward = -delta;
+      const scrollBack = Math.min(sheetStartScroll, downward);
+      scroll = sheetStartScroll - scrollBack;
+      height = Math.max(innerHeight * 0.45, sheetStartHeight - Math.max(0, downward - scrollBack));
+    }
+    sheet.style.setProperty("--sheet-height", `${height}px`);
+    sheet.classList.toggle("is-expanded", height >= innerHeight - 1);
+    sheet.scrollTop = scroll;
+  });
+  const endSheetDrag = event => {
+    if (event.pointerId !== sheetPointer) return;
+    sheetDragY = sheetPointer = null;
+  };
+  sheet.addEventListener("pointerup", endSheetDrag);
+  sheet.addEventListener("pointercancel", endSheetDrag);
   document.addEventListener("keydown", event => {
     if (event.key === "Escape") closeDialog();
     if (event.key === "Tab" && !$("overlay").hidden) {
@@ -738,7 +769,7 @@
         const tab = new URLSearchParams(location.search).get("tab");
         if (["products", "orders", "sales"].includes(tab)) state.sellerTab = tab;
         showSellerProducts();
-      } else { render(); updateNav(); }
+      } else { render(); updateNav(); if (location.hash.startsWith("#product-")) showDetail(decodeURIComponent(location.hash.slice(9))); }
     }
     catch (error) {
       const content = $("products") || $("accountContent") || $("sellerContent");

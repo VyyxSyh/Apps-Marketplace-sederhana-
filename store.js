@@ -60,17 +60,16 @@
     try { localStorage.setItem(key, JSON.stringify(value)); }
     catch { throw new Error("Penyimpanan browser penuh atau tidak tersedia. Kosongkan ruang, lalu muat ulang aplikasi."); }
   };
-  async function fetchSeedData(categories = []) {
-    const names = ["products", "carts", "orders", "chats", "stockMovements"];
-    const [meta, ...files] = await Promise.all([fetch("data.json"), ...names.map(name => fetch(`data/${name}.json`))]);
+  async function fetchSeedData() {
+    const names = ["products", "categories", "carts", "orders", "chats", "stockMovements"];
+    const files = await Promise.all(names.map(name => fetch(`data/${name}.json`)));
     if (!files.every(response => response.ok)) throw new Error("File data/*.json gagal dimuat.");
-    const [data, ...values] = await Promise.all([meta.ok ? meta.json() : { categories }, ...files.map(response => response.json())]);
-    return Object.assign(data, Object.fromEntries(names.map((name, index) => [name, values[index]])));
+    return Object.fromEntries(await Promise.all(names.map(async (name, index) => [name, await files[index].json()])));
   }
   async function fetchSeedUsers() {
     const response = await fetch("/api/users");
     if (response.ok) return response.json();
-    const fallback = await fetch("users.json");
+    const fallback = await fetch("data/users.json");
     if (!fallback.ok) throw new Error("Data akun gagal dimuat.");
     return fallback.json();
   }
@@ -85,7 +84,7 @@
         const userData = await usersResponse.json();
         if (!Array.isArray(data.products)) {
           const seed = await fetchSeedData(data.categories);
-          data = { ...seed, ...data, products: seed.products, carts: data.carts || seed.carts, orders: data.orders || seed.orders, chats: data.chats || seed.chats, stockMovements: data.stockMovements || seed.stockMovements };
+          data = { ...seed, ...data, products: seed.products, categories: seed.categories };
         }
         if (!Array.isArray(data.categories)) throw new Error("Kategori gagal dimuat.");
         apiAvailable = true;
@@ -112,7 +111,7 @@
       migrateCategories();
       if (localStorage.getItem("tokoko-seed-version") !== "8") {
         try {
-          const [seed, userSeed] = await Promise.all([fetchSeedData(read(keys.categories, [])), fetchSeedUsers()]);
+          const [seed, userSeed] = await Promise.all([fetchSeedData(), fetchSeedUsers()]);
           if (seed.products) {
             const demoIds = new Set(["beras-premium", "minyak-goreng", "telur-ayam", "mi-instan", "paket-p3k", "vitamin-c", "kaos-katun", "deterjen-cair", "sabun-mandi", "alat-dapur", "smartphone-demo", "samsung-galaxy-a16-5g", "xiaomi-redmi-note-14-5g", "oppo-a3x", "vivo-y28", "realme-c75", "headphone-demo", "salad-demo", "skincare-demo", "laptop-demo", "buku-demo", "otomotif-demo", "sepatu-lari", "perlengkapan-bayi", "mouse-wireless"]);
             const seededUsers = flattenUsers(userSeed);
@@ -139,7 +138,7 @@
       });
        write("tokoko-seed-version", "8");
     } catch {
-      throw new Error("Data awal gagal dimuat. Jalankan lewat Live Server atau pastikan data.json tersedia.");
+      throw new Error("Data awal gagal dimuat. Jalankan lewat server atau pastikan folder data tersedia.");
     }
   }
 

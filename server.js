@@ -6,8 +6,7 @@ const path = require("node:path");
 
 const root = __dirname;
 const dataDir = path.join(root, "data");
-const dataFile = path.join(root, "data.json");
-const usersFile = path.join(root, "users.json");
+const usersFile = path.join(dataDir, "users.json");
 const passwordsFile = path.join(root, "hash", "pw.json");
 const scrypt = promisify(crypto.scrypt);
 const port = Number(process.env.PORT) || 3000;
@@ -34,18 +33,8 @@ async function writeJson(file, data) {
   await fs.rename(temporaryFile, file);
 }
 async function readData() {
-  let legacy = {};
-  try { legacy = JSON.parse(await fs.readFile(dataFile, "utf8")); } catch (error) { if (error.code !== "ENOENT") throw error; }
-  const result = { categories: legacy.categories || [] };
-  for (const name of ["products", "carts", "orders", "chats", "stockMovements"]) {
-    try { result[name] = JSON.parse(await fs.readFile(path.join(dataDir, `${name}.json`), "utf8")); }
-    catch (error) {
-      if (error.code !== "ENOENT") throw error;
-      result[name] = legacy[name] || [];
-      await writeJson(path.join(dataDir, `${name}.json`), result[name]);
-    }
-  }
-  return result;
+  const names = ["products", "categories", "carts", "orders", "chats", "stockMovements"];
+  return Object.fromEntries(await Promise.all(names.map(async name => [name, JSON.parse(await fs.readFile(path.join(dataDir, `${name}.json`), "utf8"))])));
 }
 async function parseBody(req) {
   let body = "";
@@ -154,8 +143,7 @@ http.createServer(async (req, res) => {
       if (!data || !Array.isArray(data.products) || !Array.isArray(data.categories) || !Array.isArray(data.carts) || !Array.isArray(data.orders) || !Array.isArray(data.chats) || !Array.isArray(data.stockMovements)) {
         throw Object.assign(new Error("Format data tidak valid."), { status: 400 });
       }
-      await writeJson(dataFile, { categories: data.categories });
-      for (const name of ["products", "carts", "orders", "chats", "stockMovements"]) await writeJson(path.join(dataDir, `${name}.json`), data[name] || []);
+      for (const name of ["products", "categories", "carts", "orders", "chats", "stockMovements"]) await writeJson(path.join(dataDir, `${name}.json`), data[name] || []);
       res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
       return res.end(JSON.stringify({ ok: true }));
     }
