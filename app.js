@@ -1,7 +1,7 @@
 (() => {
   const $ = id => document.getElementById(id);
   const money = value => `Rp ${Number(value).toLocaleString("id-ID")}`;
-  const state = { storeId: "", sellerTab: "products", sellerSalesView: "prices", pendingProductRestore: null, query: "", modal: "", sort: "featured", authNext: "", lastFocus: null, toastTimer: 0 };
+  const state = { storeId: "", sellerTab: "products", sellerSalesView: "report", pendingProductRestore: null, query: "", modal: "", sort: "featured", authNext: "", lastFocus: null, toastTimer: 0 };
   const safe = value => String(value ?? "").replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
   const cartForUser = userId => Store.carts.filter(item => item.userId === userId);
   const currentUser = () => Store.users.find(user => user.id === Store.session?.userId) || null;
@@ -266,7 +266,7 @@
       const revenue = lines.reduce((sum, item) => sum + item.price * item.quantity, 0);
       const unread = Store.chats.filter(chat => chat.sellerId === user.id && chat.unread).length;
       const lowStock = products.filter(product => availableStock(product) <= (product.lowStockThreshold ?? 5)).length;
-      const content = `<section class="seller-account-profile"><div class="seller-avatar" aria-hidden="true">${safe(user.name.trim().slice(0, 1).toUpperCase())}</div><div><h2>${safe(user.name)}</h2><p>${safe(user.email)}</p><p>${safe(user.city || "Lokasi toko belum diatur")}</p></div><button class="secondary-button" type="button" data-action="edit-store-profile">Edit profil</button></section><section class="seller-account-metrics" aria-label="Ringkasan toko"><div><strong>${products.length}</strong><span>Produk</span></div><div><strong>${waiting}</strong><span>Perlu diproses</span></div><div><strong>${money(revenue)}</strong><span>Nilai pesanan tersimpan</span></div></section><section class="seller-account-section"><h3>Perlu perhatian</h3><button class="seller-account-link" type="button" data-account-destination="orders"><span>Pesanan aktif</span><strong>${waiting}</strong></button><button class="seller-account-link" type="button" data-account-destination="sales"><span>Pesan belum dibaca</span><strong>${unread}</strong></button><button class="seller-account-link" type="button" data-account-destination="products"><span>Produk stok menipis</span><strong>${lowStock}</strong></button></section><section class="seller-account-section"><h3>Kelola toko</h3><a class="seller-account-link" href="seller.html"><span>Produk saya</span><span>Kelola toko</span></a><button class="seller-account-link" type="button" data-account-destination="orders"><span>Pesanan</span><span>Lihat antrean toko</span></button><button class="seller-account-link" type="button" data-account-destination="sales"><span>Penjualan</span><span>Harga, laporan, chat</span></button></section><section class="seller-account-section"><h3>Akun & keamanan</h3><div class="list-row"><span>Email akun</span><strong>${safe(user.email)}</strong></div><button class="secondary-button full-width mt-2" type="button" data-action="change-password">Ubah kata sandi</button><button class="danger-button full-width mt-4" type="button" data-action="logout">Keluar</button></section>`;
+      const content = `<section class="seller-account-profile"><div class="seller-avatar" aria-hidden="true">${safe(user.name.trim().slice(0, 1).toUpperCase())}</div><div><h2>${safe(user.name)}</h2><p>${safe(user.email)}</p><p>${safe(user.city || "Lokasi toko belum diatur")}</p></div><button class="secondary-button" type="button" data-action="edit-store-profile">Edit profil</button></section><section class="seller-account-metrics" aria-label="Ringkasan toko"><div><strong>${products.length}</strong><span>Produk</span></div><div><strong>${waiting}</strong><span>Perlu diproses</span></div><div><strong>${money(revenue)}</strong><span>Nilai pesanan tersimpan</span></div></section><section class="seller-account-section"><h3>Perlu perhatian</h3><button class="seller-account-link" type="button" data-account-destination="orders"><span>Pesanan aktif</span><strong>${waiting}</strong></button><button class="seller-account-link" type="button" data-account-destination="sales"><span>Pesan belum dibaca</span><strong>${unread}</strong></button><button class="seller-account-link" type="button" data-account-destination="products"><span>Produk stok menipis</span><strong>${lowStock}</strong></button></section><section class="seller-account-section"><h3>Kelola toko</h3><a class="seller-account-link" href="seller.html"><span>Produk saya</span><span>Kelola toko</span></a><button class="seller-account-link" type="button" data-account-destination="orders"><span>Pesanan</span><span>Lihat antrean toko</span></button><button class="seller-account-link" type="button" data-account-destination="sales"><span>Penjualan</span><span>Laporan & pesan</span></button></section><section class="seller-account-section"><h3>Akun & keamanan</h3><div class="list-row"><span>Email akun</span><strong>${safe(user.email)}</strong></div><button class="secondary-button full-width mt-2" type="button" data-action="change-password">Ubah kata sandi</button><button class="danger-button full-width mt-4" type="button" data-action="logout">Keluar</button></section>`;
       if (document.body.dataset.page === "account") { $("accountContent").innerHTML = `<h1 class="standalone-title">Akun toko</h1>${content}`; return; }
       openDialog("Akun toko", content, "account");
       return;
@@ -313,13 +313,10 @@
       return;
     }
     if (state.sellerTab === "sales") {
-      const products = Store.products.filter(product => product.sellerId === seller.id);
-      const sections = `<nav class="seller-subtabs" aria-label="Bagian penjualan"><button type="button" data-seller-sales-view="prices" aria-pressed="${state.sellerSalesView === "prices"}">Harga</button><button type="button" data-seller-sales-view="report" aria-pressed="${state.sellerSalesView === "report"}">Laporan</button><button type="button" data-seller-sales-view="messages" aria-pressed="${state.sellerSalesView === "messages"}">Pesan</button></nav>`;
+      const sections = `<nav class="seller-subtabs" aria-label="Bagian penjualan"><button type="button" data-seller-sales-view="report" aria-pressed="${state.sellerSalesView === "report"}">Laporan</button><button type="button" data-seller-sales-view="messages" aria-pressed="${state.sellerSalesView === "messages"}">Pesan</button></nav>`;
       const view = state.sellerSalesView === "report"
         ? `<h1 class="standalone-title">Laporan penjualan</h1>${salesReport(seller.id)}`
-        : state.sellerSalesView === "messages"
-          ? `<h1 class="standalone-title">Pesan pelanggan</h1>${showChatList(seller.id)}`
-          : `<h1 class="standalone-title">Harga produk</h1>${products.map(product => `<form class="price-form list-row" data-price-product="${safe(product.id)}"><div><strong>${safe(product.name)}</strong><div>Stok tersedia: ${availableStock(product)}</div></div><label>Harga <input name="price" type="number" min="0" step="1" required value="${product.price}"></label><button class="secondary-button" type="submit">Simpan</button></form>`).join("") || `<div class="empty-state"><strong>Belum ada produk</strong>Tambahkan produk di tab Produk.</div>`}`;
+        : `<h1 class="standalone-title">Pesan pelanggan</h1>${showChatList(seller.id)}`;
       const content = `${tabs}${sections}${view}`;
       if (document.body.dataset.page === "seller") { $("sellerContent").innerHTML = content; return; }
       openDialog("Produk saya", content, "seller-products");
@@ -455,13 +452,6 @@
       validChat.messages.push({ from: user.role, text: message, createdAt: new Date().toISOString() }); validChat.unread = user.role === "buyer";
       try { await Store.save(); } catch (error) { toast(error.message); return; }
       showChat(validChat.id); return;
-    }
-    if (form.matches("[data-price-product]")) {
-      const seller = currentUser(); const product = Store.products.find(item => item.id === form.dataset.priceProduct && item.sellerId === seller?.id); const price = Number(data.get("price"));
-      if (!product || !Number.isSafeInteger(price) || price < 0) return toast("Harga tidak valid.");
-      Store.products = Store.products.map(item => item.id === product.id ? { ...item, price } : item);
-      try { await Store.save(); } catch (error) { toast(error.message); return; }
-      showSalesTools(); toast("Harga diperbarui."); return;
     }
     if (form.id === "productForm") {
       const seller = currentUser();
