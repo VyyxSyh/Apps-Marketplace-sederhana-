@@ -868,6 +868,40 @@ textarea:focus-visible {
   pointer-events: auto;
 }
 
+.detail-sheet-handle { display: none; }
+
+@media (max-width: 839px) {
+  .detail-dialog {
+    height: min(76dvh, 700px);
+    max-height: min(76dvh, 700px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    transition: height 220ms ease-out, max-height 220ms ease-out, border-radius 220ms ease-out;
+    touch-action: pan-y;
+  }
+
+  .detail-dialog.is-expanded {
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+  }
+
+  .detail-sheet-handle {
+    display: block;
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    width: 38px;
+    height: 4px;
+    border-radius: 4px;
+    background: #62685c;
+    transform: translateX(-50%);
+    pointer-events: auto;
+  }
+
+  .detail-dialog.is-expanded .detail-sheet-handle { top: 8px; }
+}
+
 .dialog a {
   color: var(--green-deep);
 }
@@ -1357,6 +1391,20 @@ body[data-page="seller"] .nav-item:focus-visible { outline: 3px solid var(--clay
 .detail-actions > * {
   flex: 1;
   min-height: 44px;
+}
+
+.detail-actions .ask-store-button {
+  flex: 0 0 48px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+}
+
+.ask-store-button svg {
+  display: block;
+  width: 21px;
+  height: 21px;
+  fill: currentColor;
 }
 
 .detail-dialog {

@@ -99,6 +99,11 @@
     $("modalBody").innerHTML = content;
     $("modalBody").classList.toggle("detail-body", name === "detail");
     $("overlay").querySelector(".dialog").classList.toggle("detail-dialog", name === "detail");
+    $("overlay").querySelector(".dialog").classList.remove("is-expanded");
+    const header = $("overlay").querySelector(".dialog-header");
+    let handle = header.querySelector(".detail-sheet-handle");
+    if (name === "detail" && !handle) { handle = document.createElement("span"); handle.className = "detail-sheet-handle"; handle.setAttribute("aria-hidden", "true"); header.insertBefore(handle, header.querySelector(".icon-button")); }
+    if (handle) handle.hidden = name !== "detail";
     $("overlay").hidden = false;
     document.body.classList.add("dialog-open");
     requestAnimationFrame(() => {
@@ -168,7 +173,7 @@
         </section>
         <section class="detail-description"><h3>Deskripsi produk</h3><p>${safe(product.description || "Belum ada deskripsi produk.")}</p></section>
       </div>
-         <div class="detail-actions"><button class="secondary-button" type="button" data-add="${safe(product.id)}" ${product.stock > 0 ? "" : "disabled"}>Tambah ke keranjang</button><button class="secondary-button" type="button" data-start-chat="${safe(product.id)}">Tanya toko</button><button class="primary-button" type="button" data-buy="${safe(product.id)}" ${product.stock > 0 ? "" : "disabled"}>Beli sekarang</button></div>`, "detail");
+          <div class="detail-actions"><button class="secondary-button ask-store-button" type="button" data-start-chat="${safe(product.id)}" aria-label="Tanya toko ${safe(sellerName(product.sellerId))}" title="Tanya toko"><svg aria-hidden="true" viewBox="0 0 512 512"><path d="M0 240c0 54.4 19.3 104.6 51.9 144.9L3.1 474.3c-2 3.7-3.1 7.9-3.1 12.2 0 14.1 11.4 25.5 25.5 25.5 4 0 7.8-.6 11.5-2.1L153.4 460c31.4 12.9 66.1 20 102.6 20 141.4 0 256-107.5 256-240S397.4 0 256 0 0 107.5 0 240zM94 407.9c9.3-17.1 7.4-38.1-4.8-53.2-26.1-32.3-41.2-71.9-41.2-114.7 0-103.2 90.2-192 208-192s208 88.8 208 192-90.2 192-208 192c-30.2 0-58.7-5.9-84.3-16.4-11.9-4.9-25.3-4.8-37.1 .3L76 440.9 94 407.9zM144 272a32 32 0 1 0 0-64 32 32 0 0 0 0 64zm144-32a32 32 0 1 0-64 0 32 32 0 0 0 64 0zm80 32a32 32 0 1 0 0-64 32 32 0 0 0 0 64z"/></svg></button><button class="primary-button" type="button" data-buy="${safe(product.id)}" ${product.stock > 0 ? "" : "disabled"}>Beli sekarang</button><button class="secondary-button" type="button" data-add="${safe(product.id)}" ${product.stock > 0 ? "" : "disabled"}>+ Keranjang</button></div>`, "detail");
   }
 
   function showCheckout(buyId = "") {
@@ -689,6 +694,21 @@
     }
   });
   $("overlay").addEventListener("click", event => { if (event.target === $("overlay")) closeDialog(); });
+  $("overlay").addEventListener("touchstart", event => {
+    if (state.modal !== "detail" || !event.target.closest(".dialog-header, .detail-art")) return;
+    state.sheetTouchY = event.touches[0].clientY;
+  }, { passive: true });
+  $("overlay").addEventListener("touchend", event => {
+    if (state.modal !== "detail" || state.sheetTouchY == null) return;
+    const dialog = $("overlay").querySelector(".detail-dialog");
+    const delta = state.sheetTouchY - event.changedTouches[0].clientY;
+    if (delta > 40) dialog?.classList.add("is-expanded");
+    else if (delta < -40 && dialog?.scrollTop <= 0) dialog?.classList.remove("is-expanded");
+    state.sheetTouchY = null;
+  }, { passive: true });
+  $("overlay").querySelector(".dialog").addEventListener("scroll", event => {
+    if (state.modal === "detail" && event.target.scrollTop > 12) event.target.classList.add("is-expanded");
+  }, { passive: true });
   document.addEventListener("keydown", event => {
     if (event.key === "Escape") closeDialog();
     if (event.key === "Tab" && !$("overlay").hidden) {
