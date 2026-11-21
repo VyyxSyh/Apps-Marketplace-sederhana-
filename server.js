@@ -5,6 +5,7 @@ const { promisify } = require("node:util");
 const path = require("node:path");
 
 const root = __dirname;
+const dataDir = path.join(root, "data");
 const dataFile = path.join(root, "data.json");
 const usersFile = path.join(root, "users.json");
 const passwordsFile = path.join(root, "hash", "pw.json");
@@ -32,6 +33,20 @@ async function writeJson(file, data) {
   await fs.writeFile(temporaryFile, `${JSON.stringify(data, null, 2)}\n`, "utf8");
   await fs.rename(temporaryFile, file);
 }
+async function readData() {
+  let legacy = {};
+  try { legacy = JSON.parse(await fs.readFile(dataFile, "utf8")); } catch (error) { if (error.code !== "ENOENT") throw error; }
+  const result = { categories: legacy.categories || [] };
+  for (const name of ["products", "carts", "orders", "chats", "stockMovements"]) {
+    try { result[name] = JSON.parse(await fs.readFile(path.join(dataDir, `${name}.json`), "utf8")); }
+    catch (error) {
+      if (error.code !== "ENOENT") throw error;
+      result[name] = legacy[name] || [];
+      await writeJson(path.join(dataDir, `${name}.json`), result[name]);
+    }
+  }
+  return result;
+}
 async function parseBody(req) {
   let body = "";
   for await (const chunk of req) {
@@ -46,7 +61,7 @@ http.createServer(async (req, res) => {
   try {
     if (req.url === "/api/data" && req.method === "GET") {
       res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
-      return res.end(await fs.readFile(dataFile));
+      return res.end(JSON.stringify(await readData()));
     }
     if (req.url === "/api/users" && req.method === "GET") {
       res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
@@ -136,10 +151,11 @@ http.createServer(async (req, res) => {
         if (body.length > 1_000_000) throw Object.assign(new Error("Data terlalu besar."), { status: 413 });
       }
       const data = JSON.parse(body);
-      if (!data || !Array.isArray(data.products) || !Array.isArray(data.categories) || !Array.isArray(data.orders) || !Array.isArray(data.chats) || !Array.isArray(data.stockMovements)) {
+      if (!data || !Array.isArray(data.products) || !Array.isArray(data.categories) || !Array.isArray(data.carts) || !Array.isArray(data.orders) || !Array.isArray(data.chats) || !Array.isArray(data.stockMovements)) {
         throw Object.assign(new Error("Format data tidak valid."), { status: 400 });
       }
-      await writeJson(dataFile, data);
+      await writeJson(dataFile, { categories: data.categories });
+      for (const name of ["products", "carts", "orders", "chats", "stockMovements"]) await writeJson(path.join(dataDir, `${name}.json`), data[name] || []);
       res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
       return res.end(JSON.stringify({ ok: true }));
     }

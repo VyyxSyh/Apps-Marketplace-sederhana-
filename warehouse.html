@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f5f2e9">
+  <title>Gudang | KOLAP</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;500;600;700;800&family=Rubik:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="stylesheet.css">
+  <script src="store.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body data-page="warehouse">
+  <div class="app-shell">
+    <header class="site-header"><div class="header-inner"><a class="brand" href="warehouse.html">KOLAP</a><span class="page-context">Ruang gudang</span></div></header>
+    <main id="warehouseContent" class="standalone-page" aria-live="polite"><p class="loading-state">Memuat gudang...</p></main>
+    <nav class="bottom-nav" aria-label="Navigasi gudang">
+      <a class="nav-item is-active" href="warehouse.html" aria-current="page"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 7h18v14H3zM7 7V4h10v3M7 12h10M7 16h6"/></svg><span>Pesanan</span></a>
+      <a class="nav-item" href="warehouse.html?view=stock"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 4h16v16H4zM8 8h8M8 12h8M8 16h4"/></svg><span>Stok</span></a>
+      <button class="nav-item" type="button" data-action="warehouse-account"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span>Akun</span></button>
+    </nav>
+  </div>
+  <div id="overlay" class="overlay" hidden><section class="dialog" role="dialog" aria-modal="true" aria-labelledby="modalTitle" tabindex="-1"><header class="dialog-header"><h2 id="modalTitle"></h2><button class="icon-button" type="button" data-action="close" aria-label="Tutup">×</button></header><div id="modalBody" class="dialog-body"></div></section></div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

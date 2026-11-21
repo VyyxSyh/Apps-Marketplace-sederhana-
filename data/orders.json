@@ -1,0 +1,33 @@
+[
+  {
+    "id": "409d375c-7355-4e0e-bdca-3956f7b2e175",
+    "orderNumber": "TK-MWQ7R8ON",
+    "buyerId": "buyer-demo",
+    "items": [
+      {
+        "productId": "samsung-galaxy-a16-5g",
+        "sellerId": "seller-agres",
+        "name": "Samsung Galaxy A16 5G 8/256 GB",
+        "price": 2000,
+        "quantity": 1
+      }
+    ],
+    "shipping": {
+      "name": "Pembeli Demo",
+      "phone": "085707020714",
+      "address": "jalan jalan ke pasar rebo"
+    },
+    "paymentMethod": "Bayar di tempat",
+    "subtotal": 2000,
+    "shippingCost": 0,
+    "total": 2000,
+    "status": "Diproses",
+    "createdAt": "2026-11-21T09:36:33.719Z",
+    "history": [
+      {
+        "status": "Diproses",
+        "at": "2026-11-21T09:36:33.719Z"
+      }
+    ]
+  }
+]

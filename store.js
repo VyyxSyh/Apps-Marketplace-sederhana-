@@ -60,14 +60,34 @@
     try { localStorage.setItem(key, JSON.stringify(value)); }
     catch { throw new Error("Penyimpanan browser penuh atau tidak tersedia. Kosongkan ruang, lalu muat ulang aplikasi."); }
   };
+  async function fetchSeedData(categories = []) {
+    const names = ["products", "carts", "orders", "chats", "stockMovements"];
+    const [meta, ...files] = await Promise.all([fetch("data.json"), ...names.map(name => fetch(`data/${name}.json`))]);
+    if (!files.every(response => response.ok)) throw new Error("File data/*.json gagal dimuat.");
+    const [data, ...values] = await Promise.all([meta.ok ? meta.json() : { categories }, ...files.map(response => response.json())]);
+    return Object.assign(data, Object.fromEntries(names.map((name, index) => [name, values[index]])));
+  }
+  async function fetchSeedUsers() {
+    const response = await fetch("/api/users");
+    if (response.ok) return response.json();
+    const fallback = await fetch("users.json");
+    if (!fallback.ok) throw new Error("Data akun gagal dimuat.");
+    return fallback.json();
+  }
   async function init() {
     try {
+      if (location.protocol !== "file:") {
       const response = await fetch("/api/data");
       if (response.ok) {
-        const data = await response.json();
+        let data = await response.json();
         const usersResponse = await fetch("/api/users");
         if (!usersResponse.ok) throw new Error("Akun gagal dimuat.");
         const userData = await usersResponse.json();
+        if (!Array.isArray(data.products)) {
+          const seed = await fetchSeedData(data.categories);
+          data = { ...seed, ...data, products: seed.products, carts: data.carts || seed.carts, orders: data.orders || seed.orders, chats: data.chats || seed.chats, stockMovements: data.stockMovements || seed.stockMovements };
+        }
+        if (!Array.isArray(data.categories)) throw new Error("Kategori gagal dimuat.");
         apiAvailable = true;
         write(keys.products, data.products);
         write(keys.categories, data.categories);
@@ -85,15 +105,15 @@
         if (session?.userId === "seller-demo") write(keys.session, { userId: "seller-agres", role: "seller" });
         return;
       }
+      }
     } catch { /* Use local seed data when not running through the Node server. */ }
     if (localStorage.getItem(keys.users) && localStorage.getItem(keys.products)) {
       for (const [key, value] of [[keys.orders, []], [keys.chats, []], [keys.stockMovements, []]]) if (!localStorage.getItem(key)) write(key, value);
       migrateCategories();
-      if (localStorage.getItem("tokoko-seed-version") !== "6") {
+      if (localStorage.getItem("tokoko-seed-version") !== "8") {
         try {
-          const [response, usersResponse] = await Promise.all([fetch("data.json"), fetch("users.json")]);
-          if (response.ok && usersResponse.ok) {
-            const [seed, userSeed] = await Promise.all([response.json(), usersResponse.json()]);
+          const [seed, userSeed] = await Promise.all([fetchSeedData(read(keys.categories, [])), fetchSeedUsers()]);
+          if (seed.products) {
             const demoIds = new Set(["beras-premium", "minyak-goreng", "telur-ayam", "mi-instan", "paket-p3k", "vitamin-c", "kaos-katun", "deterjen-cair", "sabun-mandi", "alat-dapur", "smartphone-demo", "samsung-galaxy-a16-5g", "xiaomi-redmi-note-14-5g", "oppo-a3x", "vivo-y28", "realme-c75", "headphone-demo", "salad-demo", "skincare-demo", "laptop-demo", "buku-demo", "otomotif-demo", "sepatu-lari", "perlengkapan-bayi", "mouse-wireless"]);
             const seededUsers = flattenUsers(userSeed);
             const demoSellerIds = new Set(["seller-demo", ...seededUsers.filter(isDemoUser).map(user => user.id)]);
@@ -106,20 +126,18 @@
             write(keys.users, [...mergedUsers.values()]);
             const session = read(keys.session, null);
             if (session?.userId === "seller-demo") write(keys.session, { userId: "seller-agres", role: "seller" });
-            localStorage.setItem("tokoko-seed-version", "6");
+            localStorage.setItem("tokoko-seed-version", "8");
           }
         } catch { /* Keep existing browser data when seed file is unavailable. */ }
       }
       return;
     }
     try {
-      const [response, usersResponse] = await Promise.all([fetch("data.json"), fetch("users.json")]);
-      if (!response.ok || !usersResponse.ok) throw new Error("seed fetch failed");
-      const [seed, userSeed] = await Promise.all([response.json(), usersResponse.json()]);
+      const [seed, userSeed] = await Promise.all([fetchSeedData(), fetchSeedUsers()]);
        Object.entries({ users: flattenUsers(userSeed), products: seed.products, categories: seed.categories, carts: seed.carts, orders: seed.orders, chats: seed.chats || [], stockMovements: seed.stockMovements || [] }).forEach(([name, value]) => {
         if (!localStorage.getItem(keys[name])) write(keys[name], value);
       });
-      write("tokoko-seed-version", "6");
+       write("tokoko-seed-version", "8");
     } catch {
       throw new Error("Data awal gagal dimuat. Jalankan lewat Live Server atau pastikan data.json tersedia.");
     }
@@ -151,9 +169,8 @@
       if (!response.ok) throw new Error(result.error || "Kata sandi gagal diubah.");
     },
     async save() {
-    const data = { users: this.users, products: this.products, categories: this.categories, carts: this.carts, orders: this.orders, chats: this.chats, stockMovements: this.stockMovements };
-      try {
-        if (!apiAvailable) throw new Error("Static mode");
+      const data = { users: this.users, products: this.products, categories: this.categories, carts: this.carts, orders: this.orders, chats: this.chats, stockMovements: this.stockMovements };
+      if (apiAvailable) {
         const usersResponse = await fetch("/api/users", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(groupUsers(data.users)) });
         if (!usersResponse.ok) throw new Error("Penyimpanan akun gagal.");
         const dataResponse = await fetch("/api/data", {
@@ -162,9 +179,8 @@
           body: JSON.stringify({ products: data.products, categories: data.categories, carts: data.carts, orders: data.orders, chats: data.chats, stockMovements: data.stockMovements })
         });
         if (!dataResponse.ok) throw new Error("Penyimpanan data gagal.");
-      } catch {
-        Object.entries(data).forEach(([name, value]) => write(keys[name], value));
       }
+      Object.entries(data).forEach(([name, value]) => write(keys[name], value));
     },
     get users() { return read(keys.users, []); },
     set users(value) { write(keys.users, value); },
