@@ -1,17 +1,32 @@
 (() => {
   const $ = id => document.getElementById(id);
   const money = value => `Rp ${Number(value).toLocaleString("id-ID")}`;
-  const state = { storeId: "", sellerTab: "products", query: "", modal: "", sort: "featured", authNext: "", lastFocus: null, toastTimer: 0 };
+  const state = { storeId: "", sellerTab: "products", sellerSalesView: "prices", pendingProductRestore: null, query: "", modal: "", sort: "featured", authNext: "", lastFocus: null, toastTimer: 0 };
   const safe = value => String(value ?? "").replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
   const cartForUser = userId => Store.carts.filter(item => item.userId === userId);
   const currentUser = () => Store.users.find(user => user.id === Store.session?.userId) || null;
   const sellerName = id => Store.users.find(user => user.id === id)?.name || "Penjual lokal";
-  function toast(message) {
+  function toast(message, action) {
     const el = $("toast");
-    el.textContent = message;
+    el.replaceChildren(document.createTextNode(message));
+    el.classList.toggle("has-action", Boolean(action));
+    if (action) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.dataset.action = action.name;
+      button.textContent = action.label;
+      el.append(button);
+    }
     el.classList.add("is-visible");
     clearTimeout(state.toastTimer);
-    state.toastTimer = setTimeout(() => el.classList.remove("is-visible"), 2400);
+    const dismiss = () => {
+      el.classList.remove("is-visible", "has-action");
+      if (action?.name === "undo-product-delete") state.pendingProductRestore = null;
+    };
+    state.toastTimer = setTimeout(() => {
+      if (el.contains(document.activeElement)) el.addEventListener("focusout", () => { if (!el.contains(document.activeElement)) dismiss(); }, { once: true });
+      else dismiss();
+    }, action ? 8000 : 2400);
   }
 
   function setNav() {
@@ -112,7 +127,7 @@
   function showAuth(mode = "login", next = "") {
     state.authNext = next;
     const register = mode === "register";
-    openDialog(register ? "Buat akun TOKOKO" : "Masuk ke TOKOKO", `<div class="notice">Akun demo hanya tersimpan di browser ini. Jangan gunakan kata sandi penting.</div>
+    openDialog(register ? "Buat akun KOLAP" : "Masuk ke KOLAP", `<div class="notice">Akun demo hanya tersimpan di browser ini. Jangan gunakan kata sandi penting.</div>
       <form id="authForm" novalidate>
         ${register ? `<div class="field"><label for="authName">Nama</label><input id="authName" name="name" autocomplete="name" required></div>` : ""}
         <div class="field"><label for="authEmail">Email</label><input id="authEmail" name="email" type="email" autocomplete="email" required></div>
@@ -299,14 +314,20 @@
     }
     if (state.sellerTab === "sales") {
       const products = Store.products.filter(product => product.sellerId === seller.id);
-      const content = `${tabs}<h1 class="standalone-title">Harga & penjualan</h1>${products.map(product => `<form class="price-form list-row" data-price-product="${safe(product.id)}"><div><strong>${safe(product.name)}</strong><div>Stok tersedia: ${availableStock(product)}</div></div><label>Harga <input name="price" type="number" min="0" step="1" required value="${product.price}"></label><button class="secondary-button" type="submit">Simpan</button></form>`).join("")}<h2 class="mt-4">Laporan penjualan</h2>${salesReport(seller.id)}<h2 class="mt-4">Pesan pelanggan</h2>${showChatList(seller.id)}`;
+      const sections = `<nav class="seller-subtabs" aria-label="Bagian penjualan"><button type="button" data-seller-sales-view="prices" aria-pressed="${state.sellerSalesView === "prices"}">Harga</button><button type="button" data-seller-sales-view="report" aria-pressed="${state.sellerSalesView === "report"}">Laporan</button><button type="button" data-seller-sales-view="messages" aria-pressed="${state.sellerSalesView === "messages"}">Pesan</button></nav>`;
+      const view = state.sellerSalesView === "report"
+        ? `<h1 class="standalone-title">Laporan penjualan</h1>${salesReport(seller.id)}`
+        : state.sellerSalesView === "messages"
+          ? `<h1 class="standalone-title">Pesan pelanggan</h1>${showChatList(seller.id)}`
+          : `<h1 class="standalone-title">Harga produk</h1>${products.map(product => `<form class="price-form list-row" data-price-product="${safe(product.id)}"><div><strong>${safe(product.name)}</strong><div>Stok tersedia: ${availableStock(product)}</div></div><label>Harga <input name="price" type="number" min="0" step="1" required value="${product.price}"></label><button class="secondary-button" type="submit">Simpan</button></form>`).join("") || `<div class="empty-state"><strong>Belum ada produk</strong>Tambahkan produk di tab Produk.</div>`}`;
+      const content = `${tabs}${sections}${view}`;
       if (document.body.dataset.page === "seller") { $("sellerContent").innerHTML = content; return; }
       openDialog("Produk saya", content, "seller-products");
       return;
     }
     const products = Store.products.filter(product => product.sellerId === seller.id);
     const rows = products.map(product => `<article class="list-row seller-product-row"><div class="seller-product-copy"><strong>${safe(product.name)}</strong><div>${money(product.price)} · Stok ${product.stock}</div></div><div class="seller-product-actions"><button class="secondary-button icon-action" type="button" data-edit-product="${safe(product.id)}" aria-label="Edit ${safe(product.name)}"><svg aria-hidden="true" viewBox="0 0 512 512"><path d="M441 58.9 453.1 71c9.4 9.4 9.4 24.6 0 33.9L424 134.1 377.9 88 407 58.9c9.4-9.4 24.6-9.4 33.9 0zM209.8 256.2 344 121.9 390.1 168 255.8 302.2c-2.9 2.9-6.5 5-10.4 6.1l-58.5 16.7 16.7-58.5c1.1-3.9 3.2-7.5 6.1-10.4zM373.1 25 175.8 222.2c-8.7 8.7-15 19.4-18.3 31.1l-28.6 100c-2.4 8.4-.1 17.4 6.1 23.6s15.2 8.5 23.6 6.1l100-28.6c11.8-3.4 22.5-9.7 31.1-18.3L487 138.9c28.1-28.1 28.1-73.7 0-101.8L474.9 25c-28.1-28.1-73.7-28.1-101.8 0zM88 64C39.4 64 0 103.4 0 152v272c0 48.6 39.4 88 88 88h272c48.6 0 88-39.4 88-88V312c0-13.3-10.7-24-24-24s-24 10.7-24 24v112c0 22.1-17.9 40-40 40H88c-22.1 0-40-17.9-40-40V152c0-22.1 17.9-40 40-40h112c13.3 0 24-10.7 24-24s-10.7-24-24-24H88z"/></svg></button><button class="danger-button icon-action" type="button" data-delete-product="${safe(product.id)}" aria-label="Hapus ${safe(product.name)}"><svg aria-hidden="true" viewBox="0 0 448 512"><path d="M166.2-16c-13.3 0-25.3 8.3-30 20.8L120 48H24C10.7 48 0 58.7 0 72s10.7 24 24 24h400c13.3 0 24-10.7 24-24s-10.7-24-24-24h-96l-16.2-43.2C307.1-7.7 295.2-16 281.8-16H166.2zM32 144v304c0 35.3 28.7 64 64 64h256c35.3 0 64-28.7 64-64V144h-48v304c0 8.8-7.2 16-16 16H96c-8.8 0-16-7.2-16-16V144H32zm160 72c0-13.3-10.7-24-24-24s-24 10.7-24 24v176c0 13.3 10.7 24 24 24s24-10.7 24-24V216zm112 0c0-13.3-10.7-24-24-24s-24 10.7-24 24v176c0 13.3 10.7 24 24 24s24-10.7 24-24V216z"/></svg></button></div></article>`).join("");
-    const content = `${tabs}<h1 class="standalone-title">Produk toko</h1>${rows || `<div class="empty-state"><strong>Belum ada produk</strong>Tambahkan produk pertama tokomu.</div>`}<button class="primary-button full-width mt-4" type="button" data-action="new-product">Tambah produk</button>`;
+    const content = `${tabs}<div class="seller-products-heading"><h1 class="standalone-title">Produk toko <span>(${products.length})</span></h1><button class="primary-button" type="button" data-action="new-product">Tambah produk</button></div>${rows || `<div class="empty-state"><strong>Belum ada produk</strong>Tambahkan produk pertama tokomu.</div>`}`;
     if (document.body.dataset.page === "seller") { $("sellerContent").innerHTML = content; return; }
     openDialog("Produk saya", content, "seller-products");
   }
@@ -506,8 +527,9 @@
   });
   window.addEventListener("hashchange", updateNav);
   document.addEventListener("click", async event => {
-    const target = event.target.closest("[data-store], [data-seller-tab], [data-account-destination], [data-add], [data-detail], [data-buy], [data-follow], [data-action], [data-auth-mode], [data-quantity], [data-cancel-order], [data-edit-product], [data-delete-product], [data-handoff], [data-fulfill], [data-order], [data-chat], [data-start-chat]");
+    const target = event.target.closest("[data-store], [data-seller-tab], [data-seller-sales-view], [data-account-destination], [data-add], [data-detail], [data-buy], [data-follow], [data-action], [data-auth-mode], [data-quantity], [data-cancel-order], [data-edit-product], [data-delete-product], [data-handoff], [data-fulfill], [data-order], [data-chat], [data-start-chat]");
     if (!target) return;
+    if (target.dataset.sellerSalesView) { state.sellerSalesView = target.dataset.sellerSalesView; showSellerProducts(); return; }
     if (target.dataset.sellerTab) { state.sellerTab = target.dataset.sellerTab; history.replaceState(null, "", `seller.html?tab=${state.sellerTab}`); showSellerProducts(); return; }
     if (target.dataset.accountDestination) { location.href = `seller.html?tab=${encodeURIComponent(target.dataset.accountDestination)}`; return; }
     if (target.hasAttribute("data-store")) { state.storeId = target.dataset.store; render(); return; }
@@ -576,10 +598,12 @@
     if (target.dataset.deleteProduct) {
       const seller = currentUser(); const product = Store.products.find(item => item.id === target.dataset.deleteProduct && item.sellerId === seller?.id);
       if (!product || !confirm(`Hapus produk “${product.name}”?`)) return;
+      const index = Store.products.findIndex(item => item.id === product.id);
       Store.products = Store.products.filter(item => item.id !== product.id);
       try { await Store.save(); }
       catch { return toast("Produk gagal dihapus dari data.json."); }
-      showSellerProducts(); toast("Produk dihapus."); return;
+      state.pendingProductRestore = { product, index };
+      showSellerProducts(); toast(`${product.name} dihapus.`, { name: "undo-product-delete", label: "Urungkan" }); return;
     }
     const action = target.dataset.action;
     if (!action) return;
@@ -596,6 +620,20 @@
       case "edit-store-profile": showStoreProfile(); break;
       case "change-password": showPasswordForm(); break;
       case "new-product": showProductForm(); break;
+      case "undo-product-delete": {
+        const pending = state.pendingProductRestore;
+        if (!pending || Store.products.some(item => item.id === pending.product.id)) return;
+        const products = [...Store.products];
+        products.splice(Math.max(0, Math.min(pending.index, products.length)), 0, pending.product);
+        Store.products = products;
+        try { await Store.save(); }
+        catch { Store.products = Store.products.filter(item => item.id !== pending.product.id); return toast("Produk gagal dipulihkan ke data.json."); }
+        state.pendingProductRestore = null;
+        showSellerProducts();
+        $("toast").classList.remove("is-visible", "has-action");
+        toast(`${pending.product.name} dipulihkan.`);
+        break;
+      }
       case "logout": Store.session = null; closeDialog(); if (document.body.dataset.page) location.href = "index.html"; else render(); toast("Kamu sudah keluar."); break;
       case "seller-products": location.href = "seller.html"; break;
       case "login": showAuth(); break;
