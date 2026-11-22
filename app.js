@@ -33,14 +33,23 @@
 
   function setNav() {
     const user = currentUser();
+    const ordersPage = document.body.dataset.page === "account" && $("accountContent")?.classList.contains("orders-page");
+    const pageContext = document.querySelector(".page-context");
+    if (pageContext && document.body.dataset.page === "account") pageContext.textContent = ordersPage ? "Pesanan" : "Akun";
     document.querySelectorAll("[data-seller-nav]").forEach(el => { el.hidden = user?.role !== "seller"; });
     document.querySelectorAll("[data-buyer-nav]").forEach(el => { el.hidden = user?.role === "seller" || user?.role === "gudang"; });
-    document.querySelectorAll("[data-account-nav]").forEach(el => { el.hidden = false; });
+    document.querySelectorAll("[data-account-nav]").forEach(el => { const active = document.body.dataset.page === "account" && !ordersPage; el.hidden = false; el.classList.toggle("is-active", active); if (active) el.setAttribute("aria-current", "page"); else el.removeAttribute("aria-current"); });
+    document.querySelectorAll("[data-buyer-nav]").forEach(el => { el.classList.toggle("is-active", ordersPage); if (ordersPage) el.setAttribute("aria-current", "page"); else el.removeAttribute("aria-current"); });
     const badge = $("cartBadge");
     if (!badge) return;
     const count = user?.role === "buyer" ? cartForUser(user.id).reduce((sum, item) => sum + item.quantity, 0) : 0;
     badge.textContent = count;
     badge.hidden = !count;
+    const unread = user?.role === "buyer" ? Store.chats.filter(chat => chat.buyerId === user.id && chat.unread).length : 0;
+    document.querySelectorAll("[data-chat-unread]").forEach(el => {
+      el.textContent = unread ? `${unread} baru` : "";
+      el.hidden = !unread;
+    });
   }
 
   function renderCategories() {
@@ -226,8 +235,10 @@
       const preview = lines[0];
       return `<article class="buyer-order-card" data-order-card="${safe(order.id)}" data-search="${safe(`${order.orderNumber} ${order.items.map(item => item.name).join(" ")} ${sellers.map(sellerName).join(" ")}`.toLocaleLowerCase("id"))}" data-statuses="${safe(statuses.join("|"))}" data-products="${safe(order.items.map(item => item.name).join("|"))}"><header class="buyer-order-head"><span class="buyer-order-bag" aria-hidden="true">▣</span><div class="buyer-order-kind"><strong>Belanja</strong><time datetime="${safe(order.createdAt)}">${new Date(order.createdAt).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}</time></div><span class="buyer-order-status" data-status="${safe(overall)}">${safe(overall)}</span><button class="buyer-order-more" type="button" data-order-detail="${safe(order.id)}" aria-label="Detail pesanan ${safe(order.orderNumber)}">⋮</button></header><button class="buyer-order-preview" type="button" data-order-detail="${safe(order.id)}"><span class="buyer-order-thumb">${preview?.image ? `<img src="${safe(preview.image)}" alt="" width="72" height="72">` : `<span aria-hidden="true">${safe(preview?.icon || "□")}</span>`}</span><span class="buyer-order-product"><strong>${safe(preview?.name || "Produk")}</strong><span>${preview?.quantity || 0} barang</span></span></button>${lines.length > 1 ? `<p class="buyer-order-extra">+${lines.length - 1} produk lainnya</p>` : ""}<footer class="buyer-order-foot"><div><span>Total belanja</span><strong>${money(total)}</strong><small>${sellers.map(id => `${safe(sellerName(id))}: ${safe(statusLabel(sellerStatus(order, id)))}`).join(" · ")}</small></div><button class="secondary-button" type="button" data-order-detail="${safe(order.id)}">Detail pesanan</button></footer>${sellers.some(id => sellerStatus(order, id) === "Menunggu penjual") ? `<div class="buyer-order-cancel">${sellers.filter(id => sellerStatus(order, id) === "Menunggu penjual").map(id => `<button class="secondary-button" type="button" data-buyer-cancel-line="${safe(id)}" data-order="${safe(order.id)}">Batalkan ${safe(sellerName(id))}</button>`).join("")}</div>` : ""}</article>`;
     }).join("");
-    const content = `<section class="buyer-orders-page"><form class="buyer-orders-search" id="orderSearchForm"><label for="orderSearch">Cari transaksi</label><input id="orderSearch" type="search" placeholder="Cari transaksi"><button class="secondary-button" type="submit">Cari</button></form><div class="buyer-order-filters" aria-label="Filter pesanan"><label><span>Status</span><select id="orderStatusFilter"><option value="">Semua status</option><option>Menunggu penjual</option><option>Diproses</option><option>Dalam pengiriman</option><option>Selesai</option><option>Ditolak toko</option><option>Dibatalkan</option></select></label><label><span>Produk</span><select id="orderProductFilter"><option value="">Semua produk</option>${[...new Set(orders.flatMap(order => order.items.map(item => item.name)))].map(name => `<option>${safe(name)}</option>`).join("")}</select></label></div><div class="buyer-order-list">${cards || `<div class="empty-state"><strong>Belum ada pesanan</strong>Pesanan yang kamu buat akan muncul di sini.</div>`}</div><div class="empty-state buyer-order-filter-empty" hidden>Tidak ada pesanan yang cocok dengan pencarian atau filter.</div></section>`;
-    openDialog("Pesanan saya", content, "orders");
+    const content = `<h1 class="standalone-title">Pesanan saya</h1><section class="buyer-orders-page"><form class="buyer-orders-search" id="orderSearchForm"><label for="orderSearch">Cari transaksi</label><input id="orderSearch" type="search" placeholder="Cari transaksi"><button class="secondary-button" type="submit">Cari</button></form><div class="buyer-order-filters" aria-label="Filter pesanan"><label><span>Status</span><select id="orderStatusFilter"><option value="">Semua status</option><option>Menunggu penjual</option><option>Diproses</option><option>Dalam pengiriman</option><option>Selesai</option><option>Ditolak toko</option><option>Dibatalkan</option></select></label><label><span>Produk</span><select id="orderProductFilter"><option value="">Semua produk</option>${[...new Set(orders.flatMap(order => order.items.map(item => item.name)))].map(name => `<option>${safe(name)}</option>`).join("")}</select></label></div><div class="buyer-order-list">${cards || `<div class="empty-state"><strong>Belum ada pesanan</strong>Pesanan yang kamu buat akan muncul di sini.</div>`}</div><div class="empty-state buyer-order-filter-empty" hidden>Tidak ada pesanan yang cocok dengan pencarian atau filter.</div></section>`;
+    const root = $("accountContent");
+    if (root) { root.innerHTML = content; root.classList.add("orders-page"); setNav(); }
+    else { location.href = "account.html?view=orders"; }
   }
 
   function showOrderDetail(order) {
@@ -326,7 +337,10 @@
     if (Store.refreshChats) await Store.refreshChats().catch(() => {});
     const chat = Store.chats.find(item => item.id === chatId && (item.sellerId === user?.id || item.buyerId === user?.id));
     if (!chat) return toast("Percakapan tidak ditemukan.");
-    if (user.role === "seller") chat.unread = false;
+    if (user.role === "seller" && chat.unread) {
+      Store.chats = Store.chats.map(item => item.id === chat.id ? { ...item, unread: false } : item);
+      await Store.save().catch(() => {});
+    }
     const title = user.role === "seller" ? chat.buyerName : sellerName(chat.sellerId);
     const messages = chat.messages.map(message => `<article class="chat-bubble ${message.from === user.role ? "is-mine" : "is-theirs"}"><p>${safe(message.text)}</p><time datetime="${safe(message.createdAt)}">${new Date(message.createdAt).toLocaleString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</time></article>`).join("");
     openDialog(`Chat · ${title}`, `<section class="chat-panel" data-chat-id="${safe(chat.id)}" aria-label="Percakapan dengan ${safe(title)}"><div class="chat-thread" aria-live="polite" aria-relevant="additions text">${messages || `<p class="chat-empty">Mulai percakapan. Tanyakan tentang produk atau pesanan.</p>`}</div><form class="chat-compose" id="chatForm" data-chat-id="${safe(chat.id)}"><label class="sr-only" for="chatMessage">Tulis pesan</label><textarea id="chatMessage" name="message" rows="1" placeholder="Tulis pesan…" required maxlength="1000"></textarea><button class="primary-button" type="submit">Kirim</button></form></section>`, "chat");
@@ -364,8 +378,10 @@
       openDialog("Akun toko", content, "account");
       return;
     }
-    const content = user ? `<div class="list-row"><span>Nama</span><strong>${safe(user.name)}</strong></div><div class="list-row"><span>Email</span><span>${safe(user.email)}</span></div><div class="list-row"><span>Peran</span><span>${roleName[user.role] || "—"}</span></div><button class="secondary-button full-width mt-2" type="button" data-action="change-password">Ubah kata sandi</button><button class="danger-button full-width mt-4" type="button" data-action="logout">Keluar</button>` : `<div class="notice">Masuk untuk memakai keranjang atau mengelola produk.</div><button class="primary-button full-width" type="button" data-action="login">Masuk</button><button class="secondary-button full-width mt-2" type="button" data-auth-mode="register">Buat akun</button>`;
-    if (document.body.dataset.page === "account") { $("accountContent").innerHTML = `<h1 class="standalone-title">Akun</h1>${content}`; return; }
+    const buyerChats = user?.role === "buyer" ? Store.chats.filter(chat => chat.buyerId === user.id) : [];
+    const unreadChats = buyerChats.filter(chat => chat.unread).length;
+    const content = user?.role === "buyer" ? `<section class="account-profile"><span class="account-avatar" aria-hidden="true">${safe(user.name.trim().slice(0, 1).toUpperCase())}</span><div class="account-identity"><h2>${safe(user.name)}</h2><p>${safe(user.email)}</p></div></section><section class="account-transactions" aria-labelledby="accountTransactionsTitle"><div class="account-section-heading"><h2 id="accountTransactionsTitle">Transaksi</h2><button type="button" data-action="orders">Semua pesanan</button></div><button class="account-action-row" type="button" data-action="orders"><span class="account-action-icon" aria-hidden="true">▤</span><span><strong>Pesanan saya</strong><small>Lihat status, barang, dan rincian transaksi</small></span><span aria-hidden="true">›</span></button></section><section class="account-menu" aria-labelledby="accountMenuTitle"><h2 id="accountMenuTitle">Akun & bantuan</h2><button class="account-action-row" type="button" data-action="buyer-chats"><span class="account-action-icon" aria-hidden="true">☏</span><span><strong>Chat dengan toko</strong><small>${buyerChats.length ? `${buyerChats.length} percakapan` : "Tanya toko tentang produk atau pesanan"}</small></span>${unreadChats ? `<span class="account-unread">${unreadChats} baru</span>` : `<span aria-hidden="true">›</span>`}</button><button class="account-action-row" type="button" data-action="change-password"><span class="account-action-icon" aria-hidden="true">⌑</span><span><strong>Ubah kata sandi</strong><small>Perbarui akses akun</small></span><span aria-hidden="true">›</span></button><button class="account-action-row is-danger" type="button" data-action="logout"><span class="account-action-icon" aria-hidden="true">↪</span><span><strong>Keluar</strong><small>Akhiri sesi akun ini</small></span><span aria-hidden="true">›</span></button></section>` : user ? `<div class="list-row"><span>Nama</span><strong>${safe(user.name)}</strong></div><div class="list-row"><span>Email</span><span>${safe(user.email)}</span></div><div class="list-row"><span>Peran</span><span>${roleName[user.role] || "—"}</span></div><button class="secondary-button full-width mt-2" type="button" data-action="change-password">Ubah kata sandi</button><button class="danger-button full-width mt-4" type="button" data-action="logout">Keluar</button>` : `<div class="account-guest"><h2>Masuk ke KOLAP</h2><p>Masuk untuk melihat pesanan dan menghubungi toko.</p><button class="primary-button full-width" type="button" data-action="login">Masuk</button><button class="secondary-button full-width mt-2" type="button" data-auth-mode="register">Buat akun</button></div>`;
+    if (document.body.dataset.page === "account") { $("accountContent").classList.remove("orders-page"); $("accountContent").innerHTML = `<h1 class="standalone-title">Akun</h1>${content}`; setNav(); return; }
     openDialog("Akun", content, "account");
   }
 
@@ -581,9 +597,11 @@
       const message = String(data.get("message") || "").trim();
       const validChat = Store.chats.find(item => item.id === form.dataset.chatId && (item.sellerId === user?.id || item.buyerId === user?.id));
       if (!user || !validChat || !message) return;
-      const priorUnread = validChat.unread;
-      validChat.messages.push({ from: user.role, text: message, createdAt: new Date().toISOString() }); validChat.unread = user.role === "buyer";
-      try { await Store.save(); } catch (error) { validChat.messages.pop(); validChat.unread = priorUnread; toast(error.message); return; }
+      const previousChats = Store.chats;
+      const updatedChat = { ...validChat, messages: [...validChat.messages, { from: user.role, text: message, createdAt: new Date().toISOString() }], unread: user.role === "buyer" };
+      Store.chats = previousChats.map(chat => chat.id === validChat.id ? updatedChat : chat);
+      try { await Store.save(); } catch (error) { Store.chats = previousChats; toast(`Pesan gagal dikirim: ${error.message}`); return; }
+      toast("Pesan terkirim.");
       showChat(validChat.id); $("chatMessage")?.focus(); return;
     }
     if (form.id === "productForm") {
@@ -959,7 +977,8 @@
       await Store.init();
       setNav();
       if (page === "account" && currentUser()?.role === "gudang") { location.replace("warehouse.html"); return; }
-      if (page === "account") showAccount();
+      if (page === "account" && new URLSearchParams(location.search).get("view") === "orders") showOrders();
+      else if (page === "account") showAccount();
       else if (page === "warehouse") {
         if (currentUser()?.role !== "gudang") { location.replace("index.html"); return; }
         if (new URLSearchParams(location.search).get("view") === "stock") showStockManagement(); else showWarehouse();

@@ -5,7 +5,28 @@
     "buyerName": "Pembeli Demo",
     "sellerId": "seller-agres",
     "productId": "samsung-galaxy-a16-5g",
-    "messages": [],
-    "unread": false
+    "messages": [
+      {
+        "from": "buyer",
+        "text": "Probe after fix",
+        "createdAt": "2026-11-22T11:07:13.592Z"
+      },
+      {
+        "from": "seller",
+        "text": "hiii",
+        "createdAt": "2026-11-22T11:37:00.900Z"
+      },
+      {
+        "from": "buyer",
+        "text": "ehh??",
+        "createdAt": "2026-11-22T11:37:09.871Z"
+      },
+      {
+        "from": "buyer",
+        "text": "hontodeskah?",
+        "createdAt": "2026-11-22T11:37:14.593Z"
+      }
+    ],
+    "unread": true
   }
 ]
