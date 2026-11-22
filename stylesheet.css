@@ -1483,11 +1483,19 @@ body[data-page="account"] .standalone-page { width: min(calc(100% - 28px), 680px
 .review-rating { display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 16px; border: 0; padding: 0; }
 .review-rating legend { margin-bottom: 6px; font-weight: 700; }
 .review-rating span { display: flex; align-items: center; gap: 2px; min-height: 44px; }
-.review-rating input { width: 20px; height: 20px; accent-color: #8a5700; }
-.review-rating label { display: grid; min-width: 36px; min-height: 44px; place-items: center; color: #8a5700; font-size: 22px; cursor: pointer; }
+.review-rating input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.review-rating label { display: grid; min-width: 44px; min-height: 44px; place-items: center; color: transparent; font-size: 32px; line-height: 1; -webkit-text-stroke: 1.75px #555; cursor: pointer; }
+.review-rating:has(#reviewRating1:checked) span:nth-of-type(-n+1) label,
+.review-rating:has(#reviewRating2:checked) span:nth-of-type(-n+2) label,
+.review-rating:has(#reviewRating3:checked) span:nth-of-type(-n+3) label,
+.review-rating:has(#reviewRating4:checked) span:nth-of-type(-n+4) label,
+.review-rating:has(#reviewRating5:checked) span:nth-of-type(-n+5) label { color: #f5bf35; -webkit-text-stroke-color: #d89a12; filter: drop-shadow(0 1px 1px rgb(80 55 0 / 35%)); }
 .review-rating input:focus-visible + label { outline: 3px solid #b6492e; outline-offset: 2px; }
 .saved-review { display: grid; gap: 5px; margin-top: 8px; }
 .saved-review .secondary-button { justify-self: start; }
+.product-review-author { display: block; margin-top: 5px; }
+.review-show-name { display: flex; align-items: center; gap: 8px; min-height: 44px; cursor: pointer; }
+.review-show-name input { width: 20px; height: 20px; accent-color: var(--accent); }
 
 .store-details {
   margin-top: 14px;

@@ -195,13 +195,17 @@
   }
 
   function productReviews(productId) {
-    return Store.orders.flatMap(order => order.items.filter(line => line.productId === productId && line.review?.buyerId === order.buyerId).map(line => ({ ...line.review, productName: line.name })));
+    return Store.orders.flatMap(order => order.items.filter(line => line.productId === productId && line.review?.buyerId === order.buyerId).map(line => {
+      const review = line.review;
+      const buyerName = review.showName && review.buyerName ? review.buyerName : Store.users.find(user => user.id === review.buyerId)?.name || "Pembeli";
+      return { ...review, displayName: review.showName && review.buyerName ? buyerName : `${[...buyerName][0] || "P"}${"*".repeat(Math.max(0, [...buyerName].length - 1))}`, productName: line.name };
+    }));
   }
 
   function renderProductReviews(productId) {
     const reviews = productReviews(productId);
     const average = reviews.length ? (reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length).toLocaleString("id-ID", { maximumFractionDigits: 1 }) : "";
-    return `<section class="product-reviews"><h3>Ulasan pembeli</h3>${reviews.length ? `<p class="product-review-summary"><span aria-label="Rata-rata ${average} dari 5 bintang">★ ${average}</span> · ${reviews.length} ulasan</p><div class="product-review-list">${reviews.slice().reverse().map(review => `<article class="product-review"><div class="product-review-stars" aria-label="${review.rating} dari 5 bintang">${"★".repeat(review.rating)}${"☆".repeat(5 - review.rating)}</div><p>${safe(review.comment)}</p><time datetime="${safe(review.createdAt)}">${new Date(review.createdAt).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}</time></article>`).join("")}</div>` : `<p class="muted-copy">Belum ada ulasan untuk produk ini.</p>`}</section>`;
+    return `<section class="product-reviews"><h3>Ulasan pembeli</h3>${reviews.length ? `<p class="product-review-summary"><span aria-label="Rata-rata ${average} dari 5 bintang">★ ${average}</span> · ${reviews.length} ulasan</p><div class="product-review-list">${reviews.slice().reverse().map(review => `<article class="product-review"><div class="product-review-stars" aria-label="${review.rating} dari 5 bintang">${"★".repeat(review.rating)}${"☆".repeat(5 - review.rating)}</div><strong class="product-review-author">${safe(review.displayName)}</strong><p>${safe(review.comment)}</p><time datetime="${safe(review.createdAt)}">${new Date(review.createdAt).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}</time></article>`).join("")}</div>` : `<p class="muted-copy">Belum ada ulasan untuk produk ini.</p>`}</section>`;
   }
 
   function showReviewForm(orderId, productId) {
@@ -210,7 +214,7 @@
     const line = order?.items.find(item => item.productId === productId && (item.status || order.status) === "Selesai");
     if (buyer?.role !== "buyer" || !line) return toast("Ulasan tersedia setelah barang selesai.");
     const review = line.review?.buyerId === buyer.id ? line.review : null;
-    openDialog(review ? "Edit ulasan" : "Beri ulasan", `<form id="reviewForm" data-order="${safe(order.id)}" data-product="${safe(productId)}"><fieldset class="review-rating"><legend>Rating bintang</legend>${[1, 2, 3, 4, 5].map(rating => `<span><input id="reviewRating${rating}" type="radio" name="rating" value="${rating}" ${Number(review?.rating || 5) === rating ? "checked" : ""} required><label for="reviewRating${rating}" aria-label="${rating} bintang">★</label></span>`).join("")}</fieldset><div class="field"><label for="reviewComment">Komentar</label><textarea id="reviewComment" name="comment" required minlength="3" maxlength="1000">${safe(review?.comment || "")}</textarea></div><p id="reviewError" class="form-error" role="alert" aria-live="polite"></p><button class="primary-button full-width" type="submit">${review ? "Simpan ulasan" : "Kirim ulasan"}</button></form>`, "review");
+    openDialog(review ? "Edit ulasan" : "Beri ulasan", `<form id="reviewForm" data-order="${safe(order.id)}" data-product="${safe(productId)}"><fieldset class="review-rating"><legend>Rating bintang</legend>${[1, 2, 3, 4, 5].map(rating => `<span><input id="reviewRating${rating}" type="radio" name="rating" value="${rating}" ${Number(review?.rating || 5) === rating ? "checked" : ""} required><label for="reviewRating${rating}" aria-label="${rating} bintang">★</label></span>`).join("")}</fieldset><div class="field"><label for="reviewComment">Komentar</label><textarea id="reviewComment" name="comment" required minlength="3" maxlength="1000">${safe(review?.comment || "")}</textarea></div><label class="review-show-name"><input type="checkbox" name="showName" ${review?.showName === true ? "checked" : ""}> Tampilkan nama saya</label><p id="reviewError" class="form-error" role="alert" aria-live="polite"></p><button class="primary-button full-width" type="submit">${review ? "Simpan ulasan" : "Kirim ulasan"}</button></form>`, "review");
   }
 
   function showCheckout(buyId = "") {
@@ -531,7 +535,7 @@
     const line = order?.items.find(item => item.productId === productId && lineCompleted(order, item));
       const rating = Number(data.get("rating")); const comment = String(data.get("comment") || "").trim(); const error = $("reviewError");
       if (buyer?.role !== "buyer" || !line || !Number.isInteger(rating) || rating < 1 || rating > 5 || comment.length < 3 || comment.length > 1000) { error.textContent = "Pilih rating 1 sampai 5 dan tulis komentar 3 sampai 1000 karakter."; return; }
-      const before = Store.orders; const review = { buyerId: buyer.id, rating, comment, createdAt: line.review?.buyerId === buyer.id ? line.review.createdAt : new Date().toISOString(), updatedAt: new Date().toISOString() };
+      const before = Store.orders; const showName = data.get("showName") === "on"; const review = { buyerId: buyer.id, rating, comment, showName, ...(showName ? { buyerName: buyer.name } : {}), createdAt: line.review?.buyerId === buyer.id ? line.review.createdAt : new Date().toISOString(), updatedAt: new Date().toISOString() };
       Store.orders = before.map(item => item.id !== order.id ? item : { ...item, items: item.items.map(entry => entry.productId === productId && lineCompleted(item, entry) ? { ...entry, review } : entry) });
       try { await Store.save(); } catch (cause) { Store.orders = before; error.textContent = `Ulasan gagal disimpan: ${cause.message}`; return; }
       showOrderDetail(Store.orders.find(item => item.id === order.id)); toast("Ulasan tersimpan."); return;

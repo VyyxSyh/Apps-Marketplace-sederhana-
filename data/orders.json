@@ -10,11 +10,18 @@
         "name": "vivo Y28 8/256 GB",
         "price": 2499000,
         "quantity": 1,
-        "status": "Dikirim"
+        "status": "Selesai",
+        "review": {
+          "buyerId": "buyer-demo",
+          "rating": 4,
+          "comment": "someone",
+          "createdAt": "2026-11-22T16:13:10.389Z",
+          "updatedAt": "2026-11-22T16:13:10.389Z"
+        }
       }
     ],
     "sellerStatuses": {
-      "seller-agres": "Dikirim"
+      "seller-agres": "Selesai"
     },
     "shipping": {
       "name": "Pembeli Demo",
@@ -53,6 +60,11 @@
         "status": "Dikirim",
         "at": "2026-11-22T01:33:57.047Z",
         "userId": "warehouse-demo"
+      },
+      {
+        "status": "Selesai",
+        "at": "2026-11-22T15:39:52.972Z",
+        "userId": "warehouse-agres"
       }
     ]
   },
@@ -67,7 +79,7 @@
         "name": "OPPO A3x 6/128 GB",
         "price": 1999000,
         "quantity": 1,
-        "status": "Dikirim"
+        "status": "Selesai"
       },
       {
         "productId": "vivo-y28",
@@ -75,7 +87,7 @@
         "name": "vivo Y28 8/256 GB",
         "price": 2499000,
         "quantity": 1,
-        "status": "Dikirim"
+        "status": "Selesai"
       },
       {
         "productId": "realme-c75",
@@ -104,7 +116,7 @@
       }
     ],
     "sellerStatuses": {
-      "seller-agres": "Dikirim",
+      "seller-agres": "Selesai",
       "seller-gamer": "Menunggu penjual",
       "seller-kla": "Menunggu penjual"
     },
@@ -159,6 +171,11 @@
         "status": "Dikirim",
         "at": "2026-11-22T01:32:54.929Z",
         "userId": "warehouse-demo"
+      },
+      {
+        "status": "Selesai",
+        "at": "2026-11-22T15:39:55.392Z",
+        "userId": "warehouse-agres"
       }
     ]
   },
@@ -173,7 +190,7 @@
         "name": "Samsung Galaxy A16 5G 8/256 GB",
         "price": 2000,
         "quantity": 1,
-        "status": "Dikirim"
+        "status": "Selesai"
       }
     ],
     "shipping": {
@@ -206,10 +223,15 @@
         "status": "Dikirim",
         "at": "2026-11-22T00:37:28.726Z",
         "userId": "warehouse-demo"
+      },
+      {
+        "status": "Selesai",
+        "at": "2026-11-22T15:39:50.348Z",
+        "userId": "warehouse-agres"
       }
     ],
     "sellerStatuses": {
-      "seller-agres": "Dikirim"
+      "seller-agres": "Selesai"
     }
   }
 ]
