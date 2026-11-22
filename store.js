@@ -182,6 +182,14 @@
       }
       Object.entries(data).forEach(([name, value]) => write(keys[name], value));
     },
+    async refreshChats() {
+      if (!apiAvailable) return this.chats;
+      const response = await fetch("/api/data");
+      if (!response.ok) throw new Error("Percakapan gagal diperbarui.");
+      const data = await response.json();
+      if (Array.isArray(data.chats)) this.chats = data.chats;
+      return this.chats;
+    },
     get users() { return read(keys.users, []); },
     set users(value) { write(keys.users, value); },
     get products() { return read(keys.products, []); },

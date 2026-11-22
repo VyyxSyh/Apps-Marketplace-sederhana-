@@ -1,1 +1,11 @@
-[]
+[
+  {
+    "id": "ca55385b-f9f5-435b-bca4-f7d9671ea5c0",
+    "buyerId": "buyer-demo",
+    "buyerName": "Pembeli Demo",
+    "sellerId": "seller-agres",
+    "productId": "samsung-galaxy-a16-5g",
+    "messages": [],
+    "unread": false
+  }
+]

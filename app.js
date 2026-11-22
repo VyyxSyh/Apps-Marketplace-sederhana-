@@ -1,7 +1,7 @@
 (() => {
   const $ = id => document.getElementById(id);
   const money = value => `Rp ${Number(value).toLocaleString("id-ID")}`;
-  const state = { storeId: "", sellerTab: "products", sellerSalesView: "report", pendingProductRestore: null, query: "", modal: "", sort: "featured", authNext: "", lastFocus: null, toastTimer: 0, detailProductId: "" };
+  const state = { storeId: "", sellerTab: "products", sellerSalesView: "report", pendingProductRestore: null, query: "", modal: "", sort: "featured", authNext: "", lastFocus: null, toastTimer: 0, chatTimer: 0, detailProductId: "" };
   const safe = value => String(value ?? "").replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
   const cartForUser = userId => Store.carts.filter(item => item.userId === userId);
   const currentUser = () => Store.users.find(user => user.id === Store.session?.userId) || null;
@@ -113,13 +113,14 @@
     requestAnimationFrame(() => {
       const dialog = $("overlay").querySelector(".dialog");
       if (name === "detail") { dialog.scrollTop = 0; dialog.focus(); return; }
-      const first = $("overlay").querySelector("input:not(:disabled), button:not(:disabled), select:not(:disabled), textarea:not(:disabled), summary");
+       const first = name === "chat" ? $("overlay").querySelector("#chatMessage") : $("overlay").querySelector("input:not(:disabled), button:not(:disabled), select:not(:disabled), textarea:not(:disabled), summary");
       (first || $("overlay").querySelector(".dialog")).focus();
     });
   }
 
   function closeDialog() {
     if ($("overlay").hidden) return;
+    clearInterval(state.chatTimer);
     $("overlay").hidden = true;
     document.body.classList.remove("dialog-open");
     state.modal = "";
@@ -234,7 +235,12 @@
     const sellers = [...new Set(lines.map(line => line.sellerId))];
     const total = lines.filter(activeLine).reduce((sum, line) => sum + line.price * line.quantity, 0);
     const shipment = order.shipping || {};
-    const items = lines.map(line => `<article class="buyer-detail-product"><div class="buyer-order-thumb">${line.image ? `<img src="${safe(line.image)}" alt="" width="72" height="72">` : `<span aria-hidden="true">${safe(line.icon || "□")}</span>`}</div><div><strong>${safe(line.name)}</strong><span>${safe(sellerName(line.sellerId))} · ${safe(statusLabel(line.status || sellerStatus(order, line.sellerId)))}</span><span>${line.quantity} × ${money(line.price)}</span>${line.rejectionReason ? `<p class="buyer-rejection-reason">Alasan toko: ${safe(line.rejectionReason)}</p>` : ""}</div></article>`).join("");
+    const items = sellers.map(id => {
+      const sellerLines = lines.filter(line => line.sellerId === id);
+      const status = sellerStatus(order, id);
+      const next = { "Menunggu penjual": "Menunggu keputusan toko", "Diteruskan ke gudang": "Gudang menyiapkan barang", "Disiapkan": "Gudang mengemas barang", "Dikemas": "Menunggu pengiriman", "Dikirim": "Dalam pengiriman", "Selesai": "Pesanan selesai", "Ditolak": "Toko menolak barang", "Dibatalkan": "Barang dibatalkan" }[status] || statusLabel(status);
+      return `<section class="buyer-detail-seller"><h4>${safe(sellerName(id))}</h4><p>${safe(statusLabel(status))} · Berikutnya: ${safe(next)}</p>${sellerLines.map(line => `<article class="buyer-detail-product"><div class="buyer-order-thumb">${line.image ? `<img src="${safe(line.image)}" alt="" width="72" height="72">` : `<span aria-hidden="true">${safe(line.icon || "□")}</span>`}</div><div><strong>${safe(line.name)}</strong><span>${safe(statusLabel(line.status || status))}</span><span>${line.quantity} × ${money(line.price)}</span>${line.rejectionReason ? `<p class="buyer-rejection-reason">Alasan toko: ${safe(line.rejectionReason)}</p>` : ""}</div></article>`).join("")}</section>`;
+    }).join("");
     openDialog("Detail pesanan", `<section class="buyer-detail-status"><strong>${safe(statusLabel(order.status))}</strong><span>Tanggal pembelian · ${new Date(order.createdAt).toLocaleString("id-ID")}</span><span>Nomor pesanan · ${safe(order.orderNumber)}</span></section><section class="buyer-detail-section"><h3>Detail produk</h3>${items}</section><section class="buyer-detail-section"><h3>Info pengiriman</h3><dl><dt>Penerima</dt><dd>${safe(shipment.name || "Belum diisi")}</dd><dt>Nomor telepon</dt><dd>${safe(shipment.phone || "Belum diisi")}</dd><dt>Alamat</dt><dd>${safe(shipment.address || "Belum diisi")}</dd></dl></section><section class="buyer-detail-section"><h3>Bantuan</h3>${sellers.map(id => `<button class="buyer-order-help" type="button" data-order-chat="${safe(id)}" data-order="${safe(order.id)}">Chat ${safe(sellerName(id))}</button>`).join("")}</section><section class="buyer-detail-section buyer-payment"><h3>Rincian pembayaran</h3><div><span>Metode pembayaran</span><strong>${safe(order.paymentMethod || "Belum diatur")}</strong></div><div><span>Subtotal produk</span><strong>${money(lines.filter(activeLine).reduce((sum, line) => sum + line.price * line.quantity, 0))}</strong></div><div class="buyer-payment-total"><span>Total belanja</span><strong>${money(total)}</strong></div></section>`, "order-detail");
   }
 
@@ -269,8 +275,24 @@
     const productIds = new Set(products.map(product => product.id));
     const low = products.filter(product => availableStock(product) <= (product.lowStockThreshold ?? 5));
     const movementRows = Store.stockMovements.filter(movement => productIds.has(movement.productId)).slice(0, 30).map(movement => `<div class="list-row"><div><strong>${safe(movement.productName)}</strong><div>${safe(movement.type)} · ${safe(movement.reason)}</div></div><span>${movement.delta > 0 ? "+" : ""}${movement.delta} · ${new Date(movement.createdAt).toLocaleDateString("id-ID")}</span></div>`).join("");
-    const content = `<h1 class="standalone-title">Stok ${safe(sellerName(user.sellerId))}</h1><h2>Stok menipis</h2>${low.map(product => `<div class="list-row"><strong>${safe(product.name)}</strong><span>${availableStock(product)} unit</span></div>`).join("") || `<p class="muted-copy">Tidak ada stok menipis.</p>`}<h2 class="mt-4">Barang masuk, opname, atau retur</h2><form id="stockForm"><div class="field"><label for="stockProduct">Produk</label><select id="stockProduct" name="productId" required>${products.map(product => `<option value="${safe(product.id)}">${safe(product.name)} · stok ${product.stock}</option>`).join("")}</select></div><div class="field"><label for="stockType">Jenis pencatatan</label><select id="stockType" name="type"><option value="Barang masuk">Barang masuk</option><option value="Stok opname">Koreksi opname (+/-)</option><option value="Barang rusak">Barang rusak (-)</option><option value="Retur layak jual">Retur layak jual (+)</option><option value="Retur rusak">Retur rusak (-)</option></select></div><div class="field"><label for="stockDelta">Perubahan unit (+/-)</label><input id="stockDelta" name="delta" type="number" step="1" required></div><div class="field"><label for="stockReason">Alasan / nomor retur</label><input id="stockReason" name="reason" required minlength="3" maxlength="120"></div><p id="stockError" class="form-error" role="alert"></p><button class="primary-button full-width" type="submit" ${products.length ? "" : "disabled"}>Simpan perubahan stok</button></form><h2 class="mt-4">Riwayat stok</h2>${movementRows || `<p class="muted-copy">Belum ada perubahan stok.</p>`}`;
+    const content = `<h1 class="standalone-title">Stok ${safe(sellerName(user.sellerId))}</h1><h2>Stok menipis</h2>${low.map(product => `<div class="list-row"><strong>${safe(product.name)}</strong><span>${availableStock(product)} unit</span></div>`).join("") || `<p class="muted-copy">Tidak ada stok menipis.</p>`}<h2 class="mt-4">Barang masuk, opname, atau retur</h2><form id="stockForm"><div class="field"><label for="stockProduct">Produk</label><select id="stockProduct" name="productId" required>${products.map(product => `<option value="${safe(product.id)}">${safe(product.name)} · stok ${product.stock}</option>`).join("")}</select></div><div class="field"><label for="stockType">Jenis pencatatan</label><select id="stockType" name="type"><option value="Barang masuk">Barang masuk</option><option value="Stok opname">Stok opname</option><option value="Barang rusak">Barang rusak</option><option value="Retur layak jual">Retur layak jual</option><option value="Retur rusak">Retur rusak</option></select></div><div class="field"><label id="stockDeltaLabel" for="stockDelta">Jumlah unit masuk</label><input id="stockDelta" name="delta" type="number" step="1" required><small id="stockDeltaHelp">Masukkan jumlah unit yang diterima.</small></div><div class="field"><label for="stockReason">Alasan / nomor retur</label><input id="stockReason" name="reason" required minlength="3" maxlength="120"></div><p id="stockError" class="form-error" role="alert"></p><button class="primary-button full-width" type="submit" ${products.length ? "" : "disabled"}>Simpan perubahan stok</button></form><h2 class="mt-4">Riwayat stok</h2>${movementRows || `<p class="muted-copy">Belum ada perubahan stok.</p>`}`;
     const root = $("warehouseContent"); if (root) root.innerHTML = content; else openDialog("Pengelolaan stok", content, "stock");
+    updateStockDeltaField();
+  }
+
+  function updateStockDeltaField() {
+    const type = $("stockType")?.value;
+    const label = $("stockDeltaLabel");
+    const help = $("stockDeltaHelp");
+    if (!label || !help) return;
+    const adjustments = {
+      "Barang masuk": ["Jumlah unit masuk", "Masukkan jumlah unit yang diterima."],
+      "Stok opname": ["Stok fisik hasil hitung", "Masukkan jumlah unit yang ada secara fisik. Selisih stok dihitung otomatis."],
+      "Barang rusak": ["Jumlah unit rusak", "Stok akan dikurangi sebanyak jumlah ini."],
+      "Retur layak jual": ["Jumlah unit retur layak jual", "Stok akan ditambah sebanyak jumlah ini."],
+      "Retur rusak": ["Jumlah unit retur rusak", "Stok tidak berubah karena barang rusak tidak masuk stok jual."]
+    };
+    [label.textContent, help.textContent] = adjustments[type] || adjustments["Barang masuk"];
   }
 
   function showSalesTools() {
@@ -290,21 +312,40 @@
 
   function showChatList(sellerId) {
     const chats = Store.chats.filter(chat => chat.sellerId === sellerId);
-    return `${chats.map(chat => `<button class="list-row chat-open" type="button" data-chat="${safe(chat.id)}"><span><strong>${safe(chat.buyerName)}</strong><span>${safe(chat.messages.at(-1)?.text || "Mulai percakapan")}</span></span><span>${chat.unread ? "Belum dibaca" : "Buka"}</span></button>`).join("") || `<div class="empty-state"><strong>Belum ada pesan</strong>Percakapan dari pembeli akan tampil di sini.</div>`}`;
+    return `<div class="chat-list">${chats.map(chat => `<button class="chat-list-item" type="button" data-chat="${safe(chat.id)}"><span class="chat-avatar" aria-hidden="true">${safe(chat.buyerName.slice(0, 1).toUpperCase())}</span><span class="chat-list-copy"><strong>${safe(chat.buyerName)}</strong><span>${safe(chat.messages.at(-1)?.text || "Mulai percakapan")}</span></span>${chat.unread ? `<span class="chat-unread">Pesan baru</span>` : ""}</button>`).join("") || `<div class="empty-state"><strong>Belum ada pesan</strong>Percakapan dari pembeli akan tampil di sini.</div>`}</div>`;
   }
 
   function showBuyerChats() {
     const buyer = requireRole("buyer"); if (!buyer) return;
     const chats = Store.chats.filter(chat => chat.buyerId === buyer.id);
-    openDialog("Pesan toko", chats.map(chat => `<button class="list-row chat-open" type="button" data-chat="${safe(chat.id)}"><span><strong>${safe(sellerName(chat.sellerId))}</strong><span>${safe(chat.messages.at(-1)?.text || "Belum ada pesan")}</span></span><span>Buka</span></button>`).join("") || `<div class="empty-state"><strong>Belum ada percakapan</strong>Buka detail produk lalu pilih Tanya toko.</div>`, "buyer-chats");
+    openDialog("Pesan toko", `<div class="chat-list">${chats.map(chat => `<button class="chat-list-item" type="button" data-chat="${safe(chat.id)}"><span class="chat-avatar" aria-hidden="true">${safe(sellerName(chat.sellerId).slice(0, 1).toUpperCase())}</span><span class="chat-list-copy"><strong>${safe(sellerName(chat.sellerId))}</strong><span>${safe(chat.messages.at(-1)?.text || "Belum ada pesan")}</span></span></button>`).join("") || `<div class="empty-state"><strong>Belum ada percakapan</strong>Buka detail produk lalu pilih Tanya toko.</div>`}</div>`, "buyer-chats");
   }
 
-  function showChat(chatId) {
+  async function showChat(chatId) {
     const user = currentUser();
+    if (Store.refreshChats) await Store.refreshChats().catch(() => {});
     const chat = Store.chats.find(item => item.id === chatId && (item.sellerId === user?.id || item.buyerId === user?.id));
     if (!chat) return toast("Percakapan tidak ditemukan.");
     if (user.role === "seller") chat.unread = false;
-    openDialog(`Chat · ${user.role === "seller" ? chat.buyerName : sellerName(chat.sellerId)}`, `${chat.messages.map(message => `<div class="list-row"><div><strong>${message.from === "seller" ? safe(sellerName(chat.sellerId)) : safe(chat.buyerName)}</strong><div>${safe(message.text)}</div></div><small>${new Date(message.createdAt).toLocaleString("id-ID")}</small></div>`).join("")}<form id="chatForm" data-chat-id="${safe(chat.id)}"><div class="field"><label for="chatMessage">${user.role === "seller" ? "Balas pesan" : "Pesan"}</label><textarea id="chatMessage" name="message" rows="3" required maxlength="1000"></textarea></div><button class="primary-button full-width" type="submit">Kirim pesan</button></form>`, "chat");
+    const title = user.role === "seller" ? chat.buyerName : sellerName(chat.sellerId);
+    const messages = chat.messages.map(message => `<article class="chat-bubble ${message.from === user.role ? "is-mine" : "is-theirs"}"><p>${safe(message.text)}</p><time datetime="${safe(message.createdAt)}">${new Date(message.createdAt).toLocaleString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</time></article>`).join("");
+    openDialog(`Chat · ${title}`, `<section class="chat-panel" data-chat-id="${safe(chat.id)}" aria-label="Percakapan dengan ${safe(title)}"><div class="chat-thread" aria-live="polite" aria-relevant="additions text">${messages || `<p class="chat-empty">Mulai percakapan. Tanyakan tentang produk atau pesanan.</p>`}</div><form class="chat-compose" id="chatForm" data-chat-id="${safe(chat.id)}"><label class="sr-only" for="chatMessage">Tulis pesan</label><textarea id="chatMessage" name="message" rows="1" placeholder="Tulis pesan…" required maxlength="1000"></textarea><button class="primary-button" type="submit">Kirim</button></form></section>`, "chat");
+    const thread = $("overlay").querySelector(".chat-thread");
+    if (thread) thread.scrollTop = thread.scrollHeight;
+    $("chatMessage")?.focus();
+    clearInterval(state.chatTimer);
+    state.chatTimer = setInterval(async () => {
+      const panel = $("overlay").querySelector(".chat-panel");
+      if (state.modal !== "chat" || panel?.dataset.chatId !== chat.id || !Store.refreshChats) return;
+      const nearBottom = thread.scrollHeight - thread.scrollTop - thread.clientHeight < 48;
+      await Store.refreshChats().catch(() => {});
+      if (state.modal !== "chat" || $("overlay").querySelector(".chat-panel")?.dataset.chatId !== chat.id) return;
+      const refreshed = Store.chats.find(item => item.id === chat.id);
+      if (!refreshed || refreshed.messages.length === chat.messages.length) return;
+      chat.messages = refreshed.messages;
+      thread.innerHTML = chat.messages.map(message => `<article class="chat-bubble ${message.from === user.role ? "is-mine" : "is-theirs"}"><p>${safe(message.text)}</p><time datetime="${safe(message.createdAt)}">${new Date(message.createdAt).toLocaleString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</time></article>`).join("");
+      if (nearBottom) thread.scrollTop = thread.scrollHeight;
+    }, 4000);
   }
 
   function showAccount() {
@@ -526,9 +567,9 @@
     if (form.id === "stockForm") {
       const warehouse = currentUser();
       const product = Store.products.find(item => item.id === data.get("productId") && warehouseOwnsProduct(warehouse, item));
-      const delta = Number(data.get("delta")); const reason = String(data.get("reason")).trim();
-      if (!product || !Number.isSafeInteger(delta) || !delta || product.stock + delta < reservedStock(product.id) || reason.length < 3) { $("stockError").textContent = "Produk, jumlah, atau alasan tidak valid. Stok tidak boleh di bawah jumlah pesanan aktif."; return; }
-      const type = String(data.get("type") || (delta > 0 ? "Barang masuk" : "Koreksi stok"));
+      const amount = Number(data.get("delta")); const reason = String(data.get("reason")).trim(); const type = String(data.get("type"));
+      const delta = type === "Stok opname" ? amount - (product?.stock || 0) : type === "Barang rusak" ? -amount : type === "Retur rusak" ? 0 : amount;
+      if (!product || !Number.isSafeInteger(amount) || amount < (type === "Stok opname" ? 0 : 1) || !Number.isSafeInteger(delta) || (!delta && type !== "Retur rusak" && type !== "Stok opname") || product.stock + delta < reservedStock(product.id) || reason.length < 3) { $("stockError").textContent = "Jumlah atau alasan tidak valid. Stok tidak boleh di bawah jumlah pesanan aktif."; return; }
       const previousProducts = Store.products; const previousMovements = Store.stockMovements;
       Store.products = Store.products.map(item => item.id === product.id ? { ...item, stock: item.stock + delta } : item);
       Store.stockMovements = [{ id: crypto.randomUUID(), productId: product.id, productName: product.name, type, delta, reason, userId: currentUser().id, createdAt: new Date().toISOString() }, ...Store.stockMovements];
@@ -540,9 +581,10 @@
       const message = String(data.get("message") || "").trim();
       const validChat = Store.chats.find(item => item.id === form.dataset.chatId && (item.sellerId === user?.id || item.buyerId === user?.id));
       if (!user || !validChat || !message) return;
+      const priorUnread = validChat.unread;
       validChat.messages.push({ from: user.role, text: message, createdAt: new Date().toISOString() }); validChat.unread = user.role === "buyer";
-      try { await Store.save(); } catch (error) { toast(error.message); return; }
-      showChat(validChat.id); return;
+      try { await Store.save(); } catch (error) { validChat.messages.pop(); validChat.unread = priorUnread; toast(error.message); return; }
+      showChat(validChat.id); $("chatMessage")?.focus(); return;
     }
     if (form.id === "productForm") {
       const seller = currentUser();
@@ -615,8 +657,15 @@
   }
 
   document.addEventListener("submit", handleSubmit);
+  document.addEventListener("keydown", event => {
+    if (event.target.id === "chatMessage" && event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      if (!event.isComposing && event.keyCode !== 229) event.target.form.requestSubmit();
+    }
+  });
   document.addEventListener("change", event => {
     if (event.target.id === "sortSelect" && !document.body.dataset.page) { state.sort = event.target.value; renderProducts(); }
+    if (event.target.id === "stockType") updateStockDeltaField();
     if (["orderStatusFilter", "orderProductFilter"].includes(event.target.id)) filterBuyerOrders();
   });
   window.addEventListener("hashchange", updateNav);
@@ -642,7 +691,7 @@
       const newChat = { id: crypto.randomUUID(), buyerId: buyer.id, buyerName: buyer.name, sellerId, productId: order.items.find(line => line.sellerId === sellerId)?.productId, messages: [], unread: false };
       Store.chats = [newChat, ...Store.chats];
       try { await Store.save(); } catch (error) { Store.chats = Store.chats.filter(item => item.id !== newChat.id); return toast(error.message); }
-      openDialog(`Chat · ${sellerName(sellerId)}`, `<form id="buyerChatForm" data-chat-id="${safe(newChat.id)}"><div class="field"><label for="buyerMessage">Pesan</label><textarea id="buyerMessage" name="message" rows="3" required maxlength="1000"></textarea></div><button class="primary-button full-width" type="submit">Kirim pesan</button></form>`, "chat");
+      showChat(newChat.id);
       return;
     }
     if (target.hasAttribute("data-order-detail")) {
@@ -713,7 +762,7 @@
       let chat = Store.chats.find(item => item.buyerId === buyer.id && item.sellerId === product.sellerId);
       if (!chat) { chat = { id: crypto.randomUUID(), buyerId: buyer.id, buyerName: buyer.name, sellerId: product.sellerId, productId: product.id, messages: [], unread: false }; Store.chats = [chat, ...Store.chats]; }
       try { await Store.save(); } catch (error) { return toast(error.message); }
-      closeDialog(); openDialog(`Chat · ${sellerName(product.sellerId)}`, `<p class="muted-copy">Tanya tentang ${safe(product.name)}.</p><form id="buyerChatForm" data-chat-id="${safe(chat.id)}"><div class="field"><label for="buyerMessage">Pesan</label><textarea id="buyerMessage" name="message" rows="3" required maxlength="1000"></textarea></div><button class="primary-button full-width" type="submit">Kirim pesan</button></form>`, "chat"); return;
+       showChat(chat.id); return;
     }
     if (target.dataset.chat) { showChat(target.dataset.chat); return; }
     if (target.dataset.handoff) {

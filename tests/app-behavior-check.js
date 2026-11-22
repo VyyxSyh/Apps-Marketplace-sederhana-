@@ -33,6 +33,13 @@ assert.match(app, /const warehouseSellerId = user => user\?\.role === "gudang" \
 assert.match(app, /line\.sellerId === sellerId && \["Diteruskan ke gudang", "Disiapkan", "Dikemas"\]/);
 assert.match(app, /movement => productIds\.has\(movement\.productId\)/);
 assert.match(app, /warehouseOwnsProduct\(warehouse, item\)/);
+assert.match(app, /class="chat-bubble \$\{message\.from === user\.role \? "is-mine" : "is-theirs"\}"/);
+assert.match(app, /!event\.isComposing && event\.keyCode !== 229/);
+assert.match(app, /validChat\.messages\.pop\(\)/);
+assert.match(app, /thread\.scrollTop = thread\.scrollHeight/);
+assert.match(app, /setInterval\(async \(\) =>/);
+assert.match(app, /clearInterval\(state\.chatTimer\)/);
+assert.match(store, /async refreshChats\(\)/);
 assert.match(store, /userData\.gudang = \(userData\.gudang \|\| \[\]\)\.filter\(user => user\.sellerId\)/);
 const users = JSON.parse(fs.readFileSync("data/users.json", "utf8"));
 assert.equal(users.seller.length, 5);
