@@ -80,21 +80,21 @@
       "demo": true
     },
     {
-      "id": "warehouse-agres",
-      "name": "Gudang Agres Id",
-      "email": "gudang.agres@tokoko.test",
-      "password": "tokoko123",
-      "role": "gudang",
-      "sellerId": "seller-agres",
-      "demo": true
-    },
-    {
       "id": "warehouse-gamer",
       "name": "Gudang GAMER ID",
       "email": "gudang.gamer@tokoko.test",
       "password": "tokoko123",
       "role": "gudang",
       "sellerId": "seller-gamer",
+      "demo": true
+    },
+    {
+      "id": "warehouse-agres",
+      "name": "Gudang Agres Id",
+      "email": "gudang.agres@tokoko.test",
+      "password": "tokoko123",
+      "role": "gudang",
+      "sellerId": "seller-agres",
       "demo": true
     }
   ]

@@ -1473,6 +1473,22 @@ body[data-page="account"] .standalone-page { width: min(calc(100% - 28px), 680px
   color: #b47700;
 }
 
+.product-reviews { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 14px; }
+.product-reviews h3 { margin: 0 0 10px; font-size: 18px; }
+.product-review-summary { margin: 0 0 12px; color: var(--muted); }
+.product-review-summary span,.product-review-stars,.saved-review > span { color: #8a5700; }
+.product-review { border-top: 1px solid var(--line); padding: 12px 0; }
+.product-review p,.saved-review p { margin: 4px 0; overflow-wrap: anywhere; }
+.product-review time { color: var(--muted); font-size: 13px; }
+.review-rating { display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 16px; border: 0; padding: 0; }
+.review-rating legend { margin-bottom: 6px; font-weight: 700; }
+.review-rating span { display: flex; align-items: center; gap: 2px; min-height: 44px; }
+.review-rating input { width: 20px; height: 20px; accent-color: #8a5700; }
+.review-rating label { display: grid; min-width: 36px; min-height: 44px; place-items: center; color: #8a5700; font-size: 22px; cursor: pointer; }
+.review-rating input:focus-visible + label { outline: 3px solid #b6492e; outline-offset: 2px; }
+.saved-review { display: grid; gap: 5px; margin-top: 8px; }
+.saved-review .secondary-button { justify-self: start; }
+
 .store-details {
   margin-top: 14px;
   border-bottom: 1px solid var(--line);

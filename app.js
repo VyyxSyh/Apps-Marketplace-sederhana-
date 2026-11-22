@@ -188,9 +188,29 @@
           <div class="store-heading"><span class="store-mark" aria-hidden="true">${safe(sellerName(product.sellerId).slice(0, 1).toUpperCase())}</span><div class="store-identity"><h3>${safe(sellerName(product.sellerId))}</h3>${Store.users.find(user => user.id === product.sellerId)?.city ? `<p>Lokasi toko · ${safe(Store.users.find(user => user.id === product.sellerId).city)}</p>` : ""}</div><button class="store-follow" type="button" data-follow="${safe(product.sellerId)}" aria-pressed="${localStorage.getItem(`tokoko-follow-${product.sellerId}`) === "true"}">${localStorage.getItem(`tokoko-follow-${product.sellerId}`) === "true" ? "Mengikuti" : "Ikuti"}</button></div>
           <p class="store-inventory">${Store.products.filter(item => item.sellerId === product.sellerId).length.toLocaleString("id-ID")} produk di toko</p>
         </section>
-        <section class="detail-description"><h3>Deskripsi produk</h3><p>${safe(product.description || "Belum ada deskripsi produk.")}</p></section>
+         <section class="detail-description"><h3>Deskripsi produk</h3><p>${safe(product.description || "Belum ada deskripsi produk.")}</p></section>
+         ${renderProductReviews(product.id)}
       </div>
           <div class="detail-actions"><button class="secondary-button ask-store-button" type="button" data-start-chat="${safe(product.id)}" aria-label="Tanya toko ${safe(sellerName(product.sellerId))}" title="Tanya toko"><svg aria-hidden="true" viewBox="0 0 512 512"><path d="M0 240c0 54.4 19.3 104.6 51.9 144.9L3.1 474.3c-2 3.7-3.1 7.9-3.1 12.2 0 14.1 11.4 25.5 25.5 25.5 4 0 7.8-.6 11.5-2.1L153.4 460c31.4 12.9 66.1 20 102.6 20 141.4 0 256-107.5 256-240S397.4 0 256 0 0 107.5 0 240zM94 407.9c9.3-17.1 7.4-38.1-4.8-53.2-26.1-32.3-41.2-71.9-41.2-114.7 0-103.2 90.2-192 208-192s208 88.8 208 192-90.2 192-208 192c-30.2 0-58.7-5.9-84.3-16.4-11.9-4.9-25.3-4.8-37.1 .3L76 440.9 94 407.9zM144 272a32 32 0 1 0 0-64 32 32 0 0 0 0 64zm144-32a32 32 0 1 0-64 0 32 32 0 0 0 64 0zm80 32a32 32 0 1 0 0-64 32 32 0 0 0 0 64z"/></svg></button><button class="primary-button" type="button" data-buy="${safe(product.id)}" ${product.stock > 0 ? "" : "disabled"}>Beli sekarang</button><button class="secondary-button" type="button" data-add="${safe(product.id)}" ${product.stock > 0 ? "" : "disabled"}>+ Keranjang</button></div>`, "detail");
+  }
+
+  function productReviews(productId) {
+    return Store.orders.flatMap(order => order.items.filter(line => line.productId === productId && line.review?.buyerId === order.buyerId).map(line => ({ ...line.review, productName: line.name })));
+  }
+
+  function renderProductReviews(productId) {
+    const reviews = productReviews(productId);
+    const average = reviews.length ? (reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length).toLocaleString("id-ID", { maximumFractionDigits: 1 }) : "";
+    return `<section class="product-reviews"><h3>Ulasan pembeli</h3>${reviews.length ? `<p class="product-review-summary"><span aria-label="Rata-rata ${average} dari 5 bintang">★ ${average}</span> · ${reviews.length} ulasan</p><div class="product-review-list">${reviews.slice().reverse().map(review => `<article class="product-review"><div class="product-review-stars" aria-label="${review.rating} dari 5 bintang">${"★".repeat(review.rating)}${"☆".repeat(5 - review.rating)}</div><p>${safe(review.comment)}</p><time datetime="${safe(review.createdAt)}">${new Date(review.createdAt).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}</time></article>`).join("")}</div>` : `<p class="muted-copy">Belum ada ulasan untuk produk ini.</p>`}</section>`;
+  }
+
+  function showReviewForm(orderId, productId) {
+    const buyer = currentUser();
+    const order = Store.orders.find(item => item.id === orderId && item.buyerId === buyer?.id);
+    const line = order?.items.find(item => item.productId === productId && (item.status || order.status) === "Selesai");
+    if (buyer?.role !== "buyer" || !line) return toast("Ulasan tersedia setelah barang selesai.");
+    const review = line.review?.buyerId === buyer.id ? line.review : null;
+    openDialog(review ? "Edit ulasan" : "Beri ulasan", `<form id="reviewForm" data-order="${safe(order.id)}" data-product="${safe(productId)}"><fieldset class="review-rating"><legend>Rating bintang</legend>${[1, 2, 3, 4, 5].map(rating => `<span><input id="reviewRating${rating}" type="radio" name="rating" value="${rating}" ${Number(review?.rating || 5) === rating ? "checked" : ""} required><label for="reviewRating${rating}" aria-label="${rating} bintang">★</label></span>`).join("")}</fieldset><div class="field"><label for="reviewComment">Komentar</label><textarea id="reviewComment" name="comment" required minlength="3" maxlength="1000">${safe(review?.comment || "")}</textarea></div><p id="reviewError" class="form-error" role="alert" aria-live="polite"></p><button class="primary-button full-width" type="submit">${review ? "Simpan ulasan" : "Kirim ulasan"}</button></form>`, "review");
   }
 
   function showCheckout(buyId = "") {
@@ -222,6 +242,7 @@
 
   const sellerStatus = (order, sellerId) => order.sellerStatuses?.[sellerId] || (order.items.some(item => item.sellerId === sellerId) ? ({ Diproses: "Menunggu penjual", "Diteruskan ke gudang": "Diteruskan ke gudang" })[order.status] || order.status : "Diproses");
   const activeLine = line => !["Ditolak", "Dibatalkan"].includes(line.status);
+  const lineCompleted = (order, line) => line.status === "Selesai" || (line.status === "Dikirim" && order.status === "Selesai") || (!line.status && order.status === "Selesai");
   function showOrders() {
     const user = requireRole("buyer");
     if (!user) return;
@@ -250,7 +271,7 @@
       const sellerLines = lines.filter(line => line.sellerId === id);
       const status = sellerStatus(order, id);
       const next = { "Menunggu penjual": "Menunggu keputusan toko", "Diteruskan ke gudang": "Gudang menyiapkan barang", "Disiapkan": "Gudang mengemas barang", "Dikemas": "Menunggu pengiriman", "Dikirim": "Dalam pengiriman", "Selesai": "Pesanan selesai", "Ditolak": "Toko menolak barang", "Dibatalkan": "Barang dibatalkan" }[status] || statusLabel(status);
-      return `<section class="buyer-detail-seller"><h4>${safe(sellerName(id))}</h4><p>${safe(statusLabel(status))} · Berikutnya: ${safe(next)}</p>${sellerLines.map(line => `<article class="buyer-detail-product"><div class="buyer-order-thumb">${line.image ? `<img src="${safe(line.image)}" alt="" width="72" height="72">` : `<span aria-hidden="true">${safe(line.icon || "□")}</span>`}</div><div><strong>${safe(line.name)}</strong><span>${safe(statusLabel(line.status || status))}</span><span>${line.quantity} × ${money(line.price)}</span>${line.rejectionReason ? `<p class="buyer-rejection-reason">Alasan toko: ${safe(line.rejectionReason)}</p>` : ""}</div></article>`).join("")}</section>`;
+      return `<section class="buyer-detail-seller"><h4>${safe(sellerName(id))}</h4><p>${safe(statusLabel(status))} · Berikutnya: ${safe(next)}</p>${sellerLines.map(line => { const lineStatus = line.status || status; const completed = lineCompleted(order, line); const review = line.review?.buyerId === order.buyerId ? line.review : null; return `<article class="buyer-detail-product"><div class="buyer-order-thumb">${line.image ? `<img src="${safe(line.image)}" alt="" width="72" height="72">` : `<span aria-hidden="true">${safe(line.icon || "□")}</span>`}</div><div><strong>${safe(line.name)}</strong><span>${safe(statusLabel(completed ? "Selesai" : lineStatus))}</span><span>${line.quantity} × ${money(line.price)}</span>${line.rejectionReason ? `<p class="buyer-rejection-reason">Alasan toko: ${safe(line.rejectionReason)}</p>` : ""}${completed ? review ? `<div class="saved-review"><span aria-label="${review.rating} dari 5 bintang">${"★".repeat(review.rating)}${"☆".repeat(5 - review.rating)}</span><p>${safe(review.comment)}</p><button class="secondary-button" type="button" data-review="${safe(order.id)}" data-product="${safe(line.productId)}">Edit ulasan</button></div>` : `<button class="secondary-button" type="button" data-review="${safe(order.id)}" data-product="${safe(line.productId)}">Beri ulasan</button>` : ""}</div></article>`; }).join("")}</section>`;
     }).join("");
     openDialog("Detail pesanan", `<section class="buyer-detail-status"><strong>${safe(statusLabel(order.status))}</strong><span>Tanggal pembelian · ${new Date(order.createdAt).toLocaleString("id-ID")}</span><span>Nomor pesanan · ${safe(order.orderNumber)}</span></section><section class="buyer-detail-section"><h3>Detail produk</h3>${items}</section><section class="buyer-detail-section"><h3>Info pengiriman</h3><dl><dt>Penerima</dt><dd>${safe(shipment.name || "Belum diisi")}</dd><dt>Nomor telepon</dt><dd>${safe(shipment.phone || "Belum diisi")}</dd><dt>Alamat</dt><dd>${safe(shipment.address || "Belum diisi")}</dd></dl></section><section class="buyer-detail-section"><h3>Bantuan</h3>${sellers.map(id => `<button class="buyer-order-help" type="button" data-order-chat="${safe(id)}" data-order="${safe(order.id)}">Chat ${safe(sellerName(id))}</button>`).join("")}</section><section class="buyer-detail-section buyer-payment"><h3>Rincian pembayaran</h3><div><span>Metode pembayaran</span><strong>${safe(order.paymentMethod || "Belum diatur")}</strong></div><div><span>Subtotal produk</span><strong>${money(lines.filter(activeLine).reduce((sum, line) => sum + line.price * line.quantity, 0))}</strong></div><div class="buyer-payment-total"><span>Total belanja</span><strong>${money(total)}</strong></div></section>`, "order-detail");
   }
@@ -266,11 +287,11 @@
     const user = requireRole("gudang");
     if (!user) return;
     const sellerId = warehouseSellerId(user);
-    const orders = Store.orders.filter(order => order.items.some(line => line.sellerId === sellerId && ["Diteruskan ke gudang", "Disiapkan", "Dikemas"].includes(line.status))).sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+    const orders = Store.orders.filter(order => order.items.some(line => line.sellerId === sellerId && ["Diteruskan ke gudang", "Disiapkan", "Dikemas", "Dikirim"].includes(line.status))).sort((a, b) => a.createdAt.localeCompare(b.createdAt));
     const orderRows = orders.map(order => {
-      const lines = order.items.filter(line => line.sellerId === sellerId && ["Diteruskan ke gudang", "Disiapkan", "Dikemas"].includes(line.status));
+      const lines = order.items.filter(line => line.sellerId === sellerId && ["Diteruskan ke gudang", "Disiapkan", "Dikemas", "Dikirim"].includes(line.status));
       const statuses = [...new Set(lines.map(line => line.status))];
-      const actions = [...new Set(lines.map(line => line.status || sellerStatus(order, line.sellerId)))].map(status => ({ "Diteruskan ke gudang": ["pick", "Mulai siapkan"], "Disiapkan": ["pack", "Tandai dikemas"], "Dikemas": ["ship", "Tandai dikirim"] })[status]).filter(Boolean);
+      const actions = [...new Set(lines.map(line => line.status || sellerStatus(order, line.sellerId)))].map(status => ({ "Diteruskan ke gudang": ["pick", "Mulai siapkan"], "Disiapkan": ["pack", "Tandai dikemas"], "Dikemas": ["ship", "Tandai dikirim"], "Dikirim": ["delivered", "Konfirmasi sudah sampai"] })[status]).filter(Boolean);
       return `<article class="list-row order-row"><div><strong>${safe(order.orderNumber)}</strong><div>${safe(order.shipping?.name || "—")} · ${lines.map(item => `${safe(item.name)} × ${item.quantity}`).join(", ")}</div><div>${safe(order.shipping?.address || "Alamat tidak tersedia")}</div><div>Status: ${statuses.map(statusLabel).map(safe).join(", ")}</div></div><div class="form-actions">${actions.map(([action, label]) => `<button class="${action === "ship" ? "primary" : "secondary"}-button" type="button" data-fulfill="${action}" data-order="${safe(order.id)}" data-seller="${safe(sellerId)}">${label}</button>`).join("")}</div></article>`;
     }).join("");
     const movements = Store.stockMovements || [];
@@ -504,6 +525,17 @@
     event.preventDefault();
     if (!validate(form)) return;
     const data = new FormData(form);
+    if (form.id === "reviewForm") {
+      const buyer = currentUser(); const orderId = form.dataset.order; const productId = form.dataset.product;
+      const order = Store.orders.find(item => item.id === orderId && item.buyerId === buyer?.id);
+    const line = order?.items.find(item => item.productId === productId && lineCompleted(order, item));
+      const rating = Number(data.get("rating")); const comment = String(data.get("comment") || "").trim(); const error = $("reviewError");
+      if (buyer?.role !== "buyer" || !line || !Number.isInteger(rating) || rating < 1 || rating > 5 || comment.length < 3 || comment.length > 1000) { error.textContent = "Pilih rating 1 sampai 5 dan tulis komentar 3 sampai 1000 karakter."; return; }
+      const before = Store.orders; const review = { buyerId: buyer.id, rating, comment, createdAt: line.review?.buyerId === buyer.id ? line.review.createdAt : new Date().toISOString(), updatedAt: new Date().toISOString() };
+      Store.orders = before.map(item => item.id !== order.id ? item : { ...item, items: item.items.map(entry => entry.productId === productId && lineCompleted(item, entry) ? { ...entry, review } : entry) });
+      try { await Store.save(); } catch (cause) { Store.orders = before; error.textContent = `Ulasan gagal disimpan: ${cause.message}`; return; }
+      showOrderDetail(Store.orders.find(item => item.id === order.id)); toast("Ulasan tersimpan."); return;
+    }
     if (form.id === "sellerRejectForm") {
       const seller = currentUser();
       const order = Store.orders.find(item => item.id === form.dataset.order && item.items.some(line => line.sellerId === seller?.id));
@@ -688,7 +720,7 @@
   });
   window.addEventListener("hashchange", updateNav);
   document.addEventListener("click", async event => {
-    const target = event.target.closest("[data-store], [data-seller-tab], [data-seller-sales-view], [data-account-destination], [data-detail-back], [data-detail-search], [data-detail-share], [data-detail-cart], [data-order-chat], [data-order-detail], [data-seller-order-detail], [data-seller-line-decision], [data-add], [data-detail], [data-buy], [data-follow], [data-action], [data-auth-mode], [data-quantity], [data-cancel-order], [data-buyer-cancel-line], [data-seller-decision], [data-edit-product], [data-delete-product], [data-handoff], [data-fulfill], [data-order], [data-chat], [data-start-chat]");
+    const target = event.target.closest("[data-store], [data-seller-tab], [data-seller-sales-view], [data-account-destination], [data-detail-back], [data-detail-search], [data-detail-share], [data-detail-cart], [data-order-chat], [data-order-detail], [data-seller-order-detail], [data-seller-line-decision], [data-review], [data-add], [data-detail], [data-buy], [data-follow], [data-action], [data-auth-mode], [data-quantity], [data-cancel-order], [data-buyer-cancel-line], [data-seller-decision], [data-edit-product], [data-delete-product], [data-handoff], [data-fulfill], [data-order], [data-chat], [data-start-chat]");
     if (!target) return;
     if (target.hasAttribute("data-detail-back")) { closeDialog(); return; }
     if (target.hasAttribute("data-detail-search")) { closeDialog(); $("searchInput")?.focus(); return; }
@@ -718,6 +750,7 @@
       if (order) showOrderDetail(order);
       return;
     }
+    if (target.hasAttribute("data-review")) { showReviewForm(target.dataset.review, target.dataset.product); return; }
     if (target.hasAttribute("data-seller-order-detail")) { showSellerOrderDetail(target.dataset.sellerOrderDetail); return; }
     if (target.dataset.sellerSalesView) { state.sellerSalesView = target.dataset.sellerSalesView; showSellerProducts(); return; }
     if (target.dataset.sellerTab) { state.sellerTab = target.dataset.sellerTab; history.replaceState(null, "", `seller.html?tab=${state.sellerTab}`); showSellerProducts(); return; }
@@ -791,9 +824,10 @@
       showSellerProducts(); return;
     }
     if (target.dataset.fulfill) {
-      const warehouse = currentUser(); const sellerId = warehouseSellerId(warehouse); const order = Store.orders.find(item => item.id === target.dataset.order); const next = { pick: ["Diteruskan ke gudang", "Disiapkan"], pack: ["Disiapkan", "Dikemas"], ship: ["Dikemas", "Dikirim"] }[target.dataset.fulfill];
+      const warehouse = currentUser(); const sellerId = warehouseSellerId(warehouse); const order = Store.orders.find(item => item.id === target.dataset.order); const next = { pick: ["Diteruskan ke gudang", "Disiapkan"], pack: ["Disiapkan", "Dikemas"], ship: ["Dikemas", "Dikirim"], delivered: ["Dikirim", "Selesai"] }[target.dataset.fulfill];
     const lines = order?.items.filter(line => line.sellerId === sellerId && (line.status || (line.sellerId && order.sellerStatuses?.[line.sellerId]) || (order.status === "Diproses" ? "Menunggu penjual" : order.status)) === next?.[0]) || [];
       if (warehouse?.role !== "gudang" || target.dataset.seller !== sellerId || !order || !lines.length) return toast("Status pesanan atau akses gudang sudah berubah.");
+      if (target.dataset.fulfill === "delivered" && !confirm(`Konfirmasi ${lines.length} barang dari ${sellerName(sellerId)} sudah sampai ke ${order.shipping?.name || "penerima"}?`)) return;
       const previousProducts = Store.products; const previousMovements = Store.stockMovements; const before = Store.orders;
       if (target.dataset.fulfill === "ship") {
         const invalid = lines.find(line => !Store.products.some(product => product.id === line.productId && product.stock - line.quantity >= reservedStock(product.id) - line.quantity));
@@ -803,7 +837,7 @@
       }
       const updatedLines = order.items.map(line => lines.includes(line) ? { ...line, status: next[1] } : line);
       const statuses = updatedLines.filter(activeLine).map(line => line.status);
-      const orderStatus = statuses.length && statuses.every(status => status === "Dikirim" || status === "Selesai") ? "Selesai" : "Dalam proses";
+      const orderStatus = statuses.length && statuses.every(status => status === "Selesai") ? "Selesai" : "Dalam proses";
       Store.orders = Store.orders.map(item => item.id !== order.id ? item : { ...item, items: updatedLines, sellerStatuses: Object.fromEntries([...new Set(updatedLines.map(line => line.sellerId))].map(id => [id, updatedLines.find(line => line.sellerId === id)?.status])), status: orderStatus, history: [...(item.history || []), { status: next[1], at: new Date().toISOString(), userId: warehouse.id }] });
       try { await Store.save(); } catch (error) { Store.products = previousProducts; Store.stockMovements = previousMovements; Store.orders = before; return toast(`Pembaruan gagal disimpan: ${error.message}`); }
       showWarehouse(); return;

@@ -94,14 +94,15 @@ This application is for local demonstration only. The server binds to loopback, 
 - Real payment processing, shipping integration, and refunds.
 - PWA installation/offline support.
 - Public deployment or production-grade security.
-- Persistent database, product reviews, ratings, and native mobile apps.
+- Persistent database and native mobile apps. Buyer product reviews and ratings are supported after line-level completion.
 
 ## Acceptance checks
 
 - Buyer can place a demo order and see its details and line statuses after refresh.
 - Seller can process one pending item without changing other sellers' lines; rejecting an item requires a reason that appears to the buyer.
 - Buyer can cancel only a still-pending seller portion.
-- Each seller-linked warehouse can perform stock adjustments only for its seller's products and advance that seller's mixed-stage order lines independently.
+- Buyer can submit or edit a 1–5 star rating and text review for each completed product line; reviews appear on that product's detail.
+- Each seller-linked warehouse can perform stock adjustments only for its seller's products, advance its order lines independently, and confirm delivery after dispatch.
 - Shipping an accepted line deducts its quantity once and records a stock movement.
 - Catalog search, filters, cart quantity controls, and navigation work at mobile and desktop widths without horizontal overflow.
 - Keyboard navigation, focus visibility, dialog dismissal, labels, and error feedback work across buyer, seller, and warehouse screens.
