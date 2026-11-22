@@ -53,11 +53,48 @@
   ],
   "gudang": [
     {
-      "id": "warehouse-demo",
-      "name": "Gudang Demo",
-      "email": "gudang@tokoko.test",
+      "id": "warehouse-enter",
+      "name": "Gudang Enter Komputer",
+      "email": "gudang.enter@tokoko.test",
       "password": "tokoko123",
       "role": "gudang",
+      "sellerId": "seller-enter",
+      "demo": true
+    },
+    {
+      "id": "warehouse-kla",
+      "name": "Gudang KLA Computer",
+      "email": "gudang.kla@tokoko.test",
+      "password": "tokoko123",
+      "role": "gudang",
+      "sellerId": "seller-kla",
+      "demo": true
+    },
+    {
+      "id": "warehouse-sentral",
+      "name": "Gudang Sentral Komputer",
+      "email": "gudang.sentral@tokoko.test",
+      "password": "tokoko123",
+      "role": "gudang",
+      "sellerId": "seller-sentral",
+      "demo": true
+    },
+    {
+      "id": "warehouse-agres",
+      "name": "Gudang Agres Id",
+      "email": "gudang.agres@tokoko.test",
+      "password": "tokoko123",
+      "role": "gudang",
+      "sellerId": "seller-agres",
+      "demo": true
+    },
+    {
+      "id": "warehouse-gamer",
+      "name": "Gudang GAMER ID",
+      "email": "gudang.gamer@tokoko.test",
+      "password": "tokoko123",
+      "role": "gudang",
+      "sellerId": "seller-gamer",
       "demo": true
     }
   ]

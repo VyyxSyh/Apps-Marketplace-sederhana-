@@ -16,7 +16,7 @@
   };
   const flattenUsers = data => ["buyer", "seller", "gudang"].flatMap(role => Array.isArray(data[role]) ? data[role] : []);
   const groupUsers = users => Object.fromEntries(["buyer", "seller", "gudang"].map(role => [role, users.filter(user => user.role === role)]));
-  const isDemoUser = user => user.demo || ["buyer-demo", "seller-agres", "seller-sentral", "seller-gamer", "seller-enter", "seller-kla", "warehouse-demo"].includes(user.id);
+  const isDemoUser = user => user.demo || ["buyer-demo", "seller-agres", "seller-sentral", "seller-gamer", "seller-enter", "seller-kla"].includes(user.id);
   const categoryMap = {
     "Sembako": "Makanan & Minuman",
     "Obat & P3K": "Kesehatan",
@@ -88,6 +88,7 @@
         }
         if (!Array.isArray(data.categories)) throw new Error("Kategori gagal dimuat.");
         apiAvailable = true;
+        userData.gudang = (userData.gudang || []).filter(user => user.sellerId);
         write(keys.products, data.products);
         write(keys.categories, data.categories);
         write(keys.orders, data.orders || []);

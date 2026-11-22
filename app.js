@@ -6,6 +6,8 @@
   const cartForUser = userId => Store.carts.filter(item => item.userId === userId);
   const currentUser = () => Store.users.find(user => user.id === Store.session?.userId) || null;
   const sellerName = id => Store.users.find(user => user.id === id)?.name || "Penjual lokal";
+  const warehouseSellerId = user => user?.role === "gudang" ? user.sellerId : null;
+  const warehouseOwnsProduct = (user, product) => product?.sellerId === warehouseSellerId(user);
   function toast(message, action) {
     const el = $("toast");
     el.replaceChildren(document.createTextNode(message));
@@ -246,25 +248,28 @@
   function showWarehouse() {
     const user = requireRole("gudang");
     if (!user) return;
-    const orders = Store.orders.filter(order => order.items.some(line => ["Diteruskan ke gudang", "Disiapkan", "Dikemas"].includes(line.status))).sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+    const sellerId = warehouseSellerId(user);
+    const orders = Store.orders.filter(order => order.items.some(line => line.sellerId === sellerId && ["Diteruskan ke gudang", "Disiapkan", "Dikemas"].includes(line.status))).sort((a, b) => a.createdAt.localeCompare(b.createdAt));
     const orderRows = orders.map(order => {
-      const lines = order.items.filter(line => ["Diteruskan ke gudang", "Disiapkan", "Dikemas"].includes(line.status));
+      const lines = order.items.filter(line => line.sellerId === sellerId && ["Diteruskan ke gudang", "Disiapkan", "Dikemas"].includes(line.status));
       const statuses = [...new Set(lines.map(line => line.status))];
       const actions = [...new Set(lines.map(line => line.status || sellerStatus(order, line.sellerId)))].map(status => ({ "Diteruskan ke gudang": ["pick", "Mulai siapkan"], "Disiapkan": ["pack", "Tandai dikemas"], "Dikemas": ["ship", "Tandai dikirim"] })[status]).filter(Boolean);
-      return `<article class="list-row order-row"><div><strong>${safe(order.orderNumber)}</strong><div>${safe(order.shipping?.name || "—")} · ${lines.map(item => `${safe(item.name)} × ${item.quantity}`).join(", ")}</div><div>${safe(order.shipping?.address || "Alamat tidak tersedia")}</div><div>Status: ${statuses.map(statusLabel).map(safe).join(", ")}</div></div><div class="form-actions">${actions.map(([action, label]) => `<button class="${action === "ship" ? "primary" : "secondary"}-button" type="button" data-fulfill="${action}" data-order="${safe(order.id)}">${label}</button>`).join("")}</div></article>`;
+      return `<article class="list-row order-row"><div><strong>${safe(order.orderNumber)}</strong><div>${safe(order.shipping?.name || "—")} · ${lines.map(item => `${safe(item.name)} × ${item.quantity}`).join(", ")}</div><div>${safe(order.shipping?.address || "Alamat tidak tersedia")}</div><div>Status: ${statuses.map(statusLabel).map(safe).join(", ")}</div></div><div class="form-actions">${actions.map(([action, label]) => `<button class="${action === "ship" ? "primary" : "secondary"}-button" type="button" data-fulfill="${action}" data-order="${safe(order.id)}" data-seller="${safe(sellerId)}">${label}</button>`).join("")}</div></article>`;
     }).join("");
     const movements = Store.stockMovements || [];
     const movementRows = movements.slice(0, 12).map(movement => `<div class="list-row"><div><strong>${safe(movement.productName)}</strong><div>${safe(movement.type)} · ${safe(movement.reason)}</div></div><span>${movement.delta > 0 ? "+" : ""}${movement.delta} · ${new Date(movement.createdAt).toLocaleDateString("id-ID")}</span></div>`).join("");
     const warehouseRoot = $("warehouseContent");
-    if (warehouseRoot) { warehouseRoot.innerHTML = `<h1 class="standalone-title">Pesanan gudang</h1><p><a class="secondary-button" href="warehouse.html?view=stock">Pengelolaan stok</a></p>${orderRows || `<div class="empty-state"><strong>Antrean kosong</strong>Pesanan yang diteruskan toko akan muncul di sini.</div>`}`; return; }
+    if (warehouseRoot) { warehouseRoot.innerHTML = `<h1 class="standalone-title">Pesanan ${safe(sellerName(sellerId))}</h1><p><a class="secondary-button" href="warehouse.html?view=stock">Stok ${safe(sellerName(sellerId))}</a></p>${orderRows || `<div class="empty-state"><strong>Antrean kosong</strong>Pesanan yang diteruskan toko akan muncul di sini.</div>`}`; return; }
     openDialog("Gudang", `<h3>Antrean pemenuhan</h3>${orderRows || `<div class="empty-state"><strong>Antrean kosong</strong>Pesanan yang diteruskan toko akan muncul di sini.</div>`}`, "warehouse");
   }
 
   function showStockManagement() {
     const user = requireRole("gudang"); if (!user) return;
-    const low = Store.products.filter(product => availableStock(product) <= (product.lowStockThreshold ?? 5));
-    const movementRows = Store.stockMovements.slice(0, 30).map(movement => `<div class="list-row"><div><strong>${safe(movement.productName)}</strong><div>${safe(movement.type)} · ${safe(movement.reason)}</div></div><span>${movement.delta > 0 ? "+" : ""}${movement.delta} · ${new Date(movement.createdAt).toLocaleDateString("id-ID")}</span></div>`).join("");
-    const content = `<h1 class="standalone-title">Pengelolaan stok</h1><h2>Stok menipis</h2>${low.map(product => `<div class="list-row"><strong>${safe(product.name)}</strong><span>${availableStock(product)} unit</span></div>`).join("") || `<p class="muted-copy">Tidak ada stok menipis.</p>`}<h2 class="mt-4">Barang masuk, opname, atau retur</h2><form id="stockForm"><div class="field"><label for="stockProduct">Produk</label><select id="stockProduct" name="productId" required>${Store.products.map(product => `<option value="${safe(product.id)}">${safe(product.name)} · stok ${product.stock}</option>`).join("")}</select></div><div class="field"><label for="stockType">Jenis pencatatan</label><select id="stockType" name="type"><option value="Barang masuk">Barang masuk</option><option value="Stok opname">Koreksi opname (+/-)</option><option value="Barang rusak">Barang rusak (-)</option><option value="Retur layak jual">Retur layak jual (+)</option><option value="Retur rusak">Retur rusak (-)</option></select></div><div class="field"><label for="stockDelta">Perubahan unit (+/-)</label><input id="stockDelta" name="delta" type="number" step="1" required></div><div class="field"><label for="stockReason">Alasan / nomor retur</label><input id="stockReason" name="reason" required minlength="3" maxlength="120"></div><p id="stockError" class="form-error" role="alert"></p><button class="primary-button full-width" type="submit">Simpan perubahan stok</button></form><h2 class="mt-4">Riwayat stok</h2>${movementRows || `<p class="muted-copy">Belum ada perubahan stok.</p>`}`;
+    const products = Store.products.filter(product => warehouseOwnsProduct(user, product));
+    const productIds = new Set(products.map(product => product.id));
+    const low = products.filter(product => availableStock(product) <= (product.lowStockThreshold ?? 5));
+    const movementRows = Store.stockMovements.filter(movement => productIds.has(movement.productId)).slice(0, 30).map(movement => `<div class="list-row"><div><strong>${safe(movement.productName)}</strong><div>${safe(movement.type)} · ${safe(movement.reason)}</div></div><span>${movement.delta > 0 ? "+" : ""}${movement.delta} · ${new Date(movement.createdAt).toLocaleDateString("id-ID")}</span></div>`).join("");
+    const content = `<h1 class="standalone-title">Stok ${safe(sellerName(user.sellerId))}</h1><h2>Stok menipis</h2>${low.map(product => `<div class="list-row"><strong>${safe(product.name)}</strong><span>${availableStock(product)} unit</span></div>`).join("") || `<p class="muted-copy">Tidak ada stok menipis.</p>`}<h2 class="mt-4">Barang masuk, opname, atau retur</h2><form id="stockForm"><div class="field"><label for="stockProduct">Produk</label><select id="stockProduct" name="productId" required>${products.map(product => `<option value="${safe(product.id)}">${safe(product.name)} · stok ${product.stock}</option>`).join("")}</select></div><div class="field"><label for="stockType">Jenis pencatatan</label><select id="stockType" name="type"><option value="Barang masuk">Barang masuk</option><option value="Stok opname">Koreksi opname (+/-)</option><option value="Barang rusak">Barang rusak (-)</option><option value="Retur layak jual">Retur layak jual (+)</option><option value="Retur rusak">Retur rusak (-)</option></select></div><div class="field"><label for="stockDelta">Perubahan unit (+/-)</label><input id="stockDelta" name="delta" type="number" step="1" required></div><div class="field"><label for="stockReason">Alasan / nomor retur</label><input id="stockReason" name="reason" required minlength="3" maxlength="120"></div><p id="stockError" class="form-error" role="alert"></p><button class="primary-button full-width" type="submit" ${products.length ? "" : "disabled"}>Simpan perubahan stok</button></form><h2 class="mt-4">Riwayat stok</h2>${movementRows || `<p class="muted-copy">Belum ada perubahan stok.</p>`}`;
     const root = $("warehouseContent"); if (root) root.innerHTML = content; else openDialog("Pengelolaan stok", content, "stock");
   }
 
@@ -519,8 +524,8 @@
     }
     if (form.id === "checkoutForm") { await saveOrder(form); return; }
     if (form.id === "stockForm") {
-      if (currentUser()?.role !== "gudang") return;
-      const product = Store.products.find(item => item.id === data.get("productId"));
+      const warehouse = currentUser();
+      const product = Store.products.find(item => item.id === data.get("productId") && warehouseOwnsProduct(warehouse, item));
       const delta = Number(data.get("delta")); const reason = String(data.get("reason")).trim();
       if (!product || !Number.isSafeInteger(delta) || !delta || product.stock + delta < reservedStock(product.id) || reason.length < 3) { $("stockError").textContent = "Produk, jumlah, atau alasan tidak valid. Stok tidak boleh di bawah jumlah pesanan aktif."; return; }
       const type = String(data.get("type") || (delta > 0 ? "Barang masuk" : "Koreksi stok"));
@@ -719,9 +724,9 @@
       showSellerProducts(); return;
     }
     if (target.dataset.fulfill) {
-      const warehouse = currentUser(); const order = Store.orders.find(item => item.id === target.dataset.order); const next = { pick: ["Diteruskan ke gudang", "Disiapkan"], pack: ["Disiapkan", "Dikemas"], ship: ["Dikemas", "Dikirim"] }[target.dataset.fulfill];
-      const lines = order?.items.filter(line => (line.status || (line.sellerId && order.sellerStatuses?.[line.sellerId]) || (order.status === "Diproses" ? "Menunggu penjual" : order.status)) === next?.[0]) || [];
-      if (warehouse?.role !== "gudang" || !order || !lines.length) return toast("Status pesanan sudah berubah.");
+      const warehouse = currentUser(); const sellerId = warehouseSellerId(warehouse); const order = Store.orders.find(item => item.id === target.dataset.order); const next = { pick: ["Diteruskan ke gudang", "Disiapkan"], pack: ["Disiapkan", "Dikemas"], ship: ["Dikemas", "Dikirim"] }[target.dataset.fulfill];
+    const lines = order?.items.filter(line => line.sellerId === sellerId && (line.status || (line.sellerId && order.sellerStatuses?.[line.sellerId]) || (order.status === "Diproses" ? "Menunggu penjual" : order.status)) === next?.[0]) || [];
+      if (warehouse?.role !== "gudang" || target.dataset.seller !== sellerId || !order || !lines.length) return toast("Status pesanan atau akses gudang sudah berubah.");
       const previousProducts = Store.products; const previousMovements = Store.stockMovements; const before = Store.orders;
       if (target.dataset.fulfill === "ship") {
         const invalid = lines.find(line => !Store.products.some(product => product.id === line.productId && product.stock - line.quantity >= reservedStock(product.id) - line.quantity));

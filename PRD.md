@@ -12,7 +12,7 @@ The interface is mobile-first, with tablet and desktop layouts supported. A PWA 
 |---|---|
 | Buyer | Browse/filter products, manage cart, place demo orders, view order details, cancel pending seller lines, contact sellers through chat. |
 | Seller | Manage own products and profile, review orders containing own items, accept or reject pending items individually, give rejection reasons, chat with buyers. |
-| Warehouse | View accepted order items, move eligible items through preparation, packing, and shipping, adjust inventory, view stock movement history. |
+| Warehouse | Each seeded seller has one linked warehouse account. It sees and processes only that seller's accepted order items, products, stock, and stock movement history. |
 
 ## Main workflows
 
@@ -38,7 +38,8 @@ The interface is mobile-first, with tablet and desktop layouts supported. A PWA 
 - A user can register as a buyer or seller, log in, log out, and update their password.
 - Email addresses must be unique. Passwords have a minimum length of six characters.
 - Seller profile name and city can be updated.
-- Warehouse is a seeded demo role; public registration does not offer warehouse access.
+- Each seeded seller has one seeded warehouse account, linked by `sellerId`; public registration does not offer warehouse access.
+- Demo warehouse logins use `gudang.<seller>@tokoko.test`, for example `gudang.agres@tokoko.test`; seeded demo password: `tokoko123`.
 - Role checks currently restrict the UI only. They do not authorize API requests.
 
 ### Catalog and cart
@@ -65,7 +66,7 @@ The interface is mobile-first, with tablet and desktop layouts supported. A PWA 
 
 ### Warehouse inventory and fulfillment
 
-- Warehouse users can view stock levels and stock movement history.
+- A warehouse account can view and adjust only products belonging to its linked seller and sees only those products' stock movement history.
 - Stock adjustments record product, signed quantity, type, reason, user, and timestamp.
 - Accepted order lines move through preparation, packing, and shipping independently, including when lines in the same order are at different stages.
 - Stock is deducted and a stock movement recorded at shipping; active order reservations constrain stock corrections.
@@ -100,7 +101,7 @@ This application is for local demonstration only. The server binds to loopback, 
 - Buyer can place a demo order and see its details and line statuses after refresh.
 - Seller can process one pending item without changing other sellers' lines; rejecting an item requires a reason that appears to the buyer.
 - Buyer can cancel only a still-pending seller portion.
-- Warehouse can perform stock adjustments once per submission and advance mixed-stage lines independently.
+- Each seller-linked warehouse can perform stock adjustments only for its seller's products and advance that seller's mixed-stage order lines independently.
 - Shipping an accepted line deducts its quantity once and records a stock movement.
 - Catalog search, filters, cart quantity controls, and navigation work at mobile and desktop widths without horizontal overflow.
 - Keyboard navigation, focus visibility, dialog dismissal, labels, and error feedback work across buyer, seller, and warehouse screens.
