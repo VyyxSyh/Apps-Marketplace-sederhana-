@@ -1,310 +1,107 @@
-# PRD — TOKOKO (Simple Marketplace Web App)
+# KOLAP: Product Requirements
 
-## 1. Product Overview
+## Product
 
-TOKOKO adalah aplikasi web marketplace sederhana yang mempertemukan **penjual** dan **pembeli**. Penjual dapat menambahkan dan mengelola produk, sedangkan pembeli dapat mencari produk, memasukkannya ke keranjang, dan melakukan checkout.
+KOLAP is a local demo marketplace for buyers, sellers, and warehouse staff. Buyers browse products, manage a cart, place demo orders, and track item-level status. Sellers manage their products and accept or reject each ordered item with a reason. Warehouse staff record stock movements and prepare, pack, and ship accepted items.
 
-TOKOKO difokuskan sebagai **aplikasi mobile**: seluruh antarmuka dirancang **mobile-first** untuk layar smartphone (360–430 px), dengan bottom navigation, tombol yang mudah dijangkau jempol, dan dapat dipasang ke layar utama sebagai **PWA** (opsional). Tampilan tablet dan desktop bersifat sekunder.
+The interface is mobile-first, with tablet and desktop layouts supported. A PWA is not implemented.
 
-Aplikasi dibangun dengan **HTML, Tailwind CSS (CDN), dan Vanilla JavaScript**. Seluruh data (pengguna, produk, keranjang, pesanan) disimpan di **`localStorage`** browser. File **`data.json`** berisi data awal (seed) yang dimuat saat pertama kali dibuka atau saat data di-reset. Tidak ada backend atau server — cukup buka `index.html` di browser.
+## Users and capabilities
 
-## 2. Problem Statement
-
-- Penjual kecil kesulitan mengelola produk dan pesanan di satu tempat karena informasi tersebar di berbagai media sosial dan chat.
-- Pembeli sulit menemukan dan membandingkan produk dari banyak penjual.
-- Proses membeli sering tidak jelas: tidak ada keranjang, ringkasan biaya, maupun riwayat pesanan yang rapi.
-- Dibutuhkan contoh aplikasi marketplace yang sederhana, mudah dipahami, dan tidak memerlukan setup server atau database.
-
-## 3. Product Goals
-
-- Menyediakan alur marketplace inti yang lengkap: **lihat produk → cari → keranjang → checkout → riwayat pesanan**.
-- Memberi penjual cara sederhana untuk menambah, mengubah, dan menghapus produk.
-- Menampilkan antarmuka yang bersih dan nyaman dipakai di smartphone, dengan satu tangan, sebagai prioritas utama.
-- Memberi pengalaman yang terasa seperti aplikasi (navigasi bawah, transisi halus, dapat dipasang ke layar utama).
-- Menyimpan data secara persisten di `localStorage` tanpa perlu server.
-
-**Target terukur:**
-
-- Pembeli dapat menyelesaikan checkout dalam ≤ 4 langkah dari halaman produk.
-- Seluruh alur utama dapat dijalankan pada layar 360–430 px tanpa zoom dan tanpa scroll horizontal.
-- Semua elemen yang dapat diketuk berukuran minimal 44×44 px.
-- Penjual dapat menambahkan produk dalam < 2 menit.
-- Halaman katalog termuat dalam < 2 detik.
-- Data tetap tersimpan setelah halaman di-refresh (localStorage).
-
-## 4. Target Users
-
-| Pengguna | Deskripsi | Kebutuhan Utama |
-|---|---|---|
-| **Pembeli** | Pengguna umum yang mencari dan membeli produk | Pencarian mudah, harga jelas, keranjang, checkout cepat |
-| **Penjual** | Individu atau pemilik usaha kecil yang menjual produk | Menambah dan mengelola produk, melihat pesanan masuk |
-
-**Karakteristik pengguna:**
-
-- Terbiasa memakai browser dan marketplace populer.
-- Menggunakan smartphone sebagai perangkat utama (layar 360–430 px), sering dengan satu tangan.
-- Menginginkan antarmuka sederhana tanpa tutorial.
-
-> Catatan: Login bersifat simulasi — password tersimpan sebagai teks biasa di localStorage. **Tidak aman untuk data nyata** (lihat bagian 7).
-
-## 5. Core Features
-
-| # | Fitur | Deskripsi Singkat | Prioritas |
-|---|---|---|---|
-| 1 | Autentikasi (Simulasi) | Register, login, logout dengan peran Pembeli atau Penjual | Must Have |
-| 2 | Katalog Produk | Daftar produk dalam bentuk card dengan foto, nama, dan harga | Must Have |
-| 3 | Detail Produk | Informasi lengkap produk, stok, dan penjual | Must Have |
-| 4 | Pencarian, Filter & Sorting | Cari berdasarkan nama, filter kategori, urutkan harga | Must Have |
-| 5 | Keranjang Belanja | Tambah, ubah jumlah, dan hapus item; total otomatis | Must Have |
-| 6 | Checkout | Isi data pengiriman dan konfirmasi pesanan | Must Have |
-| 7 | Riwayat Pesanan | Daftar pesanan pembeli beserta status | Must Have |
-| 8 | Manajemen Produk (Penjual) | Tambah, ubah, hapus produk milik sendiri | Must Have |
-| 9 | Pesanan Masuk (Penjual) | Melihat pesanan dan mengubah statusnya | Should Have |
-| 10 | Mobile-First UI | Bottom navigation, tombol mudah dijangkau, tampilan optimal di layar smartphone | Must Have |
-| 11 | Instalasi PWA | Dapat dipasang ke layar utama dan tampil layar penuh | Could Have |
-
-## 6. Functional Requirements
-
-### FR-1 — Autentikasi (Simulasi)
-
-- FR-1.1 User dapat mendaftar dengan nama, email, password, dan memilih peran (Pembeli atau Penjual); data disimpan ke `localStorage`.
-- FR-1.2 Email harus unik; sebelum menyimpan, aplikasi memeriksa data users dan menampilkan pesan error jika email sudah terdaftar.
-- FR-1.3 User dapat login dengan mencocokkan email dan password pada data users.
-- FR-1.4 Setelah login, ID dan peran user aktif disimpan di `localStorage` sebagai sesi.
-- FR-1.5 User dapat logout; sesi dihapus dan diarahkan ke halaman katalog.
-- FR-1.6 Halaman khusus peran dibatasi: Pembeli tidak dapat membuka halaman Penjual dan sebaliknya.
-- FR-1.7 Form menampilkan validasi (kolom kosong, format email, password minimal 6 karakter).
-
-### FR-2 — Katalog Produk
-
-- FR-2.1 Halaman utama membaca data produk dari `localStorage` dan menampilkannya dalam grid Product Card.
-- FR-2.2 Product Card menampilkan foto/emoji, nama produk, harga (format Rupiah), dan nama penjual.
-- FR-2.3 Produk dengan stok 0 menampilkan label `Stok Habis` dan tidak dapat ditambahkan ke keranjang.
-- FR-2.4 Katalog dapat diakses tanpa login; login diminta saat menambah ke keranjang atau checkout.
-- FR-2.5 Jika belum ada produk, tampilkan empty state.
-
-### FR-3 — Detail Produk
-
-- FR-3.1 Menampilkan informasi produk berdasarkan ID.
-- FR-3.2 Menampilkan foto/emoji, nama, harga, deskripsi, kategori, stok, dan nama penjual.
-- FR-3.3 Pembeli dapat memilih jumlah (tidak boleh melebihi stok) dan menekan `Tambah ke Keranjang`.
-- FR-3.4 Tersedia tombol `Beli Sekarang` yang langsung menuju checkout dengan produk tersebut.
-
-### FR-4 — Pencarian, Filter & Sorting
-
-- FR-4.1 User dapat mencari produk berdasarkan nama secara real-time saat mengetik (dengan debounce ±300 ms).
-- FR-4.2 Filter kategori: `Semua` atau salah satu kategori.
-- FR-4.3 Sorting: `Terbaru`, `Harga Terendah`, `Harga Tertinggi`, `Nama A–Z`.
-- FR-4.4 Pencarian, filter, dan sorting dapat dikombinasikan sekaligus.
-- FR-4.5 Jika tidak ada hasil, tampilkan pesan "Produk tidak ditemukan".
-
-### FR-5 — Keranjang Belanja
-
-- FR-5.1 Pembeli dapat menambahkan produk ke keranjang dari Product Card maupun Detail Produk.
-- FR-5.2 Item keranjang disimpan di `localStorage` berdasarkan `userId`, sehingga tetap ada setelah refresh.
-- FR-5.3 Jika produk sudah ada di keranjang, jumlahnya bertambah (maksimal sesuai stok).
-- FR-5.4 Pembeli dapat mengubah jumlah (`−` / `+`) dan menghapus item.
-- FR-5.5 Subtotal per item dan total keseluruhan dihitung otomatis.
-- FR-5.6 Ikon keranjang di navbar menampilkan badge jumlah item.
-- FR-5.7 Jika keranjang kosong, tampilkan empty state dengan tombol menuju katalog.
-
-### FR-6 — Checkout
-
-- FR-6.1 Checkout meminta: nama penerima, nomor telepon, dan alamat pengiriman.
-- FR-6.2 Pembeli memilih metode pembayaran (contoh: `Transfer Bank` atau `Bayar di Tempat`); pembayaran bersifat simulasi.
-- FR-6.3 Ringkasan pesanan menampilkan daftar item, subtotal, ongkos kirim (flat), dan total bayar.
-- FR-6.4 Saat pesanan dibuat, aplikasi mengurangi stok tiap produk dan mengosongkan keranjang pengguna di `localStorage`.
-- FR-6.5 Sebelum membuat pesanan, aplikasi memeriksa stok; jika stok tidak mencukupi, tampilkan pesan dan sesuaikan jumlah.
-- FR-6.6 Data pesanan menyimpan salinan (snapshot) nama dan harga produk saat transaksi.
-- FR-6.7 Setelah berhasil, tampilkan halaman konfirmasi dengan nomor pesanan unik.
-
-### FR-7 — Riwayat Pesanan (Pembeli)
-
-- FR-7.1 Pembeli dapat melihat daftar pesanannya, diurutkan dari yang terbaru.
-- FR-7.2 Setiap pesanan menampilkan nomor pesanan, tanggal, total, dan status.
-- FR-7.3 Pembeli dapat membuka detail pesanan (daftar produk, alamat, metode pembayaran, rincian biaya).
-- FR-7.4 Status pesanan: `Diproses`, `Dikirim`, `Selesai`, `Dibatalkan`.
-- FR-7.5 Pembeli dapat membatalkan pesanan selama status masih `Diproses`; stok produk dikembalikan.
-
-### FR-8 — Manajemen Produk (Penjual)
-
-- FR-8.1 Penjual dapat melihat daftar produk miliknya.
-- FR-8.2 Penjual dapat menambah produk: nama, deskripsi, harga, stok, kategori, dan emoji/URL gambar.
-- FR-8.3 Penjual dapat mengedit dan menghapus hanya produk miliknya sendiri.
-- FR-8.4 Form produk memvalidasi input (kolom wajib, harga dan stok tidak boleh negatif).
-- FR-8.5 Penghapusan produk meminta konfirmasi terlebih dahulu.
-
-### FR-9 — Pesanan Masuk (Penjual) — Should Have
-
-- FR-9.1 Penjual dapat melihat pesanan yang berisi produk miliknya.
-- FR-9.2 Penjual dapat mengubah status pesanan dari `Diproses` ke `Dikirim`, lalu ke `Selesai`.
-- FR-9.3 Penjual dapat memfilter pesanan berdasarkan status.
-
-### FR-10 — Navigasi & Mobile UX
-
-- FR-10.1 **Bottom Navigation** tampil di semua halaman utama, berisi ikon + label: `Beranda`, `Cari`, `Keranjang`, `Pesanan`, `Akun`. Menu aktif ditandai warna Primary dan badge jumlah pada `Keranjang`.
-- FR-10.2 Untuk Penjual, Bottom Navigation berisi: `Beranda`, `Produk Saya`, `Pesanan Masuk`, `Akun`.
-- FR-10.3 **Top Bar** berisi logo TOKOKO dan kolom pencarian; pada halaman dalam (detail, checkout), Top Bar menampilkan tombol kembali dan judul halaman.
-- FR-10.4 Katalog menampilkan grid **2 kolom**; filter dan sorting dibuka lewat tombol `Filter` dalam bentuk **bottom sheet**.
-- FR-10.5 Halaman Detail Produk menampilkan emoji/gambar produk dan tombol `Tambah ke Keranjang` serta `Beli Sekarang` yang menempel (sticky) di bagian bawah layar.
-- FR-10.6 Halaman Keranjang menampilkan ringkasan total dan tombol `Checkout` yang menempel di bagian bawah layar, di atas Bottom Navigation.
-- FR-10.7 Seluruh elemen interaktif berukuran minimal 44×44 px dan diberi jarak cukup untuk mencegah salah ketuk.
-- FR-10.8 Kolom form memakai jenis input yang sesuai (`type="email"`, `type="tel"`, `inputmode="numeric"`) agar keyboard HP yang muncul tepat.
-- FR-10.9 Tombol aksi utama ditempatkan di bagian bawah layar (zona jempol); aksi destruktif (hapus, batal) meminta konfirmasi.
-- FR-10.10 Feedback aksi (berhasil, gagal) ditampilkan sebagai toast singkat di dekat bagian bawah layar.
-- FR-10.11 Konten tidak tertutup Top Bar, Bottom Navigation, maupun *notch*/*safe area* perangkat.
-- FR-10.12 *(Could Have)* PWA: `manifest.json` dan service worker sederhana.
-- FR-10.13 Pada layar tablet dan desktop, konten tampil dalam kontainer berlebar maksimum (±480 px); tampilan ini tidak menjadi prioritas.
-
-## 7. Non-Functional Requirements
-
-| Kategori | Kebutuhan |
+| Role | Current capabilities |
 |---|---|
-| **Usability** | Dapat dioperasikan dengan satu tangan; tombol utama berada di zona jempol; ukuran area ketuk ≥ 44×44 px; pesan error dan validasi jelas dalam Bahasa Indonesia; jenis keyboard sesuai input. |
-| **Performance** | Halaman termuat < 2 detik; gambar memakai `loading="lazy"`; pencarian memakai debounce; total aset awal dijaga ringan. |
-| **Responsiveness** | Pendekatan **mobile-first**: dirancang dan diuji utama pada lebar 360, 390, dan 430 px; tablet dan desktop sekunder. Mendukung orientasi potret (utama); lanskap tidak boleh merusak tata letak. |
-| **Compatibility** | Berjalan di Chrome Android dan Safari iOS versi terbaru, serta browser modern desktop (Chrome, Firefox, Edge) sebagai pelengkap. |
-| **Data Persistence** | Data disimpan di `localStorage`. File `data.json` berisi seed data yang dimuat saat pertama kali atau saat reset. Data bertahan selama browser tidak di-clear. |
-| **Maintainability** | Kode dipisah per modul: `store.js` (data layer localStorage), `app.js` (logika UI), `index.html` (markup). |
-| **Security (Keterbatasan)** | Password tersimpan sebagai teks biasa di localStorage. Cocok untuk tugas, demo, dan pembelajaran, **bukan untuk produksi**. Input pengguna di-escape saat dirender ke DOM untuk mencegah XSS. |
-| **Accessibility** | Kontras warna terbaca di bawah cahaya terang; elemen interaktif punya label yang jelas; gambar memiliki atribut `alt`; HTML memakai tag semantik; teks tidak lebih kecil dari 14 px. |
-| **Portability** | Cukup buka `index.html` di browser. Koneksi internet diperlukan hanya untuk Tailwind CDN. Dapat di-deploy sebagai static site. |
+| Buyer | Browse/filter products, manage cart, place demo orders, view order details, cancel pending seller lines, contact sellers through chat. |
+| Seller | Manage own products and profile, review orders containing own items, accept or reject pending items individually, give rejection reasons, chat with buyers. |
+| Warehouse | View accepted order items, move eligible items through preparation, packing, and shipping, adjust inventory, view stock movement history. |
 
-## 8. Tech Stack
+## Main workflows
 
-- **HTML** — markup
-- **Tailwind CSS (CDN)** — styling, pendekatan mobile-first (`md:`/`lg:` untuk layar lebih besar)
-- **Vanilla JavaScript** — logika aplikasi
-- **localStorage** — penyimpan data persisten di browser
-- **data.json** — seed data awal (produk, kategori, user contoh)
+1. Buyer selects products and places a demo checkout order. No payment or real shipping occurs.
+2. Each seller processes or rejects their own order lines. Rejection reasons are visible in the buyer's order details. A pending line can be cancelled by its buyer.
+3. Warehouse staff move accepted lines through `Diteruskan ke gudang`, `Disiapkan`, `Dikemas`, and `Dikirim`. Stock is deducted when an item is marked shipped.
+4. Buyers can view per-seller and per-item status, shipping details, and start a seller chat from order details.
 
-**Catatan implementasi:**
+## Runtime and data
 
-- Tidak memerlukan Node.js, npm, atau server apapun.
-- Tailwind dimuat lewat CDN. Pastikan ada koneksi internet saat membuka.
-- Setiap halaman wajib memuat `<meta name="viewport" content="width=device-width, initial-scale=1">` dan `<meta name="theme-color">`.
-- Selama pengembangan, gunakan mode responsif DevTools (iPhone SE, Pixel 7, iPhone 14 Pro Max).
-- Buka `index.html` langsung di browser atau lewat Live Server VS Code.
+- Built with HTML, CSS, and vanilla JavaScript; no npm dependencies.
+- Start the local Node.js server with `node server.js`; open `http://127.0.0.1:3000`.
+- The server reads and writes JSON files in `data/`, and serves `/api/*` endpoints.
+- Browser `localStorage` holds a client-side cache and session marker. It is not an authoritative identity store.
+- Demo password hashes are stored in `hash/pw.json` using Node.js scrypt.
+- Product images are optional local paths; missing images fall back to product placeholders.
+- Google Fonts are loaded externally. Core layout and components use `stylesheet.css`.
 
-**Struktur data di localStorage:**
+## Functional requirements
 
-| Key | Isi | Keterangan |
-|---|---|---|
-| `tokoko-users` | `User[]` | Daftar user yang terdaftar |
-| `tokoko-session` | `{ userId, role }` | Sesi login aktif |
-| `tokoko-products` | `Product[]` | Semua produk |
-| `tokoko-categories` | `Category[]` | Daftar kategori |
-| `tokoko-carts` | `CartItem[]` | Keranjang per user |
-| `tokoko-orders` | `Order[]` | Semua pesanan |
+### Authentication and accounts
 
-**Contoh seed data (`data.json`):**
+- A user can register as a buyer or seller, log in, log out, and update their password.
+- Email addresses must be unique. Passwords have a minimum length of six characters.
+- Seller profile name and city can be updated.
+- Warehouse is a seeded demo role; public registration does not offer warehouse access.
+- Role checks currently restrict the UI only. They do not authorize API requests.
 
-```json
-{
-  "users": [
-    { "id": 1, "name": "Budi", "email": "budi@mail.com", "password": "123456", "role": "seller" },
-    { "id": 2, "name": "Ani", "email": "ani@mail.com", "password": "123456", "role": "buyer" }
-  ],
-  "categories": [
-    { "id": 1, "name": "Sembako" },
-    { "id": 2, "name": "Obat & P3K" },
-    { "id": 3, "name": "Pakaian" },
-    { "id": 4, "name": "Rumah Tangga" }
-  ],
-  "products": [
-    {
-      "id": 1,
-      "sellerId": 1,
-      "name": "Beras Premium 5 kg",
-      "description": "Beras pulen kualitas premium",
-      "price": 74800,
-      "oldPrice": 89000,
-      "stock": 50,
-      "category": "Sembako",
-      "icon": "🍚",
-      "rating": 4.9,
-      "sold": 2400,
-      "tag": "Gratis ongkir",
-      "city": "Jakarta Barat",
-      "discount": "16%",
-      "createdAt": "2026-11-01T10:00:00Z"
-    }
-  ],
-  "carts": [],
-  "orders": []
-}
-```
+### Catalog and cart
 
-**Struktur folder:**
+- Catalog is accessible without login and supports search, seller selection, category filtering, and sorting.
+- Product cards show seller, product name, price, stock, and an image or placeholder.
+- A buyer can add available products to a per-user cart, adjust quantities within available stock, or remove items.
+- Cart and catalog show empty states when they contain no matching items.
 
-```text
-tokoko/
-├── index.html         # Markup utama (SPA)
-├── store.js           # Data layer: baca/tulis localStorage, load seed
-├── app.js             # Logika UI, render, event handling
-├── stylesheet.css     # Style kustom di luar Tailwind
-├── data.json          # Seed data awal
-├── PRD.md             # Dokumen kebutuhan produk
-├── README.md          # Dokumentasi proyek
-└── LICENSE            # Lisensi MIT
-```
+### Checkout and buyer orders
 
-## 9. Acceptance Criteria
+- Checkout requires a recipient name, phone number, shipping address, and a demo payment method.
+- Checkout validates current stock, records a product and price snapshot, creates an order number, and empties the buyer's cart.
+- Checkout is a simulation. It does not charge a payment method or arrange delivery.
+- Buyers can search/filter order history, open order details, view item-level status and rejection reasons, and contact sellers.
+- Buyers can cancel a seller's pending portion while that seller has not started processing it.
 
-### Autentikasi
-- [ ] User dapat mendaftar dengan data valid; akun baru tersimpan di localStorage dan dapat langsung login.
-- [ ] Pendaftaran dengan email yang sudah terdaftar ditolak dengan pesan error.
-- [ ] Setelah login, navbar menampilkan menu sesuai peran; setelah logout, menu kembali ke mode tamu.
-- [ ] Pembeli yang membuka halaman Penjual dialihkan ke halaman yang sesuai.
+### Seller orders and products
 
-### Katalog, Pencarian & Detail
-- [ ] Produk dari localStorage tampil sebagai card dengan emoji, nama, harga (format `Rp 125.000`), dan penjual.
-- [ ] Mengetik di kolom pencarian memperbarui daftar produk tanpa reload halaman.
-- [ ] Filter kategori, sorting, dan pencarian dapat dipakai bersamaan dan menghasilkan daftar yang benar.
-- [ ] Produk dengan stok 0 menampilkan `Stok Habis` dan tidak bisa ditambahkan ke keranjang.
-- [ ] Halaman detail menampilkan seluruh informasi produk dan jumlah tidak dapat melebihi stok.
+- Sellers can add, edit, and delete only their own products.
+- Sellers can inspect orders containing their products and process or reject each pending line separately.
+- Rejection requires a reason of 5–500 characters, saved with the order line and visible to the buyer.
+- Processing an accepted line advances it to the warehouse queue.
 
-### Keranjang & Checkout
-- [ ] Menambah produk ke keranjang memperbarui badge jumlah di navbar dan tersimpan di localStorage.
-- [ ] Mengubah jumlah atau menghapus item memperbarui subtotal dan total seketika.
-- [ ] Isi keranjang tetap ada setelah halaman di-refresh.
-- [ ] Checkout dengan data valid membuat pesanan baru, mengurangi stok, dan mengosongkan keranjang.
-- [ ] Checkout dengan form tidak lengkap ditolak dengan pesan validasi.
-- [ ] Halaman konfirmasi menampilkan nomor pesanan unik.
+### Warehouse inventory and fulfillment
 
-### Pesanan
-- [ ] Pesanan baru muncul di riwayat pembeli dengan status `Diproses`.
-- [ ] Pembeli dapat membatalkan pesanan `Diproses` dan stok produk kembali.
-- [ ] *(Should Have)* Penjual melihat pesanan yang berisi produk miliknya dan dapat mengubah statusnya.
+- Warehouse users can view stock levels and stock movement history.
+- Stock adjustments record product, signed quantity, type, reason, user, and timestamp.
+- Accepted order lines move through preparation, packing, and shipping independently, including when lines in the same order are at different stages.
+- Stock is deducted and a stock movement recorded at shipping; active order reservations constrain stock corrections.
 
-### Manajemen Produk (Penjual)
-- [ ] Penjual dapat menambah produk dan produk tersebut muncul di katalog.
-- [ ] Penjual dapat mengedit dan menghapus hanya produk miliknya sendiri.
-- [ ] Form menolak harga atau stok negatif dan kolom wajib yang kosong.
+### Chat
 
-### Mobile UX
-- [ ] Bottom Navigation tampil di semua halaman utama, menu aktif ter-highlight, dan badge keranjang akurat.
-- [ ] Semua tombol dan tautan dapat diketuk dengan nyaman (≥ 44×44 px) tanpa salah ketuk.
-- [ ] Tombol `Tambah ke Keranjang` dan `Checkout` selalu terlihat di bagian bawah layar.
-- [ ] Filter dan sorting terbuka sebagai bottom sheet dan dapat ditutup dengan mudah.
-- [ ] Keyboard HP yang muncul sesuai jenis input.
-- [ ] Tampilan tidak terpotong oleh notch atau safe area.
+- Buyers can initiate a conversation with a seller from a product or order.
+- Buyers and sellers can view and send messages in their conversations.
 
-### Umum
-- [ ] Tampilan tidak rusak (tidak ada scroll horizontal) pada lebar layar 360px, 390px, dan 430px.
-- [ ] Data tetap ada setelah halaman di-refresh.
-- [ ] Tidak ada error pada console browser saat alur utama dijalankan.
+## Non-functional requirements
 
-## 10. Future Improvements (Should Have & Beyond)
+- Layout must reflow without horizontal overflow on mobile, tablet, and desktop.
+- Interactive elements must be keyboard-operable, visibly focused, and have accessible names. Form fields use visible labels and clear validation feedback.
+- Data views should provide suitable loading, empty, and error states.
+- Text contrast should meet WCAG AA: 4.5:1 for normal text and 3:1 for large text.
+- Product media reserves space using intrinsic dimensions or aspect ratio; non-critical images may lazy-load.
+- No performance or reliability target is claimed without measurement.
 
-- Pesanan masuk penjual (Should Have — tahap 2).
-- Mode dark/light.
-- Tampilan tablet dan desktop yang dioptimalkan.
-- PWA (manifest.json, service worker).
-- Dibungkus menjadi aplikasi native (Android/iOS) dengan Capacitor.
-- Backend dan database sungguhan (autentikasi aman, password ter-hash, otorisasi API).
-- Upload foto produk.
-- Ulasan dan rating produk.
-- Wishlist / produk favorit.
-- Integrasi payment gateway dan ongkir real-time.
-- Chat antara pembeli dan penjual.
+## Security limitation
+
+This application is for local demonstration only. The server binds to loopback, but `/api/data` and `/api/users` write endpoints do not validate a server-managed session or authorize roles. The browser session marker is user-editable and must not be trusted by the server. Do not expose the server to a network or use real personal, account, payment, or order data. Production use requires server-managed authentication, role-scoped API operations, and server-side input validation.
+
+## Out of scope
+
+- Real payment processing, shipping integration, and refunds.
+- PWA installation/offline support.
+- Public deployment or production-grade security.
+- Persistent database, product reviews, ratings, and native mobile apps.
+
+## Acceptance checks
+
+- Buyer can place a demo order and see its details and line statuses after refresh.
+- Seller can process one pending item without changing other sellers' lines; rejecting an item requires a reason that appears to the buyer.
+- Buyer can cancel only a still-pending seller portion.
+- Warehouse can perform stock adjustments once per submission and advance mixed-stage lines independently.
+- Shipping an accepted line deducts its quantity once and records a stock movement.
+- Catalog search, filters, cart quantity controls, and navigation work at mobile and desktop widths without horizontal overflow.
+- Keyboard navigation, focus visibility, dialog dismissal, labels, and error feedback work across buyer, seller, and warehouse screens.
+- API write authorization remains a known blocker; the app is not safe to expose beyond local loopback use.

@@ -1,1 +1,42 @@
-[]
+[
+  {
+    "id": "626f781d-ce57-44b8-ac18-e1d82a7bffee",
+    "productId": "vivo-y28",
+    "productName": "vivo Y28 8/256 GB",
+    "type": "Keluar untuk pesanan",
+    "delta": -1,
+    "reason": "TK-MWR5XRW7",
+    "userId": "warehouse-demo",
+    "createdAt": "2026-11-22T01:33:57.047Z"
+  },
+  {
+    "id": "31c0b9a3-be9f-4f95-bb46-a22470a2858e",
+    "productId": "oppo-a3x",
+    "productName": "OPPO A3x 6/128 GB",
+    "type": "Keluar untuk pesanan",
+    "delta": -1,
+    "reason": "TK-MWR534IJ",
+    "userId": "warehouse-demo",
+    "createdAt": "2026-11-22T01:32:54.928Z"
+  },
+  {
+    "id": "a0ecc683-d633-48a0-84e2-d61987acfad7",
+    "productId": "vivo-y28",
+    "productName": "vivo Y28 8/256 GB",
+    "type": "Keluar untuk pesanan",
+    "delta": -1,
+    "reason": "TK-MWR534IJ",
+    "userId": "warehouse-demo",
+    "createdAt": "2026-11-22T01:32:54.928Z"
+  },
+  {
+    "id": "c5012b1a-198c-4108-85ba-7d21a7f4815f",
+    "productId": "samsung-galaxy-a16-5g",
+    "productName": "Samsung Galaxy A16 5G 8/256 GB",
+    "type": "Keluar untuk pesanan",
+    "delta": -1,
+    "reason": "TK-MWQ7R8ON",
+    "userId": "warehouse-demo",
+    "createdAt": "2026-11-22T00:37:28.726Z"
+  }
+]

@@ -480,7 +480,7 @@ textarea:focus-visible {
 
 .product-promo {
   margin-top: 5px;
-  color: #e56b12;
+  color: #8a3c00;
   font-size: 11px;
   font-weight: 800;
 }
@@ -918,7 +918,84 @@ textarea:focus-visible {
   font-size: 11px;
 }
 
+.buyer-orders-page { display: grid; gap: 16px; }
+.buyer-orders-search { display: flex; gap: 8px; }
+.buyer-orders-search label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.buyer-orders-search input { min-width: 0; flex: 1; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); padding: 12px; color: var(--ink); font: inherit; }
+.buyer-order-filters { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 2px; }
+.buyer-order-filters label { display: grid; gap: 4px; }
+.buyer-order-filters label > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.buyer-order-filters select { min-width: 150px; min-height: 44px; border: 1px solid var(--line); border-radius: 22px; background: var(--surface); color: var(--ink); padding: 0 14px; font: inherit; }
+.buyer-order-list { display: grid; gap: 14px; }
+.buyer-order-card { min-width: 0; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); padding: 14px; }
+.buyer-order-head { display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--line); padding-bottom: 12px; }
+.buyer-order-bag { color: var(--green); font-size: 22px; }
+.buyer-order-kind { display: grid; min-width: 0; flex: 1; }
+.buyer-order-kind time,.buyer-order-foot small { color: var(--muted); font-size: 13px; }
+.buyer-order-status { border: 1px solid var(--line); border-radius: 6px; color: var(--green); padding: 4px 8px; font-size: 13px; }
+.buyer-order-status[data-status="Ditolak"],.buyer-order-status[data-status="Dibatalkan"],.buyer-order-status[data-status="Perlu perhatian"] { color: var(--clay); }
+.buyer-order-more { width: 40px; height: 40px; border: 0; background: transparent; color: var(--ink); font-size: 24px; cursor: pointer; }
+.buyer-order-preview { display: flex; width: 100%; align-items: center; gap: 12px; border: 0; border-bottom: 1px solid var(--line); background: transparent; color: var(--ink); padding: 12px 0; text-align: left; cursor: pointer; }
+.buyer-order-thumb { display: grid; width: 72px; height: 72px; flex: 0 0 72px; place-items: center; overflow: hidden; border-radius: 8px; background: var(--paper); font-size: 28px; }
+.buyer-order-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.buyer-order-product { display: grid; min-width: 0; gap: 4px; }
+.buyer-order-product strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.buyer-order-product span,.buyer-order-extra { color: var(--muted); font-size: 14px; }
+.buyer-order-extra { margin: 8px 0 0; }
+.buyer-order-foot { display: flex; align-items: end; justify-content: space-between; gap: 12px; padding-top: 12px; }
+.buyer-order-foot > div { display: grid; gap: 3px; }
+.buyer-order-foot > div > strong { font-size: 18px; }
+.buyer-order-foot small { max-width: 48ch; }
+.buyer-order-cancel { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 12px; }
+.buyer-order-cancel button { min-height: 40px; }
+.buyer-detail-status,.buyer-detail-section { border-bottom: 8px solid var(--paper); padding: 18px; }
+.buyer-detail-status { display: grid; gap: 8px; }
+.buyer-detail-status > strong { color: var(--green); font-size: 20px; }
+.buyer-detail-status > span,.buyer-detail-product > div:last-child > span { color: var(--muted); font-size: 14px; }
+.buyer-detail-section h3 { margin: 0 0 14px; font-size: 18px; }
+.buyer-detail-product { display: flex; gap: 12px; border-bottom: 1px solid var(--line); padding: 10px 0; }
+.buyer-detail-product > div:last-child { display: grid; min-width: 0; align-content: start; gap: 5px; }
+.buyer-detail-section dl { display: grid; grid-template-columns: minmax(100px, .7fr) minmax(0, 1.3fr); gap: 8px 12px; margin: 0; }
+.buyer-detail-section dd { margin: 0; overflow-wrap: anywhere; }
+.buyer-order-help { display: block; width: 100%; min-height: 48px; border: 0; border-bottom: 1px solid var(--line); background: transparent; color: var(--green-deep); text-align: left; font: inherit; cursor: pointer; }
+.buyer-payment > div { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; }
+.buyer-payment-total { margin-top: 8px; border-top: 1px solid var(--line); font-size: 18px; }
+.buyer-order-card[hidden] { display: none; }
+.seller-order-detail { display: grid; gap: 12px; }
+.seller-order-detail > p { margin: 0; color: var(--muted); }
+.seller-order-line { display: grid; gap: 10px; border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
+.seller-order-line > div:first-child { display: grid; gap: 5px; min-width: 0; }
+.seller-order-line > div:first-child > span { color: var(--muted); }
+.seller-rejection-reason,.buyer-rejection-reason { margin: 4px 0 0; color: var(--clay); overflow-wrap: anywhere; }
+.seller-order-line .form-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.seller-order-line .form-actions > button { flex: 1 1 120px; }
+.seller-order-detail > strong { text-align: end; }
+
+.order-dialog { max-width: 720px; }
+.order-dialog #modalBody { padding: 0; }
+.order-dialog .buyer-orders-page { padding: 18px; }
+.order-dialog:has(.buyer-detail-status) #modalBody { padding-bottom: calc(18px + env(safe-area-inset-bottom)); }
+
 @media (max-width: 839px) {
+  .order-dialog {
+    width: 100%;
+    max-width: none;
+    max-height: 100dvh;
+    height: 100dvh;
+    border-radius: 0;
+  }
+
+  .order-dialog .dialog-header {
+    position: sticky;
+    top: 0;
+    background: var(--surface);
+  }
+
+  .order-dialog .buyer-orders-page { padding: 14px 12px calc(22px + env(safe-area-inset-bottom)); }
+  .order-dialog .buyer-order-card { padding: 12px; }
+  .order-dialog .buyer-order-foot { align-items: start; }
+  .order-dialog .buyer-order-foot > button { min-width: 100px; }
+
   .detail-dialog {
     height: var(--sheet-height, 75dvh);
     max-height: var(--sheet-height, 75dvh);

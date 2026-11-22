@@ -49,7 +49,7 @@
   function productCard(product) {
     const stock = availableStock(product);
     return `<article class="product-card">
-      <button class="product-art" type="button" data-detail="${safe(product.id)}" aria-label="Lihat detail ${safe(product.name)}">
+      <button class="product-art" type="button" data-detail="${safe(product.id)}">
         <span class="product-category">${safe(product.category)}</span>${product.image ? `<img class="product-image" src="${safe(product.image)}" alt="${safe(product.name)}" width="640" height="560" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.hidden=false">` : ""}<span class="product-emoji" aria-hidden="true" ${product.image ? "hidden" : ""}>${safe(product.icon || "□")}</span>
       </button>
       <div class="product-info">
@@ -99,6 +99,7 @@
     $("modalBody").innerHTML = content;
     $("modalBody").classList.toggle("detail-body", name === "detail");
     $("overlay").querySelector(".dialog").classList.toggle("detail-dialog", name === "detail");
+    $("overlay").querySelector(".dialog").classList.toggle("order-dialog", name === "orders" || name === "order-detail");
     $("overlay").querySelector(".dialog").classList.remove("is-expanded");
     $("overlay").querySelector(".dialog").style.removeProperty("--sheet-height");
     const header = $("overlay").querySelector(".dialog-header");
@@ -203,7 +204,7 @@
         <div class="field"><label for="checkoutAddress">Alamat pengiriman</label><textarea id="checkoutAddress" name="address" rows="3" autocomplete="street-address" required></textarea></div>
         <div class="field"><label for="paymentMethod">Metode pembayaran (simulasi)</label><select id="paymentMethod" name="payment"><option>Bayar di tempat</option><option>Transfer bank</option></select></div>
         <div class="cart-total"><span>Total</span><span>${money(cartTotal(items))}</span></div>
-        <p id="checkoutError" class="form-error" role="alert"></p><button class="primary-button full-width" type="submit">Buat pesanan demo</button>
+      <p id="checkoutError" class="form-error" role="alert"></p><button class="primary-button full-width" type="submit">Buat pesanan demo</button>
       </form>`, "checkout");
   }
 
@@ -213,15 +214,29 @@
     const user = requireRole("buyer");
     if (!user) return;
     const orders = Store.orders.filter(order => order.buyerId === user.id).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-    const content = orders.length ? orders.map(order => {
+    const cards = orders.map(order => {
+      const sellers = [...new Set(order.items.map(item => item.sellerId))];
       const total = order.items.filter(activeLine).reduce((sum, line) => sum + line.price * line.quantity, 0);
-      return `<article class="list-row order-row"><div><strong>${safe(order.orderNumber)}</strong><div>${new Date(order.createdAt).toLocaleDateString("id-ID")} · ${safe(order.status)}</div>${[...new Set(order.items.map(item => item.sellerId))].map(sellerId => `<section class="order-store-group"><strong>${safe(sellerName(sellerId))} · ${safe(statusLabel(sellerStatus(order, sellerId)))}</strong>${order.items.filter(item => item.sellerId === sellerId).map(item => `<div>${safe(item.name)} × ${item.quantity} · ${safe(item.status || sellerStatus(order, sellerId))}</div>`).join("")}${sellerStatus(order, sellerId) === "Menunggu penjual" ? `<button class="secondary-button" type="button" data-buyer-cancel-line="${safe(sellerId)}" data-order="${safe(order.id)}">Batalkan bagian toko ini</button>` : ""}</section>`).join("")}</div><strong>${money(total)}</strong></article>`;
-    }).join("") : `<div class="empty-state"><strong>Belum ada pesanan</strong>Pesanan yang kamu buat akan muncul di sini.</div>`;
-    if (document.body.dataset.page === "account") { openDialog("Pesanan saya", content, "orders"); return; }
+      const statuses = sellers.map(id => sellerStatus(order, id));
+      const overall = statuses.every(status => status === "Selesai") ? "Selesai" : statuses.every(status => ["Ditolak", "Dibatalkan"].includes(status)) ? "Dibatalkan" : statuses.some(status => status === "Dikirim") ? "Dalam pengiriman" : statuses.some(status => status === "Disiapkan" || status === "Dikemas" || status === "Diteruskan ke gudang") ? "Diproses" : statuses.some(status => status === "Ditolak" || status === "Dibatalkan") ? "Perlu perhatian" : "Menunggu penjual";
+      const lines = order.items.filter(activeLine);
+      const preview = lines[0];
+      return `<article class="buyer-order-card" data-order-card="${safe(order.id)}" data-search="${safe(`${order.orderNumber} ${order.items.map(item => item.name).join(" ")} ${sellers.map(sellerName).join(" ")}`.toLocaleLowerCase("id"))}" data-statuses="${safe(statuses.join("|"))}" data-products="${safe(order.items.map(item => item.name).join("|"))}"><header class="buyer-order-head"><span class="buyer-order-bag" aria-hidden="true">▣</span><div class="buyer-order-kind"><strong>Belanja</strong><time datetime="${safe(order.createdAt)}">${new Date(order.createdAt).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}</time></div><span class="buyer-order-status" data-status="${safe(overall)}">${safe(overall)}</span><button class="buyer-order-more" type="button" data-order-detail="${safe(order.id)}" aria-label="Detail pesanan ${safe(order.orderNumber)}">⋮</button></header><button class="buyer-order-preview" type="button" data-order-detail="${safe(order.id)}"><span class="buyer-order-thumb">${preview?.image ? `<img src="${safe(preview.image)}" alt="" width="72" height="72">` : `<span aria-hidden="true">${safe(preview?.icon || "□")}</span>`}</span><span class="buyer-order-product"><strong>${safe(preview?.name || "Produk")}</strong><span>${preview?.quantity || 0} barang</span></span></button>${lines.length > 1 ? `<p class="buyer-order-extra">+${lines.length - 1} produk lainnya</p>` : ""}<footer class="buyer-order-foot"><div><span>Total belanja</span><strong>${money(total)}</strong><small>${sellers.map(id => `${safe(sellerName(id))}: ${safe(statusLabel(sellerStatus(order, id)))}`).join(" · ")}</small></div><button class="secondary-button" type="button" data-order-detail="${safe(order.id)}">Detail pesanan</button></footer>${sellers.some(id => sellerStatus(order, id) === "Menunggu penjual") ? `<div class="buyer-order-cancel">${sellers.filter(id => sellerStatus(order, id) === "Menunggu penjual").map(id => `<button class="secondary-button" type="button" data-buyer-cancel-line="${safe(id)}" data-order="${safe(order.id)}">Batalkan ${safe(sellerName(id))}</button>`).join("")}</div>` : ""}</article>`;
+    }).join("");
+    const content = `<section class="buyer-orders-page"><form class="buyer-orders-search" id="orderSearchForm"><label for="orderSearch">Cari transaksi</label><input id="orderSearch" type="search" placeholder="Cari transaksi"><button class="secondary-button" type="submit">Cari</button></form><div class="buyer-order-filters" aria-label="Filter pesanan"><label><span>Status</span><select id="orderStatusFilter"><option value="">Semua status</option><option>Menunggu penjual</option><option>Diproses</option><option>Dalam pengiriman</option><option>Selesai</option><option>Ditolak toko</option><option>Dibatalkan</option></select></label><label><span>Produk</span><select id="orderProductFilter"><option value="">Semua produk</option>${[...new Set(orders.flatMap(order => order.items.map(item => item.name)))].map(name => `<option>${safe(name)}</option>`).join("")}</select></label></div><div class="buyer-order-list">${cards || `<div class="empty-state"><strong>Belum ada pesanan</strong>Pesanan yang kamu buat akan muncul di sini.</div>`}</div><div class="empty-state buyer-order-filter-empty" hidden>Tidak ada pesanan yang cocok dengan pencarian atau filter.</div></section>`;
     openDialog("Pesanan saya", content, "orders");
   }
 
-  const statusLabel = status => ({ "Diproses": "Menunggu penjual", "Menunggu penjual": "Menunggu penjual", "Diteruskan ke gudang": "Menunggu gudang", "Disiapkan": "Sedang disiapkan", "Dikemas": "Siap dikirim", "Dikirim": "Dalam pengiriman", "Selesai": "Selesai", "Ditolak": "Ditolak toko", "Dibatalkan": "Dibatalkan" }[status] || status);
+  function showOrderDetail(order) {
+    const lines = order.items;
+    const sellers = [...new Set(lines.map(line => line.sellerId))];
+    const total = lines.filter(activeLine).reduce((sum, line) => sum + line.price * line.quantity, 0);
+    const shipment = order.shipping || {};
+    const items = lines.map(line => `<article class="buyer-detail-product"><div class="buyer-order-thumb">${line.image ? `<img src="${safe(line.image)}" alt="" width="72" height="72">` : `<span aria-hidden="true">${safe(line.icon || "□")}</span>`}</div><div><strong>${safe(line.name)}</strong><span>${safe(sellerName(line.sellerId))} · ${safe(statusLabel(line.status || sellerStatus(order, line.sellerId)))}</span><span>${line.quantity} × ${money(line.price)}</span>${line.rejectionReason ? `<p class="buyer-rejection-reason">Alasan toko: ${safe(line.rejectionReason)}</p>` : ""}</div></article>`).join("");
+    openDialog("Detail pesanan", `<section class="buyer-detail-status"><strong>${safe(statusLabel(order.status))}</strong><span>Tanggal pembelian · ${new Date(order.createdAt).toLocaleString("id-ID")}</span><span>Nomor pesanan · ${safe(order.orderNumber)}</span></section><section class="buyer-detail-section"><h3>Detail produk</h3>${items}</section><section class="buyer-detail-section"><h3>Info pengiriman</h3><dl><dt>Penerima</dt><dd>${safe(shipment.name || "Belum diisi")}</dd><dt>Nomor telepon</dt><dd>${safe(shipment.phone || "Belum diisi")}</dd><dt>Alamat</dt><dd>${safe(shipment.address || "Belum diisi")}</dd></dl></section><section class="buyer-detail-section"><h3>Bantuan</h3>${sellers.map(id => `<button class="buyer-order-help" type="button" data-order-chat="${safe(id)}" data-order="${safe(order.id)}">Chat ${safe(sellerName(id))}</button>`).join("")}</section><section class="buyer-detail-section buyer-payment"><h3>Rincian pembayaran</h3><div><span>Metode pembayaran</span><strong>${safe(order.paymentMethod || "Belum diatur")}</strong></div><div><span>Subtotal produk</span><strong>${money(lines.filter(activeLine).reduce((sum, line) => sum + line.price * line.quantity, 0))}</strong></div><div class="buyer-payment-total"><span>Total belanja</span><strong>${money(total)}</strong></div></section>`, "order-detail");
+  }
+
+  const statusLabel = status => ({ "Diproses": "Menunggu penjual", "Menunggu penjual": "Menunggu penjual", "Diteruskan ke gudang": "Diproses", "Disiapkan": "Sedang disiapkan", "Dikemas": "Siap dikirim", "Dikirim": "Dalam pengiriman", "Selesai": "Selesai", "Ditolak": "Ditolak toko", "Dibatalkan": "Dibatalkan" }[status] || status);
   function showSalesOrders() {
     if (!requireRole("seller")) return;
     state.sellerTab = "orders";
@@ -235,8 +250,8 @@
     const orderRows = orders.map(order => {
       const lines = order.items.filter(line => ["Diteruskan ke gudang", "Disiapkan", "Dikemas"].includes(line.status));
       const statuses = [...new Set(lines.map(line => line.status))];
-      const action = statuses.length === 1 ? ({ "Diteruskan ke gudang": "pick", "Disiapkan": "pack", "Dikemas": "ship" })[statuses[0]] : "";
-      return `<article class="list-row order-row"><div><strong>${safe(order.orderNumber)}</strong><div>${safe(order.shipping?.name || "—")} · ${lines.map(item => `${safe(item.name)} × ${item.quantity}`).join(", ")}</div><div>${safe(order.shipping?.address || "Alamat tidak tersedia")}</div><div>Status: ${statuses.map(statusLabel).map(safe).join(", ")}</div></div><div class="form-actions">${action ? `<button class="${action === "ship" ? "primary" : "secondary"}-button" type="button" data-fulfill="${action}" data-order="${safe(order.id)}">${{ pick: "Mulai siapkan", pack: "Tandai dikemas", ship: "Tandai dikirim" }[action]}</button>` : ""}</div></article>`;
+      const actions = [...new Set(lines.map(line => line.status || sellerStatus(order, line.sellerId)))].map(status => ({ "Diteruskan ke gudang": ["pick", "Mulai siapkan"], "Disiapkan": ["pack", "Tandai dikemas"], "Dikemas": ["ship", "Tandai dikirim"] })[status]).filter(Boolean);
+      return `<article class="list-row order-row"><div><strong>${safe(order.orderNumber)}</strong><div>${safe(order.shipping?.name || "—")} · ${lines.map(item => `${safe(item.name)} × ${item.quantity}`).join(", ")}</div><div>${safe(order.shipping?.address || "Alamat tidak tersedia")}</div><div>Status: ${statuses.map(statusLabel).map(safe).join(", ")}</div></div><div class="form-actions">${actions.map(([action, label]) => `<button class="${action === "ship" ? "primary" : "secondary"}-button" type="button" data-fulfill="${action}" data-order="${safe(order.id)}">${label}</button>`).join("")}</div></article>`;
     }).join("");
     const movements = Store.stockMovements || [];
     const movementRows = movements.slice(0, 12).map(movement => `<div class="list-row"><div><strong>${safe(movement.productName)}</strong><div>${safe(movement.type)} · ${safe(movement.reason)}</div></div><span>${movement.delta > 0 ? "+" : ""}${movement.delta} · ${new Date(movement.createdAt).toLocaleDateString("id-ID")}</span></div>`).join("");
@@ -336,10 +351,10 @@
       const orders = Store.orders.filter(order => order.items.some(item => item.sellerId === seller.id)).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
       const rows = orders.map(order => {
         const items = order.items.filter(item => item.sellerId === seller.id);
-        const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+      const total = items.filter(activeLine).reduce((sum, item) => sum + item.price * item.quantity, 0);
         const status = sellerStatus(order, seller.id);
-        const actionable = status === "Menunggu penjual";
-        return `<article class="list-row order-row"><div><strong>${safe(order.orderNumber)}</strong><div>${new Date(order.createdAt).toLocaleDateString("id-ID")} · ${safe(statusLabel(status))}</div><div>${items.map(item => `${safe(item.name)} × ${item.quantity}`).join(", ")}</div><div>Pembeli: ${safe(order.shipping?.name || "—")} · ${money(total)}</div></div>${actionable ? `<div class="form-actions"><button class="danger-button" type="button" data-seller-decision="reject" data-order="${safe(order.id)}">Tolak</button><button class="primary-button" type="button" data-seller-decision="process" data-order="${safe(order.id)}">Proses ke gudang</button></div>` : ""}</article>`;
+        const actionable = items.some(line => (line.status || status) === "Menunggu penjual");
+        return `<article class="list-row order-row"><div><strong>${safe(order.orderNumber)}</strong><div>${new Date(order.createdAt).toLocaleDateString("id-ID")} · ${safe(statusLabel(status))}</div><div>${items.map(item => `${safe(item.name)} × ${item.quantity}${item.rejectionReason ? ` · Ditolak: ${safe(item.rejectionReason)}` : ""}`).join(", ")}</div><div>Pembeli: ${safe(order.shipping?.name || "—")} · ${money(total)}</div></div><div class="form-actions"><button class="secondary-button" type="button" data-seller-order-detail="${safe(order.id)}">Detail pesanan</button>${actionable ? `<button class="primary-button" type="button" data-seller-order-detail="${safe(order.id)}">Tinjau barang</button>` : ""}</div></article>`;
       }).join("");
       const content = `${tabs}<h1 class="standalone-title">Pesanan toko</h1>${rows || `<div class="empty-state"><strong>Belum ada pesanan</strong>Pesanan produk tokomu akan muncul di sini.</div>`}`;
       if (document.body.dataset.page === "seller") { $("sellerContent").innerHTML = content; return; }
@@ -361,6 +376,18 @@
     const content = `${tabs}<div class="seller-products-heading"><h1 class="standalone-title">Produk toko <span>(${products.length})</span></h1><button class="primary-button" type="button" data-action="new-product">Tambah produk</button></div>${rows || `<div class="empty-state"><strong>Belum ada produk</strong>Tambahkan produk pertama tokomu.</div>`}`;
     if (document.body.dataset.page === "seller") { $("sellerContent").innerHTML = content; return; }
     openDialog("Produk saya", content, "seller-products");
+  }
+
+  function showSellerOrderDetail(orderId) {
+    const seller = requireRole("seller");
+    const order = Store.orders.find(item => item.id === orderId && item.items.some(line => line.sellerId === seller?.id));
+    if (!order) return toast("Pesanan toko tidak ditemukan.");
+    const items = order.items.map((line, index) => ({ line, index })).filter(({ line }) => line.sellerId === seller.id);
+    openDialog(`Pesanan ${order.orderNumber}`, `<div class="seller-order-detail"><p>Pembeli: ${safe(order.shipping?.name || "—")} · ${safe(new Date(order.createdAt).toLocaleString("id-ID"))}</p>${items.map(({ line, index }) => {
+      const status = line.status || sellerStatus(order, seller.id);
+      const pending = status === "Menunggu penjual";
+      return `<article class="seller-order-line"><div><strong>${safe(line.name)} × ${line.quantity}</strong><span>${money(line.price * line.quantity)}</span><span>Status: ${safe(statusLabel(status))}</span>${line.rejectionReason ? `<p class="seller-rejection-reason">Alasan ditolak: ${safe(line.rejectionReason)}</p>` : ""}</div>${pending ? `<div class="form-actions"><button class="danger-button" type="button" data-seller-line-decision="reject" data-line-index="${index}" data-order="${safe(order.id)}">Tolak barang</button><button class="primary-button" type="button" data-seller-line-decision="process" data-line-index="${index}" data-order="${safe(order.id)}">Proses</button></div>` : ""}</article>`;
+    }).join("")}<strong>Total barang toko: ${money(items.reduce((sum, { line }) => sum + (activeLine(line) ? line.price * line.quantity : 0), 0))}</strong></div>`, "seller-order-detail");
   }
 
   function showProductForm(productId = "") {
@@ -411,9 +438,31 @@
     if (form.id === "searchForm") {
       event.preventDefault(); state.query = $("searchInput").value.trim().toLocaleLowerCase("id"); render(); $("products").scrollIntoView({ behavior: "smooth", block: "start" }); return;
     }
+    if (form.id === "orderSearchForm") { event.preventDefault(); filterBuyerOrders(); return; }
     event.preventDefault();
     if (!validate(form)) return;
     const data = new FormData(form);
+    if (form.id === "sellerRejectForm") {
+      const seller = currentUser();
+      const order = Store.orders.find(item => item.id === form.dataset.order && item.items.some(line => line.sellerId === seller?.id));
+      const index = Number(form.dataset.lineIndex);
+      const line = order?.items[index];
+      const reason = String(data.get("reason") || "").trim();
+      const error = $("rejectionError");
+      if (seller?.role !== "seller" || !line || line.sellerId !== seller.id || (line.status || sellerStatus(order, seller.id)) !== "Menunggu penjual") { error.textContent = "Status barang sudah berubah."; return; }
+      if (reason.length < 5 || reason.length > 500) { error.textContent = "Alasan harus berisi 5 sampai 500 karakter."; return; }
+      const before = Store.orders;
+      Store.orders = Store.orders.map(item => {
+        if (item.id !== order.id) return item;
+        const updatedLines = item.items.map((entry, i) => i === index ? { ...entry, status: "Ditolak", rejectionReason: reason } : entry);
+        const sellerLines = updatedLines.filter(entry => entry.sellerId === seller.id);
+        const sellerStatuses = { ...(item.sellerStatuses || {}), [seller.id]: sellerLines.every(entry => ["Ditolak", "Dibatalkan"].includes(entry.status)) ? "Ditolak" : sellerLines.every(entry => entry.status !== "Menunggu penjual") ? "Diteruskan ke gudang" : "Menunggu penjual" };
+        const total = updatedLines.filter(activeLine).reduce((sum, entry) => sum + entry.price * entry.quantity, 0);
+        return { ...item, items: updatedLines, sellerStatuses, total, history: [...(item.history || []), { status: "Ditolak", reason, at: new Date().toISOString(), userId: seller.id, productId: line.productId }] };
+      });
+      try { await Store.save(); } catch (cause) { Store.orders = before; error.textContent = `Penolakan gagal disimpan: ${cause.message}`; return; }
+      showSellerOrderDetail(order.id); toast("Barang ditolak. Reservasi stok dilepas."); return;
+    }
     if (form.id === "authForm") {
       const email = String(data.get("email")).trim().toLowerCase();
       const password = String(data.get("password"));
@@ -474,7 +523,6 @@
       const product = Store.products.find(item => item.id === data.get("productId"));
       const delta = Number(data.get("delta")); const reason = String(data.get("reason")).trim();
       if (!product || !Number.isSafeInteger(delta) || !delta || product.stock + delta < reservedStock(product.id) || reason.length < 3) { $("stockError").textContent = "Produk, jumlah, atau alasan tidak valid. Stok tidak boleh di bawah jumlah pesanan aktif."; return; }
-      Store.products = Store.products.map(item => item.id === product.id ? { ...item, stock: item.stock + delta } : item);
       const type = String(data.get("type") || (delta > 0 ? "Barang masuk" : "Koreksi stok"));
       const previousProducts = Store.products; const previousMovements = Store.stockMovements;
       Store.products = Store.products.map(item => item.id === product.id ? { ...item, stock: item.stock + delta } : item);
@@ -505,6 +553,17 @@
       catch (error) { $("productError").textContent = error.message; return; }
       closeDialog(); if (!document.body.dataset.page) render(); showSellerProducts(); toast(current ? "Produk diperbarui." : "Produk ditambahkan.");
     }
+  }
+
+  function filterBuyerOrders() {
+    const query = $("orderSearch")?.value.trim().toLocaleLowerCase("id") || "";
+    const status = $("orderStatusFilter")?.value || "";
+    const product = $("orderProductFilter")?.value || "";
+    document.querySelectorAll("[data-order-card]").forEach(card => {
+      card.hidden = !(card.dataset.search.includes(query) && (!status || card.dataset.statuses.split("|").some(value => statusLabel(value) === status || value === status)) && (!product || card.dataset.products.split("|").includes(product)));
+    });
+    const empty = document.querySelector(".buyer-order-filter-empty");
+    if (empty) empty.hidden = [...document.querySelectorAll("[data-order-card]")].some(card => !card.hidden);
   }
 
   function bumpBadge() {
@@ -553,10 +612,11 @@
   document.addEventListener("submit", handleSubmit);
   document.addEventListener("change", event => {
     if (event.target.id === "sortSelect" && !document.body.dataset.page) { state.sort = event.target.value; renderProducts(); }
+    if (["orderStatusFilter", "orderProductFilter"].includes(event.target.id)) filterBuyerOrders();
   });
   window.addEventListener("hashchange", updateNav);
   document.addEventListener("click", async event => {
-    const target = event.target.closest("[data-store], [data-seller-tab], [data-seller-sales-view], [data-account-destination], [data-detail-back], [data-detail-search], [data-detail-share], [data-detail-cart], [data-add], [data-detail], [data-buy], [data-follow], [data-action], [data-auth-mode], [data-quantity], [data-cancel-order], [data-buyer-cancel-line], [data-seller-decision], [data-edit-product], [data-delete-product], [data-handoff], [data-fulfill], [data-order], [data-chat], [data-start-chat]");
+    const target = event.target.closest("[data-store], [data-seller-tab], [data-seller-sales-view], [data-account-destination], [data-detail-back], [data-detail-search], [data-detail-share], [data-detail-cart], [data-order-chat], [data-order-detail], [data-seller-order-detail], [data-seller-line-decision], [data-add], [data-detail], [data-buy], [data-follow], [data-action], [data-auth-mode], [data-quantity], [data-cancel-order], [data-buyer-cancel-line], [data-seller-decision], [data-edit-product], [data-delete-product], [data-handoff], [data-fulfill], [data-order], [data-chat], [data-start-chat]");
     if (!target) return;
     if (target.hasAttribute("data-detail-back")) { closeDialog(); return; }
     if (target.hasAttribute("data-detail-search")) { closeDialog(); $("searchInput")?.focus(); return; }
@@ -567,6 +627,26 @@
       return;
     }
     if (target.hasAttribute("data-detail-cart")) { showCart(); return; }
+    if (target.hasAttribute("data-order-chat")) {
+      const order = Store.orders.find(item => item.id === target.dataset.order && item.buyerId === currentUser()?.id);
+      const sellerId = target.dataset.orderChat;
+      if (!order || !order.items.some(line => line.sellerId === sellerId)) return;
+      const chat = Store.chats.find(item => item.buyerId === order.buyerId && item.sellerId === sellerId);
+      if (chat) { showChat(chat.id); return; }
+      const buyer = currentUser();
+      const newChat = { id: crypto.randomUUID(), buyerId: buyer.id, buyerName: buyer.name, sellerId, productId: order.items.find(line => line.sellerId === sellerId)?.productId, messages: [], unread: false };
+      Store.chats = [newChat, ...Store.chats];
+      try { await Store.save(); } catch (error) { Store.chats = Store.chats.filter(item => item.id !== newChat.id); return toast(error.message); }
+      openDialog(`Chat · ${sellerName(sellerId)}`, `<form id="buyerChatForm" data-chat-id="${safe(newChat.id)}"><div class="field"><label for="buyerMessage">Pesan</label><textarea id="buyerMessage" name="message" rows="3" required maxlength="1000"></textarea></div><button class="primary-button full-width" type="submit">Kirim pesan</button></form>`, "chat");
+      return;
+    }
+    if (target.hasAttribute("data-order-detail")) {
+      const buyer = currentUser();
+      const order = Store.orders.find(item => item.id === target.dataset.orderDetail && item.buyerId === buyer?.id);
+      if (order) showOrderDetail(order);
+      return;
+    }
+    if (target.hasAttribute("data-seller-order-detail")) { showSellerOrderDetail(target.dataset.sellerOrderDetail); return; }
     if (target.dataset.sellerSalesView) { state.sellerSalesView = target.dataset.sellerSalesView; showSellerProducts(); return; }
     if (target.dataset.sellerTab) { state.sellerTab = target.dataset.sellerTab; history.replaceState(null, "", `seller.html?tab=${state.sellerTab}`); showSellerProducts(); return; }
     if (target.dataset.accountDestination) { location.href = `seller.html?tab=${encodeURIComponent(target.dataset.accountDestination)}`; return; }
@@ -581,6 +661,33 @@
       Store.orders = Store.orders.map(item => item.id !== order.id ? item : { ...item, items: item.items.map(line => line.sellerId === seller.id ? { ...line, status: next } : line), sellerStatuses: { ...(item.sellerStatuses || {}), [seller.id]: next }, status: "Dalam proses" });
       try { await Store.save(); } catch (error) { Store.orders = before; return toast(`Pesanan gagal disimpan: ${error.message}`); }
       showSellerProducts(); return;
+    }
+    if (target.dataset.sellerLineDecision) {
+      const seller = currentUser();
+      const order = Store.orders.find(item => item.id === target.dataset.order && item.items.some(line => line.sellerId === seller?.id));
+      const index = Number(target.dataset.lineIndex);
+      const line = order?.items[index];
+      if (seller?.role !== "seller" || !line || line.sellerId !== seller.id || (line.status || sellerStatus(order, seller.id)) !== "Menunggu penjual") return toast("Status barang sudah berubah.");
+      const rejected = target.dataset.sellerLineDecision === "reject";
+      if (rejected) {
+        openDialog(`Tolak ${line.name}`, `<form id="sellerRejectForm" data-order="${safe(order.id)}" data-line-index="${index}"><div class="field"><label for="rejectionReason">Alasan penolakan</label><textarea id="rejectionReason" name="reason" required minlength="5" maxlength="500" aria-describedby="rejectionError"></textarea><p id="rejectionError" class="form-error" role="alert"></p></div><div class="form-actions"><button class="danger-button" type="submit">Tolak barang</button><button class="secondary-button" type="button" data-action="close">Batal</button></div></form>`, "seller-reject");
+        return;
+      }
+      const reason = "";
+      const nextStatus = rejected ? "Ditolak" : "Diteruskan ke gudang";
+      const before = Store.orders;
+      Store.orders = Store.orders.map(item => {
+        if (item.id !== order.id) return item;
+        const updatedLines = item.items.map((entry, i) => i === index ? { ...entry, status: nextStatus, ...(rejected ? { rejectionReason: reason } : {}) } : entry);
+        const sellerLines = updatedLines.filter(entry => entry.sellerId === seller.id);
+        const sellerStatuses = { ...(item.sellerStatuses || {}), [seller.id]: sellerLines.every(entry => entry.status === "Ditolak" || entry.status === "Dibatalkan") ? "Ditolak" : sellerLines.every(entry => entry.status !== "Menunggu penjual") ? "Diteruskan ke gudang" : "Menunggu penjual" };
+        const activeTotal = updatedLines.filter(activeLine).reduce((sum, entry) => sum + entry.price * entry.quantity, 0);
+        return { ...item, items: updatedLines, sellerStatuses, total: activeTotal, status: "Dalam proses", history: [...(item.history || []), { status: nextStatus, reason, at: new Date().toISOString(), userId: seller.id, productId: line.productId }] };
+      });
+      try { await Store.save(); } catch (error) { Store.orders = before; return toast(`Keputusan gagal disimpan: ${error.message}`); }
+      showSellerOrderDetail(order.id);
+      toast(rejected ? "Barang ditolak. Reservasi stok dilepas." : "Barang diteruskan ke gudang.");
+      return;
     }
     if (target.dataset.buyerCancelLine) {
       const buyer = currentUser(); const order = Store.orders.find(item => item.id === target.dataset.order && item.buyerId === buyer?.id);

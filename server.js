@@ -134,12 +134,7 @@ http.createServer(async (req, res) => {
       return res.end(JSON.stringify({ ok: true }));
     }
     if (req.url === "/api/data" && req.method === "PUT") {
-      let body = "";
-      for await (const chunk of req) {
-        body += chunk;
-        if (body.length > 1_000_000) throw Object.assign(new Error("Data terlalu besar."), { status: 413 });
-      }
-      const data = JSON.parse(body);
+      const data = await parseBody(req);
       if (!data || !Array.isArray(data.products) || !Array.isArray(data.categories) || !Array.isArray(data.carts) || !Array.isArray(data.orders) || !Array.isArray(data.chats) || !Array.isArray(data.stockMovements)) {
         throw Object.assign(new Error("Format data tidak valid."), { status: 400 });
       }
@@ -148,9 +143,12 @@ http.createServer(async (req, res) => {
       return res.end(JSON.stringify({ ok: true }));
     }
 
-    const pathname = decodeURIComponent(new URL(req.url, "http://localhost").pathname);
-    if (["/hash", "/users.json", "/data.json"].includes(pathname) || pathname.startsWith("/hash/")) throw Object.assign(new Error("Tidak ditemukan."), { status: 404 });
-    const file = path.resolve(root, `.${pathname === "/" ? "/index.html" : pathname}`);
+    const pathname = new URL(req.url, "http://localhost").pathname;
+    let decodedPathname;
+    try { decodedPathname = decodeURIComponent(pathname); }
+    catch { throw Object.assign(new Error("Tidak ditemukan."), { status: 404 }); }
+    if (["/hash", "/users.json", "/data.json"].includes(decodedPathname) || decodedPathname.startsWith("/hash/")) throw Object.assign(new Error("Tidak ditemukan."), { status: 404 });
+    const file = path.resolve(root, `.${decodedPathname === "/" ? "/index.html" : decodedPathname}`);
     if (!file.startsWith(`${root}${path.sep}`)) throw Object.assign(new Error("Tidak ditemukan."), { status: 404 });
     const content = await fs.readFile(file);
     res.writeHead(200, { "Content-Type": `${types[path.extname(file)] || "application/octet-stream"}; charset=utf-8` });
