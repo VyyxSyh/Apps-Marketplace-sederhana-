@@ -30,6 +30,9 @@ assert.match(app, /data-cart-select/);
 assert.match(app, /data-cart-store/);
 assert.match(app, /showCheckout\("", state\.selectedCartIds\)/);
 assert.match(app, /!items\.some\(ordered => ordered\.productId === item\.productId\)/);
+assert.match(app, /if \(!page && currentUser\(\)\?\.role === "gudang"\) \{ location\.replace\("warehouse\.html"\); return; \}/);
+assert.match(app, /currentUser\(\)\?\.role === "gudang" && document\.body\.dataset\.page !== "warehouse"/);
+assert.match(app, /\[data-market-nav\].*hidden = warehouse/);
 
 const actions = statuses => [...new Set(statuses)].map(status => ({
   "Diteruskan ke gudang": ["pick", "Mulai siapkan"],

@@ -33,10 +33,13 @@
 
   function setNav() {
     const user = currentUser();
+    const warehouse = user?.role === "gudang";
     const ordersPage = document.body.dataset.page === "account" && $("accountContent")?.classList.contains("orders-page");
     const pageContext = document.querySelector(".page-context");
     if (pageContext && document.body.dataset.page === "account") pageContext.textContent = ordersPage ? "Pesanan" : "Akun";
     document.querySelectorAll("[data-seller-nav]").forEach(el => { el.hidden = user?.role !== "seller"; });
+    document.querySelectorAll("[data-market-nav]").forEach(el => { el.hidden = warehouse; });
+    document.querySelectorAll("[data-warehouse-nav]").forEach(el => { el.hidden = !warehouse; });
     document.querySelectorAll("[data-buyer-nav]").forEach(el => { el.hidden = user?.role === "seller" || user?.role === "gudang"; });
     document.querySelectorAll("[data-account-nav]").forEach(el => { const active = document.body.dataset.page === "account" && !ordersPage; el.hidden = false; el.classList.toggle("is-active", active); if (active) el.setAttribute("aria-current", "page"); else el.removeAttribute("aria-current"); });
     document.querySelectorAll("[data-buyer-nav]").forEach(el => { el.classList.toggle("is-active", ordersPage); if (ordersPage) el.setAttribute("aria-current", "page"); else el.removeAttribute("aria-current"); });
@@ -617,6 +620,7 @@
       state.authNext = "";
       closeDialog(); if (!document.body.dataset.page) render(); toast("Berhasil masuk.");
       if (currentUser()?.role === "seller" && document.body.dataset.page !== "seller") { location.href = "seller.html"; return; }
+      if (currentUser()?.role === "gudang" && document.body.dataset.page !== "warehouse") { location.href = "warehouse.html"; return; }
       if (document.body.dataset.page === "account") showAccount();
       else if (document.body.dataset.page === "seller") showSellerProducts();
       if (next === "checkout") showCheckout();
@@ -1073,6 +1077,7 @@
     try {
       await Store.init();
       setNav();
+      if (!page && currentUser()?.role === "gudang") { location.replace("warehouse.html"); return; }
       if (page === "account" && currentUser()?.role === "gudang") { location.replace("warehouse.html"); return; }
       if (page === "account" && new URLSearchParams(location.search).get("view") === "orders") showOrders();
       else if (page === "account") showAccount();
