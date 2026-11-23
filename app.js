@@ -156,8 +156,8 @@
         ${register ? `<div class="field"><label for="authRole">Daftar sebagai</label><select id="authRole" name="role"><option value="buyer">Pembeli</option><option value="seller">Penjual</option></select></div>` : ""}
         <p id="authError" class="form-error" role="alert"></p><button class="primary-button full-width" type="submit">${register ? "Buat akun" : "Masuk"}</button>
       </form>
-      <p class="auth-switch">${register ? "Sudah punya akun?" : "Belum punya akun?"} <button class="text-link" type="button" data-auth-mode="${register ? "login" : "register"}" data-next="${safe(next)}">${register ? "Masuk" : "Daftar"}</button></p>
-        <details class="demo-accounts"><summary>Akun contoh</summary>${Store.users.filter(user => user.demo).map(user => `<p>${safe(user.name)}: ${safe(user.email)} / ${safe(user.password || "(tersimpan sebagai hash)")}</p>`).join("")}</details>`, "auth");
+      <p class="auth-switch">${register ? "Sudah punya akun?" : "Belum punya akun?"} <a class="text-link" href="#auth" data-auth-mode="${register ? "login" : "register"}" data-next="${safe(next)}">${register ? "Masuk" : "Daftar"}</a></p>
+      `, "auth");
   }
 
   function cartTotal(items) { return items.reduce((sum, item) => sum + Number(item.price) * item.quantity, 0); }
@@ -891,7 +891,7 @@
       target.textContent = following ? "Mengikuti" : "Ikuti";
       return;
     }
-    if (target.dataset.authMode) { showAuth(target.dataset.authMode, target.dataset.next || ""); return; }
+    if (target.dataset.authMode) { event.preventDefault(); showAuth(target.dataset.authMode, target.dataset.next || ""); return; }
     if (target.dataset.quantity) {
       const user = currentUser(); const delta = Number(target.dataset.delta); const product = Store.products.find(item => item.id === target.dataset.quantity);
       Store.carts = Store.carts.flatMap(item => {

@@ -57,6 +57,11 @@ select:disabled {
   cursor: not-allowed;
 }
 
+.auth-switch { margin-top: 18px; text-align: center; }
+.text-link { color: #1553a5; text-decoration: underline; text-underline-offset: 3px; }
+.text-link:hover { color: #103b77; }
+.text-link:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+
 button:focus-visible,
 a:focus-visible,
 input:focus-visible,
