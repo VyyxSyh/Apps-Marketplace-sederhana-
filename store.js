@@ -10,6 +10,7 @@
     session: "tokoko-session"
   };
   let apiAvailable = false;
+  let apiRevision = "";
   const read = (key, fallback) => {
     try { return JSON.parse(localStorage.getItem(key)) ?? fallback; }
     catch { return fallback; }
@@ -79,6 +80,7 @@
       const response = await fetch("/api/data");
       if (response.ok) {
         let data = await response.json();
+        apiRevision = data.revision || "";
         const usersResponse = await fetch("/api/users");
         if (!usersResponse.ok) throw new Error("Akun gagal dimuat.");
         const userData = await usersResponse.json();
@@ -168,17 +170,27 @@
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Kata sandi gagal diubah.");
     },
+    async updateBuyerProfile(userId, name, email) {
+      if (!apiAvailable) throw new Error("Edit profil hanya tersedia saat memakai server Node.js.");
+      const response = await fetch("/api/profile", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ userId, name, email }) });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Profil gagal diperbarui.");
+      this.users = this.users.map(user => user.id === userId ? result.user : user);
+      return result.user;
+    },
     async save() {
       const data = { users: this.users, products: this.products, categories: this.categories, carts: this.carts, orders: this.orders, chats: this.chats, stockMovements: this.stockMovements };
       if (apiAvailable) {
-        const usersResponse = await fetch("/api/users", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(groupUsers(data.users)) });
-        if (!usersResponse.ok) throw new Error("Penyimpanan akun gagal.");
         const dataResponse = await fetch("/api/data", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ products: data.products, categories: data.categories, carts: data.carts, orders: data.orders, chats: data.chats, stockMovements: data.stockMovements })
+          body: JSON.stringify({ products: data.products, categories: data.categories, carts: data.carts, orders: data.orders, chats: data.chats, stockMovements: data.stockMovements, revision: apiRevision })
         });
-        if (!dataResponse.ok) throw new Error("Penyimpanan data gagal.");
+        const dataResult = await dataResponse.json();
+        if (!dataResponse.ok) throw new Error(dataResult.error || "Penyimpanan data gagal.");
+        apiRevision = dataResult.revision;
+        const usersResponse = await fetch("/api/users", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(groupUsers(data.users)) });
+        if (!usersResponse.ok) throw new Error("Penyimpanan akun gagal.");
       }
       Object.entries(data).forEach(([name, value]) => write(keys[name], value));
     },

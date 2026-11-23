@@ -38,6 +38,7 @@ The interface is mobile-first, with tablet and desktop layouts supported. A PWA 
 - A user can register as a buyer or seller, log in, log out, and update their password.
 - Email addresses must be unique. Passwords have a minimum length of six characters.
 - Seller profile name and city can be updated.
+- Buyer name and email can be updated; email is normalized and must be unique across roles.
 - Each seeded seller has one seeded warehouse account, linked by `sellerId`; public registration does not offer warehouse access.
 - Demo warehouse logins use `gudang.<seller>@tokoko.test`, for example `gudang.agres@tokoko.test`; seeded demo password: `tokoko123`.
 - Role checks currently restrict the UI only. They do not authorize API requests.
@@ -102,6 +103,7 @@ This application is for local demonstration only. The server binds to loopback, 
 - Seller can process one pending item without changing other sellers' lines; rejecting an item requires a reason that appears to the buyer.
 - Buyer can cancel only a still-pending seller portion.
 - Buyer can submit or edit a 1–5 star rating and text review for each completed product line; reviews appear on that product's detail.
+- Buyer can update their name and email; duplicate or invalid email changes are rejected.
 - Each seller-linked warehouse can perform stock adjustments only for its seller's products, advance its order lines independently, and confirm delivery after dispatch.
 - Shipping an accepted line deducts its quantity once and records a stock movement.
 - Catalog search, filters, cart quantity controls, and navigation work at mobile and desktop widths without horizontal overflow.

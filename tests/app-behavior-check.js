@@ -15,6 +15,16 @@ assert.match(css, /\.product-promo[\s\S]*?color: #8a3c00/);
 assert.match(app, /<button class="product-art" type="button" data-detail="\$\{safe\(product\.id\)\}">/);
 assert.match(server, /const data = await parseBody\(req\)/);
 assert.match(server, /decodedPathname\.startsWith\("\/hash\/"\)/);
+assert.match(server, /data\.revision !== revision/);
+assert.match(server, /req\.url === "\/api\/profile" && req\.method === "PUT"/);
+assert.match(server, /new Set\(submittedEmails\)\.size !== submittedEmails\.length/);
+assert.match(server, /result\.conflict \? 409 : 200/);
+assert.match(server, /dataWriteQueue = write\.catch\(\(\) => \{\}\)/);
+assert.match(store, /revision: apiRevision/);
+assert.match(store, /apiRevision = dataResult\.revision/);
+assert.match(store, /async updateBuyerProfile\(userId, name, email\)/);
+assert.match(app, /id="buyerProfileForm"/);
+assert.match(app, /case "edit-buyer-profile": showBuyerProfileForm\(\)/);
 
 const actions = statuses => [...new Set(statuses)].map(status => ({
   "Diteruskan ke gudang": ["pick", "Mulai siapkan"],

@@ -406,8 +406,20 @@
     const buyerChats = user?.role === "buyer" ? Store.chats.filter(chat => chat.buyerId === user.id) : [];
     const unreadChats = buyerChats.filter(chat => chat.unread).length;
     const content = user?.role === "buyer" ? `<section class="account-profile"><span class="account-avatar" aria-hidden="true">${safe(user.name.trim().slice(0, 1).toUpperCase())}</span><div class="account-identity"><h2>${safe(user.name)}</h2><p>${safe(user.email)}</p></div></section><section class="account-transactions" aria-labelledby="accountTransactionsTitle"><div class="account-section-heading"><h2 id="accountTransactionsTitle">Transaksi</h2><button type="button" data-action="orders">Semua pesanan</button></div><button class="account-action-row" type="button" data-action="orders"><span class="account-action-icon" aria-hidden="true">▤</span><span><strong>Pesanan saya</strong><small>Lihat status, barang, dan rincian transaksi</small></span><span aria-hidden="true">›</span></button></section><section class="account-menu" aria-labelledby="accountMenuTitle"><h2 id="accountMenuTitle">Akun & bantuan</h2><button class="account-action-row" type="button" data-action="buyer-chats"><span class="account-action-icon" aria-hidden="true">☏</span><span><strong>Chat dengan toko</strong><small>${buyerChats.length ? `${buyerChats.length} percakapan` : "Tanya toko tentang produk atau pesanan"}</small></span>${unreadChats ? `<span class="account-unread">${unreadChats} baru</span>` : `<span aria-hidden="true">›</span>`}</button><button class="account-action-row" type="button" data-action="change-password"><span class="account-action-icon" aria-hidden="true">⌑</span><span><strong>Ubah kata sandi</strong><small>Perbarui akses akun</small></span><span aria-hidden="true">›</span></button><button class="account-action-row is-danger" type="button" data-action="logout"><span class="account-action-icon" aria-hidden="true">↪</span><span><strong>Keluar</strong><small>Akhiri sesi akun ini</small></span><span aria-hidden="true">›</span></button></section>` : user ? `<div class="list-row"><span>Nama</span><strong>${safe(user.name)}</strong></div><div class="list-row"><span>Email</span><span>${safe(user.email)}</span></div><div class="list-row"><span>Peran</span><span>${roleName[user.role] || "—"}</span></div><button class="secondary-button full-width mt-2" type="button" data-action="change-password">Ubah kata sandi</button><button class="danger-button full-width mt-4" type="button" data-action="logout">Keluar</button>` : `<div class="account-guest"><h2>Masuk ke KOLAP</h2><p>Masuk untuk melihat pesanan dan menghubungi toko.</p><button class="primary-button full-width" type="button" data-action="login">Masuk</button><button class="secondary-button full-width mt-2" type="button" data-auth-mode="register">Buat akun</button></div>`;
-    if (document.body.dataset.page === "account") { $("accountContent").classList.remove("orders-page"); $("accountContent").innerHTML = `<h1 class="standalone-title">Akun</h1>${content}`; setNav(); return; }
+    if (document.body.dataset.page === "account") { $("accountContent").classList.remove("orders-page"); $("accountContent").innerHTML = `<h1 class="standalone-title">Akun</h1>${content}`; if (user?.role === "buyer") addBuyerProfileButton($("accountContent")); setNav(); return; }
     openDialog("Akun", content, "account");
+    if (user?.role === "buyer") addBuyerProfileButton($("modalBody"));
+  }
+
+  function addBuyerProfileButton(root) {
+    const profile = root.querySelector(".account-profile");
+    if (!profile || profile.querySelector("[data-action='edit-buyer-profile']")) return;
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "secondary-button";
+    button.dataset.action = "edit-buyer-profile";
+    button.textContent = "Edit profil";
+    profile.append(button);
   }
 
   function showPasswordForm() {
@@ -418,6 +430,16 @@
       <div class="field"><label for="confirmPassword">Ulangi kata sandi baru</label><input id="confirmPassword" name="confirmPassword" type="password" autocomplete="new-password" required minlength="6" maxlength="256"></div>
       <p id="passwordError" class="form-error" role="alert" aria-live="polite"></p><button class="primary-button full-width" type="submit">Simpan kata sandi</button>
     </form>`, "password-form");
+  }
+
+  function showBuyerProfileForm() {
+    const buyer = requireRole("buyer");
+    if (!buyer) return;
+    openDialog("Edit profil", `<form id="buyerProfileForm" novalidate>
+      <div class="field"><label for="buyerName">Nama</label><input id="buyerName" name="name" autocomplete="name" required minlength="2" maxlength="80" value="${safe(buyer.name)}"></div>
+      <div class="field"><label for="buyerEmail">Email</label><input id="buyerEmail" name="email" type="email" autocomplete="email" autocapitalize="none" spellcheck="false" required maxlength="254" value="${safe(buyer.email)}"></div>
+      <p id="buyerProfileError" class="form-error" role="alert" aria-live="polite"></p><button class="primary-button full-width" type="submit">Simpan profil</button>
+    </form>`, "buyer-profile");
   }
 
   function showStoreProfile() {
@@ -488,7 +510,7 @@
       <div class="field"><label for="productPrice">Harga (rupiah)</label><input id="productPrice" name="price" type="number" inputmode="numeric" min="0" step="1" required value="${safe(product?.price ?? "")}"></div>
       ${product ? `<p class="notice">Stok dikelola Gudang. Stok tersedia: ${product.stock} unit.</p>` : ""}
       <div class="field"><label for="productCategory">Kategori</label><select id="productCategory" name="category">${Store.categories.filter(category => category !== "Semua").map(category => `<option ${product?.category === category ? "selected" : ""}>${safe(category)}</option>`).join("")}</select></div>
-      <div class="field"><label for="productImage">Path gambar (opsional)</label><input id="productImage" name="image" placeholder="src/images/nama-produk.jpg" value="${safe(product?.image || "")}"></div>
+      <div class="field"><label for="productImage">Path gambar (opsional)</label><input id="productImage" name="image" placeholder="img/products/toko/nama-file.png" value="${safe(product?.image || "")}"></div>
       <p id="productError" class="form-error" role="alert"></p><button class="primary-button full-width" type="submit">Simpan produk</button>
     </form>`, "product-form");
   }
@@ -603,6 +625,20 @@
       closeDialog(); if (!document.body.dataset.page) render(); if (document.body.dataset.page === "account") showAccount(); else if (document.body.dataset.page === "seller") showSellerProducts(); toast("Profil toko diperbarui.");
       return;
     }
+    if (form.id === "buyerProfileForm") {
+      const buyer = currentUser();
+      const name = String(data.get("name") || "").trim();
+      const email = String(data.get("email") || "").trim().toLowerCase();
+      const error = $("buyerProfileError");
+      if (buyer?.role !== "buyer") return;
+      if (name.length < 2 || name.length > 80 || email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { error.textContent = "Isi nama 2–80 karakter dan alamat email yang valid."; return; }
+      try { await Store.updateBuyerProfile(buyer.id, name, email); }
+      catch (cause) { error.textContent = cause.message; return; }
+      closeDialog();
+      showAccount();
+      toast("Profil diperbarui.");
+      return;
+    }
     if (form.id === "passwordForm") {
       const user = currentUser();
       const currentPassword = String(data.get("currentPassword"));
@@ -647,7 +683,7 @@
       const productId = form.dataset.productId;
       const current = Store.products.find(item => item.id === productId);
       const image = String(data.get("image")).trim();
-      if (image && !/^src\/images\/[\w.-]+\.(?:png|jpe?g|webp)$/i.test(image)) { $("productError").textContent = "Path gambar gunakan format src/images/nama-file.jpg, png, atau webp."; return; }
+      if (image && !/^img\/products\/(?:agres|enter|gamer|kla|sentral)\/[\w.-]+\.(?:png|jpe?g|webp)$/i.test(image)) { $("productError").textContent = "Path gambar gunakan format img/products/nama-toko/nama-file.png, jpg, atau webp."; return; }
       const product = { ...current, id: current?.id || crypto.randomUUID(), sellerId: seller.id, name: String(data.get("name")).trim(), description: String(data.get("description")).trim(), price, stock: current?.stock || 0, category: data.get("category"), image, icon: current?.icon || "📦", createdAt: current?.createdAt || new Date().toISOString() };
       Store.products = current ? Store.products.map(item => item.id === product.id ? product : item) : [product, ...Store.products];
       try { await Store.save(); }
@@ -902,6 +938,7 @@
       case "warehouse": showWarehouse(); break;
       case "account": location.href = "account.html"; break;
       case "edit-store-profile": showStoreProfile(); break;
+      case "edit-buyer-profile": showBuyerProfileForm(); break;
       case "change-password": showPasswordForm(); break;
       case "new-product": showProductForm(); break;
       case "undo-product-delete": {

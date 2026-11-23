@@ -1259,6 +1259,7 @@ body[data-page="seller"] .nav-item:focus-visible { outline: 3px solid var(--clay
 
 body[data-page="account"] .standalone-page { width: min(calc(100% - 28px), 680px); }
 .account-profile { display: flex; align-items: center; gap: 14px; padding: 8px 0 24px; }
+.account-profile > .secondary-button { margin-inline-start: auto; flex: 0 0 auto; }
 .account-avatar { display: grid; width: 68px; height: 68px; flex: 0 0 auto; place-items: center; border: 2px solid var(--surface); border-radius: 50%; background: #e6e3d7; color: var(--green-deep); font-size: 28px; font-weight: 800; }
 .account-identity { min-width: 0; }
 .account-identity h2 { margin: 0 0 3px; font-family: var(--font-heading); font-size: 24px; overflow-wrap: anywhere; }

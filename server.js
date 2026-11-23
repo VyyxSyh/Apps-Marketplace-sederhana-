@@ -3,6 +3,7 @@ const fs = require("node:fs/promises");
 const crypto = require("node:crypto");
 const { promisify } = require("node:util");
 const path = require("node:path");
+const { createHash } = require("node:crypto");
 
 const root = __dirname;
 const dataDir = path.join(root, "data");
@@ -11,6 +12,12 @@ const passwordsFile = path.join(root, "hash", "pw.json");
 const scrypt = promisify(crypto.scrypt);
 const port = Number(process.env.PORT) || 3000;
 const types = { ".css": "text/css", ".html": "text/html", ".js": "text/javascript", ".json": "application/json" };
+let dataWriteQueue = Promise.resolve();
+async function dataRevision() {
+  const names = ["products", "categories", "carts", "orders", "chats", "stockMovements"];
+  const contents = await Promise.all(names.map(name => fs.readFile(path.join(dataDir, `${name}.json`))));
+  return createHash("sha256").update(Buffer.concat(contents.flatMap((content, index) => [Buffer.from(names[index]), content]))).digest("hex");
+}
 async function readUsers() {
   const data = JSON.parse(await fs.readFile(usersFile, "utf8"));
   if (Array.isArray(data.users)) {
@@ -49,8 +56,9 @@ async function parseBody(req) {
 http.createServer(async (req, res) => {
   try {
     if (req.url === "/api/data" && req.method === "GET") {
+      await dataWriteQueue;
       res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
-      return res.end(JSON.stringify(await readData()));
+      return res.end(JSON.stringify({ ...await readData(), revision: await dataRevision() }));
     }
     if (req.url === "/api/users" && req.method === "GET") {
       res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
@@ -66,14 +74,31 @@ http.createServer(async (req, res) => {
       const oldUsers = ["buyer", "seller", "gudang"].flatMap(role => existing[role] || []);
       const submittedUsers = ["buyer", "seller", "gudang"].flatMap(role => data[role]);
       const currentPasswords = await readPasswords();
-      if (submittedUsers.length !== oldUsers.length || submittedUsers.some(user => !oldUsers.some(old => old.id === user.id && old.role === user.role && old.email.toLowerCase() === user.email.toLowerCase())) || oldUsers.some(user => !currentPasswords[user.id])) throw Object.assign(new Error("Akun tidak valid."), { status: 400 });
+      const submittedEmails = submittedUsers.map(user => String(user.email).trim().toLowerCase());
+      if (submittedUsers.length !== oldUsers.length || submittedUsers.some(user => !oldUsers.some(old => old.id === user.id && old.role === user.role)) || new Set(submittedEmails).size !== submittedEmails.length || oldUsers.some(user => !currentPasswords[user.id])) throw Object.assign(new Error("Akun tidak valid."), { status: 400 });
       await writeJson(usersFile, Object.fromEntries(["buyer", "seller", "gudang"].map(role => [role, data[role].map(user => {
         const { password, ...account } = user;
         const old = oldUsers.find(item => item.id === user.id);
-        return { ...old, ...account, password: old.password };
+        return { ...old, ...account, email: account.email.trim().toLowerCase(), password: old.password };
       })])));
       res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
       return res.end(JSON.stringify({ ok: true }));
+    }
+    if (req.url === "/api/profile" && req.method === "PUT") {
+      const { userId, name, email } = await parseBody(req);
+      const normalizedName = typeof name === "string" ? name.trim() : "";
+      const normalizedEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
+      if (typeof userId !== "string" || normalizedName.length < 2 || normalizedName.length > 80 || normalizedEmail.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) throw Object.assign(new Error("Nama atau email tidak valid."), { status: 400 });
+      const users = await readUsers();
+      const buyer = (users.buyer || []).find(user => user.id === userId);
+      if (!buyer) throw Object.assign(new Error("Akun pembeli tidak ditemukan."), { status: 404 });
+      if (["buyer", "seller", "gudang"].some(role => (users[role] || []).some(user => user.id !== userId && user.email.toLowerCase() === normalizedEmail))) throw Object.assign(new Error("Email sudah digunakan akun lain."), { status: 409 });
+      buyer.name = normalizedName;
+      buyer.email = normalizedEmail;
+      await writeJson(usersFile, users);
+      res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+      const { password: ignoredPassword, ...publicBuyer } = buyer;
+      return res.end(JSON.stringify({ user: publicBuyer }));
     }
     if (req.url === "/api/auth" && req.method === "POST") {
       const { action, name, email, password, role } = await parseBody(req);
@@ -138,9 +163,16 @@ http.createServer(async (req, res) => {
       if (!data || !Array.isArray(data.products) || !Array.isArray(data.categories) || !Array.isArray(data.carts) || !Array.isArray(data.orders) || !Array.isArray(data.chats) || !Array.isArray(data.stockMovements)) {
         throw Object.assign(new Error("Format data tidak valid."), { status: 400 });
       }
-      for (const name of ["products", "categories", "carts", "orders", "chats", "stockMovements"]) await writeJson(path.join(dataDir, `${name}.json`), data[name] || []);
-      res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
-      return res.end(JSON.stringify({ ok: true }));
+      const write = dataWriteQueue.then(async () => {
+        const revision = await dataRevision();
+        if (typeof data.revision !== "string" || data.revision !== revision) return { conflict: true, revision };
+        for (const name of ["products", "categories", "carts", "orders", "chats", "stockMovements"]) await writeJson(path.join(dataDir, `${name}.json`), data[name]);
+        return { conflict: false, revision: await dataRevision() };
+      });
+      dataWriteQueue = write.catch(() => {});
+      const result = await write;
+      res.writeHead(result.conflict ? 409 : 200, { "Content-Type": "application/json; charset=utf-8" });
+      return res.end(JSON.stringify(result.conflict ? { error: "Data berubah sejak dimuat. Muat ulang aplikasi sebelum menyimpan lagi." } : { ok: true, revision: result.revision }));
     }
 
     const pathname = new URL(req.url, "http://localhost").pathname;
