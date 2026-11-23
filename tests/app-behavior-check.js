@@ -33,6 +33,9 @@ assert.match(app, /!items\.some\(ordered => ordered\.productId === item\.product
 assert.match(app, /if \(!page && currentUser\(\)\?\.role === "gudang"\) \{ location\.replace\("warehouse\.html"\); return; \}/);
 assert.match(app, /currentUser\(\)\?\.role === "gudang" && document\.body\.dataset\.page !== "warehouse"/);
 assert.match(app, /\[data-market-nav\].*hidden = warehouse/);
+assert.match(store, /const seedIds = new Set\(seed\.products\.map\(product => product\.id\)\)/);
+assert.match(store, /!demoIds\.has\(product\.id\) && !seedIds\.has\(product\.id\)/);
+assert.match(store, /tokoko-seed-version.*!== "9"/);
 
 const actions = statuses => [...new Set(statuses)].map(status => ({
   "Diteruskan ke gudang": ["pick", "Mulai siapkan"],

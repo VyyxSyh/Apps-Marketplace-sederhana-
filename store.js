@@ -112,14 +112,15 @@
     if (localStorage.getItem(keys.users) && localStorage.getItem(keys.products)) {
       for (const [key, value] of [[keys.orders, []], [keys.chats, []], [keys.stockMovements, []]]) if (!localStorage.getItem(key)) write(key, value);
       migrateCategories();
-      if (localStorage.getItem("tokoko-seed-version") !== "8") {
+      if (localStorage.getItem("tokoko-seed-version") !== "9") {
         try {
           const [seed, userSeed] = await Promise.all([fetchSeedData(), fetchSeedUsers()]);
           if (seed.products) {
             const demoIds = new Set(["beras-premium", "minyak-goreng", "telur-ayam", "mi-instan", "paket-p3k", "vitamin-c", "kaos-katun", "deterjen-cair", "sabun-mandi", "alat-dapur", "smartphone-demo", "samsung-galaxy-a16-5g", "xiaomi-redmi-note-14-5g", "oppo-a3x", "vivo-y28", "realme-c75", "headphone-demo", "salad-demo", "skincare-demo", "laptop-demo", "buku-demo", "otomotif-demo", "sepatu-lari", "perlengkapan-bayi", "mouse-wireless"]);
             const seededUsers = flattenUsers(userSeed);
             const demoSellerIds = new Set(["seller-demo", ...seededUsers.filter(isDemoUser).map(user => user.id)]);
-            const custom = read(keys.products, []).filter(product => !demoIds.has(product.id));
+            const seedIds = new Set(seed.products.map(product => product.id));
+            const custom = read(keys.products, []).filter(product => !demoIds.has(product.id) && !seedIds.has(product.id));
             write(keys.products, [...seed.products, ...custom]);
             write(keys.categories, seed.categories);
             const localUsers = new Map(read(keys.users, []).filter(user => !demoSellerIds.has(user.id) && !user.demo).map(user => [user.id, user]));
@@ -128,7 +129,7 @@
             write(keys.users, [...mergedUsers.values()]);
             const session = read(keys.session, null);
             if (session?.userId === "seller-demo") write(keys.session, { userId: "seller-agres", role: "seller" });
-            localStorage.setItem("tokoko-seed-version", "8");
+            localStorage.setItem("tokoko-seed-version", "9");
           }
         } catch { /* Keep existing browser data when seed file is unavailable. */ }
       }
@@ -139,7 +140,7 @@
        Object.entries({ users: flattenUsers(userSeed), products: seed.products, categories: seed.categories, carts: seed.carts, orders: seed.orders, chats: seed.chats || [], stockMovements: seed.stockMovements || [] }).forEach(([name, value]) => {
         if (!localStorage.getItem(keys[name])) write(keys[name], value);
       });
-       write("tokoko-seed-version", "8");
+        write("tokoko-seed-version", "9");
     } catch {
       throw new Error("Data awal gagal dimuat. Jalankan lewat server atau pastikan folder data tersedia.");
     }
@@ -217,6 +218,5 @@
     set stockMovements(value) { write(keys.stockMovements, value); },
     get session() { return read(keys.session, null); },
     set session(value) { value ? write(keys.session, value) : localStorage.removeItem(keys.session); },
-    reset() { Object.values(keys).forEach(key => localStorage.removeItem(key)); }
   };
 })();
