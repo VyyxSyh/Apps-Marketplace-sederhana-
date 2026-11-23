@@ -113,6 +113,7 @@ textarea:focus-visible {
 }
 
 .brand {
+  flex: 0 0 auto;
   color: var(--green);
   font-size: 19px;
   font-weight: 1000;
@@ -264,30 +265,6 @@ textarea:focus-visible {
   color: #465243;
   font-size: 14px;
   line-height: 1.5;
-}
-
-.market-stamp {
-  display: flex;
-  width: 98px;
-  height: 98px;
-  flex: 0 0 auto;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  transform: rotate(7deg);
-  border: 1px solid #a9b08b;
-  border-radius: 50%;
-  color: var(--green);
-}
-
-.market-stamp span {
-  font-size: 12px;
-}
-
-.market-stamp strong {
-  font-family: var(--font-heading);
-  font-size: 24px;
-  letter-spacing: -0.08em;
 }
 
 /* Sections & Heading */
@@ -490,6 +467,19 @@ textarea:focus-visible {
   font-weight: 800;
 }
 
+.product-proof {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 7px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.product-proof span[aria-label] {
+  color: #8a5a00;
+}
+
 .product-foot {
   display: flex;
   align-items: center;
@@ -529,7 +519,6 @@ textarea:focus-visible {
   position: relative;
   width: 100%;
   min-height: 44px;
-  margin-top: 10px;
   border: 1px solid var(--green);
   border-radius: 9px;
   background: transparent;
@@ -1679,8 +1668,6 @@ body[data-page="account"] .standalone-page { width: min(calc(100% - 28px), 680px
     font-size: clamp(27px, 8vw, 36px);
   }
 
-  .market-stamp { display: none; }
-
   .catalog-section {
     margin-top: 18px;
   }
@@ -1734,11 +1721,6 @@ body[data-page="account"] .standalone-page { width: min(calc(100% - 28px), 680px
     min-height: 176px;
     margin-top: 18px;
     padding: 24px 28px;
-  }
-
-  .market-stamp {
-    width: 122px;
-    height: 122px;
   }
 
   .product-grid {

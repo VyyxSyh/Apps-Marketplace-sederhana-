@@ -6,6 +6,7 @@ const app = fs.readFileSync("app.js", "utf8");
 const css = fs.readFileSync("stylesheet.css", "utf8");
 const server = fs.readFileSync("server.js", "utf8");
 const store = fs.readFileSync("store.js", "utf8");
+const products = JSON.parse(fs.readFileSync("data/products.json", "utf8"));
 assert.match(app, /item\.stock \+ delta/);
 assert.equal((app.match(/item\.stock \+ delta/g) || []).length, 1);
 assert.match(app, /line\.status \|\| sellerStatus\(order, line\.sellerId\)/);
@@ -33,9 +34,21 @@ assert.match(app, /!items\.some\(ordered => ordered\.productId === item\.product
 assert.match(app, /if \(!page && currentUser\(\)\?\.role === "gudang"\) \{ location\.replace\("warehouse\.html"\); return; \}/);
 assert.match(app, /currentUser\(\)\?\.role === "gudang" && document\.body\.dataset\.page !== "warehouse"/);
 assert.match(app, /\[data-market-nav\].*hidden = warehouse/);
+assert.match(app, /class="product-proof"/);
+assert.match(app, /\$\{Number\(product\.sold\) \|\| 0\} terjual/);
 assert.match(store, /const seedIds = new Set\(seed\.products\.map\(product => product\.id\)\)/);
 assert.match(store, /!demoIds\.has\(product\.id\) && !seedIds\.has\(product\.id\)/);
 assert.match(store, /tokoko-seed-version.*!== "9"/);
+const ideapads = products.filter(product => product.brand === "Lenovo");
+assert.equal(new Set(ideapads.map(product => product.description)).size, 1);
+assert.deepEqual(ideapads.map(product => [product.sellerId, product.rating || null, product.sold]), [
+  ["seller-agres", "4,9", 165], ["seller-enter", null, 0], ["seller-gamer", "4,9", 61], ["seller-kla", "5,0", 5], ["seller-sentral", "5,0", 3]
+]);
+const asus = products.filter(product => product.brand === "ASUS");
+assert.equal(new Set(asus.map(product => product.description)).size, 1);
+assert.deepEqual(asus.map(product => [product.sellerId, product.rating, product.sold]), [
+  ["seller-agres", "4,9", 428], ["seller-enter", "5,0", 4], ["seller-gamer", "4,9", 73], ["seller-kla", "5,0", 52], ["seller-sentral", "5,0", 6]
+]);
 
 const actions = statuses => [...new Set(statuses)].map(status => ({
   "Diteruskan ke gudang": ["pick", "Mulai siapkan"],

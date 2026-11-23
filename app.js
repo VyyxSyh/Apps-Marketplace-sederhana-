@@ -70,6 +70,7 @@
         <button class="product-name" type="button" data-detail="${safe(product.id)}">${safe(product.name)}</button>
         <div class="product-price">${money(product.price)}${product.oldPrice ? `<span class="product-old-price">${money(product.oldPrice)}</span>` : ""}</div>
         ${product.oldPrice ? `<div class="product-promo">Hemat ${Math.max(1, Math.round((1 - product.price / product.oldPrice) * 100))}%</div>` : ""}
+        <div class="product-proof">${product.rating ? `<span aria-label="Rating ${safe(product.rating)} dari 5">★ ${safe(product.rating)}</span><span class="product-proof-divider" aria-hidden="true">|</span>` : ""}<span>${Number(product.sold) || 0} terjual</span></div>
         <div class="product-foot">
           <span class="product-store">${safe(sellerName(product.sellerId))}</span>
           ${stock ? `<span class="stock-chip">Stok ${stock}</span>` : `<span class="stock-chip is-empty">Habis</span>`}
