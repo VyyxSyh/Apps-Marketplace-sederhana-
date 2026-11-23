@@ -1,1 +1,23 @@
-[]
+[
+  {
+    "userId": "buyer-demo",
+    "productId": "lenovo-ideapad-slim-3-agres",
+    "name": "Lenovo IdeaPad Slim 3 14IRH10 i5-13420H 16GB 512GB",
+    "price": 11025975,
+    "quantity": 1
+  },
+  {
+    "userId": "buyer-demo",
+    "productId": "asus-vivobook-go-14-agres",
+    "name": "ASUS Vivobook Go 14 E1404FA Ryzen 3 7320U 8GB 512GB",
+    "price": 8466145,
+    "quantity": 1
+  },
+  {
+    "userId": "buyer-demo",
+    "productId": "lenovo-ideapad-slim-3-gamer",
+    "name": "Lenovo IdeaPad Slim 3 14 i5-13420H 8GB 512GB",
+    "price": 10863030,
+    "quantity": 1
+  }
+]

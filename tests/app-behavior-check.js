@@ -25,6 +25,11 @@ assert.match(store, /apiRevision = dataResult\.revision/);
 assert.match(store, /async updateBuyerProfile\(userId, name, email\)/);
 assert.match(app, /id="buyerProfileForm"/);
 assert.match(app, /case "edit-buyer-profile": showBuyerProfileForm\(\)/);
+assert.match(app, /Object\.groupBy\(items, item => Store\.products\.find\(product => product\.id === item\.productId\)\?\.sellerId/);
+assert.match(app, /data-cart-select/);
+assert.match(app, /data-cart-store/);
+assert.match(app, /showCheckout\("", state\.selectedCartIds\)/);
+assert.match(app, /!items\.some\(ordered => ordered\.productId === item\.productId\)/);
 
 const actions = statuses => [...new Set(statuses)].map(status => ({
   "Diteruskan ke gudang": ["pick", "Mulai siapkan"],

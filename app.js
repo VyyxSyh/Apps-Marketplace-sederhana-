@@ -1,7 +1,7 @@
 (() => {
   const $ = id => document.getElementById(id);
   const money = value => `Rp ${Number(value).toLocaleString("id-ID")}`;
-  const state = { storeId: "", sellerTab: "products", sellerSalesView: "report", pendingProductRestore: null, query: "", modal: "", sort: "featured", authNext: "", lastFocus: null, toastTimer: 0, chatTimer: 0, detailProductId: "" };
+  const state = { storeId: "", sellerTab: "products", sellerSalesView: "report", pendingProductRestore: null, query: "", modal: "", sort: "featured", authNext: "", lastFocus: null, toastTimer: 0, chatTimer: 0, detailProductId: "", selectedCartIds: [], checkoutProductIds: null };
   const safe = value => String(value ?? "").replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
   const cartForUser = userId => Store.carts.filter(item => item.userId === userId);
   const currentUser = () => Store.users.find(user => user.id === Store.session?.userId) || null;
@@ -168,10 +168,18 @@
     const user = requireRole("buyer");
     if (!user) return;
     const items = cartForUser(user.id);
-    const rows = items.map(item => `<div class="list-row"><div><strong>${safe(item.name)}</strong><div>${money(item.price)} × ${item.quantity}</div></div>
-      <div class="quantity-control"><button type="button" data-quantity="${safe(item.productId)}" data-delta="-1" aria-label="Kurangi ${safe(item.name)}">−</button><span>${item.quantity}</span><button type="button" data-quantity="${safe(item.productId)}" data-delta="1" aria-label="Tambah ${safe(item.name)}">+</button></div></div>`).join("");
-    openDialog("Keranjang", `${rows || `<div class="empty-state"><strong>Keranjang masih kosong</strong>Pilih produk di katalog untuk mulai berbelanja.</div>`}
-      ${items.length ? `<div class="cart-total"><span>Total belanja</span><span>${money(cartTotal(items))}</span></div><button class="primary-button full-width" type="button" data-action="checkout">Lanjut ke checkout</button>` : ""}`, "cart");
+    const ids = new Set(items.map(item => item.productId));
+    state.selectedCartIds = state.selectedCartIds.filter(id => ids.has(id));
+    const selected = items.filter(item => state.selectedCartIds.includes(item.productId));
+    const groups = Object.groupBy(items, item => Store.products.find(product => product.id === item.productId)?.sellerId || "unknown");
+    const rows = Object.entries(groups).map(([sellerId, sellerItems]) => `<section class="cart-store" aria-labelledby="cart-store-${safe(sellerId)}">
+      <header class="cart-store-heading"><input type="checkbox" data-cart-store="${safe(sellerId)}" aria-label="Pilih semua barang dari ${safe(sellerName(sellerId))}" ${sellerItems.every(item => state.selectedCartIds.includes(item.productId)) ? "checked" : ""}><h3 id="cart-store-${safe(sellerId)}">${safe(sellerName(sellerId))}</h3></header>
+      ${sellerItems.map(item => { const product = Store.products.find(entry => entry.id === item.productId); return `<article class="cart-item">
+        <input type="checkbox" data-cart-select="${safe(item.productId)}" aria-label="Pilih ${safe(item.name)}" ${state.selectedCartIds.includes(item.productId) ? "checked" : ""}>
+        ${product?.image ? `<img src="${safe(product.image)}" alt="" width="72" height="72">` : `<span class="cart-item-placeholder" aria-hidden="true">${safe(product?.icon || "□")}</span>`}
+        <div class="cart-item-info"><strong>${safe(item.name)}</strong><span>${money(item.price)}</span><div class="quantity-control"><button type="button" data-quantity="${safe(item.productId)}" data-delta="-1" aria-label="Kurangi ${safe(item.name)}">−</button><span>${item.quantity}</span><button type="button" data-quantity="${safe(item.productId)}" data-delta="1" aria-label="Tambah ${safe(item.name)}">+</button></div></div>
+      </article>`; }).join("")}</section>`).join("");
+    openDialog("Keranjang", `${items.length ? `<label class="cart-select-all"><input type="checkbox" data-cart-all ${items.every(item => state.selectedCartIds.includes(item.productId)) ? "checked" : ""}> Pilih semua</label>${rows}<div class="cart-total"><span>Total barang dipilih</span><span>${money(cartTotal(selected))}</span></div><button class="primary-button full-width" type="button" data-cart-checkout ${selected.length ? "" : "disabled"}>Checkout (${selected.length})</button>` : `<div class="empty-state"><strong>Keranjang masih kosong</strong>Pilih produk di katalog untuk mulai berbelanja.</div>`}`, "cart");
   }
 
   function showDetail(id) {
@@ -217,7 +225,7 @@
     openDialog(review ? "Edit ulasan" : "Beri ulasan", `<form id="reviewForm" data-order="${safe(order.id)}" data-product="${safe(productId)}"><fieldset class="review-rating"><legend>Rating bintang</legend>${[1, 2, 3, 4, 5].map(rating => `<span><input id="reviewRating${rating}" type="radio" name="rating" value="${rating}" ${Number(review?.rating || 5) === rating ? "checked" : ""} required><label for="reviewRating${rating}" aria-label="${rating} bintang">★</label></span>`).join("")}</fieldset><div class="field"><label for="reviewComment">Komentar</label><textarea id="reviewComment" name="comment" required minlength="3" maxlength="1000">${safe(review?.comment || "")}</textarea></div><label class="review-show-name"><input type="checkbox" name="showName" ${review?.showName === true ? "checked" : ""}> Tampilkan nama saya</label><p id="reviewError" class="form-error" role="alert" aria-live="polite"></p><button class="primary-button full-width" type="submit">${review ? "Simpan ulasan" : "Kirim ulasan"}</button></form>`, "review");
   }
 
-  function showCheckout(buyId = "") {
+  function showCheckout(buyId = "", selectedIds = null) {
     const user = requireRole("buyer");
     if (!user) return;
     let items = cartForUser(user.id);
@@ -228,7 +236,9 @@
       items = existing ? items.map(item => item.productId === product.id ? { ...item, quantity: Math.min(item.quantity + 1, product.stock) } : item) : [...items, { userId: user.id, productId: product.id, name: product.name, price: product.price, quantity: 1 }];
       Store.carts = [...Store.carts.filter(item => item.userId !== user.id), ...items];
     }
+    if (selectedIds) items = items.filter(item => selectedIds.includes(item.productId));
     if (!items.length) return toast("Keranjang masih kosong.");
+    state.checkoutProductIds = items.map(item => item.productId);
     if (items.length > 5) return toast("Maksimal 5 produk berbeda per pesanan.");
     const unavailable = items.find(item => !Store.products.some(product => product.id === item.productId && availableStock(product) >= item.quantity));
     if (unavailable) return toast(`${unavailable.name} melebihi stok yang tersedia.`);
@@ -518,7 +528,7 @@
   async function saveOrder(form) {
     const user = currentUser();
     if (user?.role !== "buyer") return showAuth("login", "checkout");
-    const items = cartForUser(user.id);
+    const items = cartForUser(user.id).filter(item => !state.checkoutProductIds || state.checkoutProductIds.includes(item.productId));
     const fresh = items.map(item => ({ item, product: Store.products.find(product => product.id === item.productId) }));
     const invalid = fresh.find(({ item, product }) => !product || availableStock(product) < item.quantity);
     if (invalid) { $("checkoutError").textContent = `${invalid.item.name} sudah berubah stoknya. Periksa keranjang lalu coba lagi.`; return; }
@@ -531,7 +541,7 @@
     const sellerStatuses = Object.fromEntries([...new Set(snapshot.map(item => item.sellerId))].map(id => [id, "Menunggu penjual"]));
     const order = { id: crypto.randomUUID(), orderNumber: `TK-${Date.now().toString(36).toUpperCase()}`, buyerId: user.id, items: snapshot, sellerStatuses, shipping: { name: String(data.get("name")).trim(), phone: String(data.get("phone")).trim(), address: String(data.get("address")).trim() }, paymentMethod: data.get("payment"), subtotal: cartTotal(items), shippingCost: 0, total: cartTotal(items), status: "Menunggu penjual", createdAt: new Date().toISOString(), history: [{ status: "Menunggu penjual", at: new Date().toISOString() }] };
     Store.orders = [order, ...Store.orders];
-    Store.carts = Store.carts.filter(item => item.userId !== user.id);
+    Store.carts = Store.carts.filter(item => item.userId !== user.id || !items.some(ordered => ordered.productId === item.productId));
     try { await Store.save(); }
     catch { Store.orders = Store.orders.filter(item => item.id !== order.id); Store.carts = [...Store.carts, ...items]; $("checkoutError").textContent = "Pesanan gagal disimpan. Keranjang dipulihkan; coba lagi."; return; }
     closeDialog();
@@ -757,10 +767,21 @@
     if (event.target.id === "sortSelect" && !document.body.dataset.page) { state.sort = event.target.value; renderProducts(); }
     if (event.target.id === "stockType") updateStockDeltaField();
     if (["orderStatusFilter", "orderProductFilter"].includes(event.target.id)) filterBuyerOrders();
+    if (event.target.matches("[data-cart-select]")) {
+      const id = event.target.dataset.cartSelect;
+      state.selectedCartIds = event.target.checked ? [...new Set([...state.selectedCartIds, id])] : state.selectedCartIds.filter(item => item !== id);
+      showCart();
+    }
+    if (event.target.matches("[data-cart-store], [data-cart-all]")) {
+      const ids = cartForUser(currentUser()?.id).map(item => item.productId);
+      const groupIds = event.target.matches("[data-cart-all]") ? ids : cartForUser(currentUser()?.id).filter(item => Store.products.find(product => product.id === item.productId)?.sellerId === event.target.dataset.cartStore).map(item => item.productId);
+      state.selectedCartIds = event.target.checked ? [...new Set([...state.selectedCartIds, ...groupIds])] : state.selectedCartIds.filter(id => !groupIds.includes(id));
+      showCart();
+    }
   });
   window.addEventListener("hashchange", updateNav);
   document.addEventListener("click", async event => {
-    const target = event.target.closest("[data-store], [data-seller-tab], [data-seller-sales-view], [data-account-destination], [data-detail-back], [data-detail-search], [data-detail-share], [data-detail-cart], [data-order-chat], [data-order-detail], [data-seller-order-detail], [data-seller-line-decision], [data-review], [data-add], [data-detail], [data-buy], [data-follow], [data-action], [data-auth-mode], [data-quantity], [data-cancel-order], [data-buyer-cancel-line], [data-seller-decision], [data-edit-product], [data-delete-product], [data-handoff], [data-fulfill], [data-order], [data-chat], [data-start-chat]");
+    const target = event.target.closest("[data-store], [data-seller-tab], [data-seller-sales-view], [data-account-destination], [data-detail-back], [data-detail-search], [data-detail-share], [data-detail-cart], [data-order-chat], [data-order-detail], [data-seller-order-detail], [data-seller-line-decision], [data-review], [data-add], [data-detail], [data-buy], [data-follow], [data-action], [data-auth-mode], [data-quantity], [data-cart-checkout], [data-cancel-order], [data-buyer-cancel-line], [data-seller-decision], [data-edit-product], [data-delete-product], [data-handoff], [data-fulfill], [data-order], [data-chat], [data-start-chat]");
     if (!target) return;
     if (target.hasAttribute("data-detail-back")) { closeDialog(); return; }
     if (target.hasAttribute("data-detail-search")) { closeDialog(); $("searchInput")?.focus(); return; }
@@ -903,6 +924,7 @@
       catch { return toast("Keranjang gagal disimpan ke data.json."); }
       render(); showCart(); return;
     }
+    if (target.hasAttribute("data-cart-checkout")) { state.checkoutProductIds = null; showCheckout("", state.selectedCartIds); return; }
     if (target.dataset.cancelOrder) {
       const user = currentUser(); const order = Store.orders.find(item => item.id === target.dataset.cancelOrder && item.buyerId === user.id && item.items.some(line => sellerStatus(item, line.sellerId) === "Menunggu penjual"));
       if (!order || !confirm("Batalkan pesanan ini? Stok produk akan dikembalikan.")) return;
@@ -930,7 +952,7 @@
     switch (action) {
       case "cart": showCart(); break;
       case "close": closeDialog(); break;
-      case "checkout": showCheckout(); break;
+      case "checkout": state.checkoutProductIds = null; showCheckout(); break;
       case "orders": showOrders(); break;
       case "sales-orders": showSalesOrders(); break;
       case "sales-tools": showSalesTools(); break;
